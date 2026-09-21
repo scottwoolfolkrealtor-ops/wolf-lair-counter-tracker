@@ -50,6 +50,7 @@ window.onerror=function(msg,src,line,col,err){dbg("ERROR "+msg+" line "+line+":"
 
 function save(){try{localStorage.setItem(KEY,JSON.stringify(creatures))}catch(e){}}
 function load(){try{var x=JSON.parse(localStorage.getItem(KEY)||"[]");if(Array.isArray(x))creatures=x}catch(e){}}
+function normalize(c){c.p=Number(c.p)||0;c.t=Number(c.t)||0;c.c=Number(c.c)||0;if(!Array.isArray(c.links))c.links=[]}
 function getPrev(){
  try{
   var v=localStorage.getItem(PREVKEY);
