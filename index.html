@@ -68,7 +68,7 @@ function render(){
    '<div class="count"><span>+1/+1 Counters</span><strong>'+c.c+'</strong></div>'+
    '<div class="controls"><button class="minus">−1</button><button class="plus">+1</button><button class="power">+ Current Power</button><button class="reset">Reset to Base</button></div>'+
    '<div class="custom"><input class="amt" type="number" inputmode="numeric" placeholder="Custom"><button class="addx">+X</button></div>'+
-   '<div class="links"><b>Link to:</b>'+linkHTML+'<button class="wide linked">+ Current Power to Me + Linked</button></div>'+
+   '<div class="links"><b>Target / Link to:</b>'+linkHTML+'<button class="wide linked">+ Current Power to Me + Linked</button><button class="wide counters">+ My Counters to Target(s)</button></div>'+
    '<button class="wide remove">Remove Creature</button>';
    card.querySelector(".minus").onclick=function(){change(c.id,-1)};
    card.querySelector(".plus").onclick=function(){change(c.id,1)};
@@ -81,6 +81,14 @@ function render(){
    };
    card.querySelector(".linked").onclick=function(){
      if(!c.links.length)return;snap();var amount=c.p+c.c;c.c+=amount;
+     for(var z=0;z<creatures.length;z++)if(c.links.indexOf(creatures[z].id)>=0)creatures[z].c+=amount;
+     save();render()
+   };
+   card.querySelector(".counters").onclick=function(){
+     if(!c.links.length)return;
+     var amount=c.c;
+     if(amount<=0)return;
+     snap();
      for(var z=0;z<creatures.length;z++)if(c.links.indexOf(creatures[z].id)>=0)creatures[z].c+=amount;
      save();render()
    };
