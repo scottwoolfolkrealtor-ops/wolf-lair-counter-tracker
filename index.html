@@ -39,6 +39,13 @@ nav button{min-height:52px}button:disabled{opacity:.4}
 .backHome{margin-bottom:8px}
 @media(max-width:390px){.appGrid{gap:9px}.appTile{min-height:142px;padding:13px}}
 
+
+.deckForm{margin-top:12px;border:1px solid #45604d;border-radius:16px;padding:12px;background:#0b1710}
+.deckForm textarea{width:100%;min-height:230px;margin-top:8px;background:#06100b;color:#fff;border:1px solid #4c6654;border-radius:10px;padding:12px;font:15px system-ui,-apple-system,sans-serif;resize:vertical}
+.deckCard{background:#0b1710;border:1px solid #45604d;border-radius:16px;padding:14px;margin-bottom:10px}
+.deckCard h3{margin:0 0 5px;font-size:20px}.deckMeta{color:#aebcaf;font-size:13px;margin-bottom:10px}
+.deckActions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.deckPreview{font-size:13px;color:#c7d2ca;white-space:pre-line;max-height:100px;overflow:hidden;margin:8px 0}
+
 </style>
 </head>
 <body>
@@ -50,11 +57,28 @@ nav button{min-height:52px}button:disabled{opacity:.4}
   </div>
   <div class="appGrid">
     <button class="appTile" id="openTracker" type="button"><span class="ico">⚔️</span><strong>Counter Tracker</strong><small>Track creatures, +1/+1 counters, linked effects and battlefield math.</small></button>
-    <button class="appTile disabled" type="button"><span class="ico">📚</span><strong>My Decks</strong><small>Save and organize your decks. Coming next.</small></button>
+    <button class="appTile" id="openDecks" type="button"><span class="ico">📚</span><strong>My Decks</strong><small>Create, save and reopen your Commander decks.</small></button>
     <button class="appTile disabled" type="button"><span class="ico">🎲</span><strong>Game Mode</strong><small>Tabletop tools built around the deck you're playing.</small></button>
     <button class="appTile disabled" type="button"><span class="ico">🐺</span><strong>Wolf Lair Pro</strong><small>Account, sync and premium tools. Coming later.</small></button>
   </div>
   <div class="homeFoot">THE WOLF LAIR • BUILT FOR THE TABLE</div>
+</section>
+
+<section id="decksView" class="hidden">
+ <main>
+  <button id="backDecksHome" class="backHome" type="button">‹ Wolf Lair Home</button>
+  <header><div class="wolf">📚</div><h1>My Decks</h1><small>WOLF LAIR</small></header>
+  <div id="deckList"></div>
+  <button id="newDeck" class="wide" type="button">＋ New Deck</button>
+  <div id="deckForm" class="hidden deckForm">
+   <input id="deckName" placeholder="Deck name">
+   <input id="commanderName" placeholder="Commander" style="margin-top:8px">
+   <textarea id="deckCards" placeholder="Paste deck list here&#10;&#10;Example:&#10;1 Sol Ring&#10;1 Command Tower"></textarea>
+   <button id="saveDeck" class="wide" type="button">Save Deck</button>
+   <button id="cancelDeck" class="wide" type="button">Cancel</button>
+   <div id="deckMsg" class="msg"></div>
+  </div>
+ </main>
 </section>
 <section id="trackerView" class="hidden">
 <main>
@@ -171,6 +195,56 @@ el("backHome").onclick=function(){
  el("home").className="";
  window.scrollTo(0,0);
 };
+
+
+var DECKKEY="wolfLairDecks1", decks=[], editingDeck=null;
+function loadDecks(){try{var x=JSON.parse(localStorage.getItem(DECKKEY)||"[]");if(Array.isArray(x))decks=x}catch(e){decks=[]}}
+function saveDecks(){try{localStorage.setItem(DECKKEY,JSON.stringify(decks))}catch(e){}}
+function deckCardCount(txt){
+ var lines=String(txt||"").split(/\n+/), total=0;
+ for(var i=0;i<lines.length;i++){var m=lines[i].trim().match(/^(\d+)\s+/);if(m)total+=parseInt(m[1],10)}
+ return total;
+}
+function renderDecks(){
+ var box=el("deckList");box.innerHTML="";
+ if(!decks.length){box.innerHTML='<div class="empty">No decks saved yet.<br>Create your first Wolf Lair deck.</div>';return}
+ for(var i=0;i<decks.length;i++){
+  (function(d){
+   var c=document.createElement("div");c.className="deckCard";
+   var count=deckCardCount(d.cards);
+   c.innerHTML='<h3>'+escapeHTML(d.name)+'</h3><div class="deckMeta">Commander: '+escapeHTML(d.commander||"Not set")+' • '+count+' cards listed</div>'+
+    '<div class="deckPreview">'+escapeHTML((d.cards||"").split(/\n/).slice(0,5).join("\n"))+'</div>'+
+    '<div class="deckActions"><button class="editDeck">Edit</button><button class="deleteDeck">Delete</button></div>';
+   c.querySelector(".editDeck").onclick=function(){
+    editingDeck=d.id;el("deckName").value=d.name;el("commanderName").value=d.commander||"";el("deckCards").value=d.cards||"";
+    el("deckForm").className="deckForm";el("newDeck").className="wide hidden";window.scrollTo(0,0);
+   };
+   c.querySelector(".deleteDeck").onclick=function(){
+    decks=decks.filter(function(x){return x.id!==d.id});saveDecks();renderDecks();
+   };
+   box.appendChild(c);
+  })(decks[i]);
+ }
+}
+function closeDeckForm(){
+ editingDeck=null;el("deckForm").className="hidden deckForm";el("newDeck").className="wide";
+ el("deckName").value="";el("commanderName").value="";el("deckCards").value="";el("deckMsg").textContent="";
+}
+el("openDecks").onclick=function(){el("home").className="hidden";el("decksView").className="";renderDecks();window.scrollTo(0,0)};
+el("backDecksHome").onclick=function(){closeDeckForm();el("decksView").className="hidden";el("home").className="";window.scrollTo(0,0)};
+el("newDeck").onclick=function(){editingDeck=null;el("deckForm").className="deckForm";el("newDeck").className="wide hidden";el("deckName").focus()};
+el("cancelDeck").onclick=closeDeckForm;
+el("saveDeck").onclick=function(){
+ var n=el("deckName").value.trim(), cmd=el("commanderName").value.trim(), cards=el("deckCards").value.trim();
+ if(!n){el("deckMsg").textContent="Enter a deck name.";return}
+ if(editingDeck){
+  for(var i=0;i<decks.length;i++)if(decks[i].id===editingDeck){decks[i].name=n;decks[i].commander=cmd;decks[i].cards=cards;break}
+ }else{
+  decks.push({id:"d"+Date.now()+"_"+Math.floor(Math.random()*1000000),name:n,commander:cmd,cards:cards});
+ }
+ saveDecks();closeDeckForm();renderDecks();
+};
+loadDecks();
 
 load();render();
 })();
