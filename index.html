@@ -50,18 +50,22 @@ window.onerror=function(msg,src,line,col,err){dbg("ERROR "+msg+" line "+line+":"
 
 function save(){try{localStorage.setItem(KEY,JSON.stringify(creatures))}catch(e){}}
 function load(){try{var x=JSON.parse(localStorage.getItem(KEY)||"[]");if(Array.isArray(x))creatures=x}catch(e){}}
-function getPrev(){try{return localStorage.getItem(PREVKEY)}catch(e){return history}}
+function getPrev(){
+ try{
+  var v=localStorage.getItem(PREVKEY);
+  return (typeof v==="string" && v.charAt(0)==="[") ? v : null;
+ }catch(e){return null}
+}
 function syncUndo(){var u=E("undo");if(u)u.disabled=!getPrev()}
 function snap(){
  try{
-  history=JSON.stringify(creatures);
-  localStorage.setItem(PREVKEY,history);
-  dbg("SNAP saved "+history);
+  var snapshot=JSON.stringify(creatures);
+  localStorage.setItem(PREVKEY,snapshot);
+  history=snapshot;
+  dbg("SNAP saved");
  }catch(e){dbg("SNAP ERROR "+e.message)}
  syncUndo()
 }
-function safe(s){var d=document.createElement("div");d.textContent=String(s);return d.innerHTML}
-function normalize(c){c.p=Number(c.p)||0;c.t=Number(c.t)||0;c.c=Number(c.c)||0;if(!Array.isArray(c.links))c.links=[]}
 function change(id,n){snap();for(var i=0;i<creatures.length;i++){if(creatures[i].id===id){creatures[i].c=Math.max(0,creatures[i].c+n);break}}save();render()}
 function render(){
  var field=E("field"); field.innerHTML="";
@@ -126,15 +130,16 @@ E("add").onclick=function(){
 E("show").onclick=function(){E("form").className="";E("nm").focus();window.scrollTo(0,0)};
 E("undo").onclick=function(){
  var prev=getPrev();
- dbg("UNDO pressed; saved="+(prev||"NONE"));
- if(!prev)return;
+ if(!prev){dbg("UNDO: no valid snapshot");return}
  try{
-   creatures=JSON.parse(prev);
-   history=null;
-   localStorage.removeItem(PREVKEY);
-   save();
-   render();
-   dbg("UNDO restored; creatures="+creatures.length)
+  var restored=JSON.parse(prev);
+  if(!Array.isArray(restored))throw new Error("snapshot is not a creature list");
+  creatures=restored;
+  history=null;
+  localStorage.removeItem(PREVKEY);
+  save();
+  render();
+  dbg("UNDO OK")
  }catch(e){dbg("UNDO ERROR "+e.message)}
 };
 E("bill").onclick=function(){if(!creatures.length)return;snap();for(var i=0;i<creatures.length;i++)creatures[i].c*=2;save();render()};
