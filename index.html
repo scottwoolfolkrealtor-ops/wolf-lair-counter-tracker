@@ -46,7 +46,8 @@ var KEY="wolfLairV17";
 function E(id){return document.getElementById(id)}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(creatures))}catch(e){}}
 function load(){try{var x=JSON.parse(localStorage.getItem(KEY)||"[]");if(Array.isArray(x))creatures=x}catch(e){}}
-function snap(){history=JSON.stringify(creatures);E("undo").disabled=false}
+function syncUndo(){E("undo").disabled=(history===null)}
+function snap(){history=JSON.stringify(creatures);syncUndo()}
 function safe(s){var d=document.createElement("div");d.textContent=String(s);return d.innerHTML}
 function normalize(c){c.p=Number(c.p)||0;c.t=Number(c.t)||0;c.c=Number(c.c)||0;if(!Array.isArray(c.links))c.links=[]}
 function change(id,n){snap();for(var i=0;i<creatures.length;i++){if(creatures[i].id===id){creatures[i].c=Math.max(0,creatures[i].c+n);break}}save();render()}
@@ -100,6 +101,7 @@ function render(){
    field.appendChild(card);
   })(creatures[i]);
  }
+ syncUndo();
 }
 E("add").onclick=function(){
  E("msg").textContent="";
@@ -110,7 +112,7 @@ E("add").onclick=function(){
  save();E("nm").value="";E("pw").value="";E("th").value="";E("form").className="hidden";render()
 };
 E("show").onclick=function(){E("form").className="";E("nm").focus();window.scrollTo(0,0)};
-E("undo").onclick=function(){if(!history)return;creatures=JSON.parse(history);history=null;E("undo").disabled=true;save();render()};
+E("undo").onclick=function(){if(history===null)return;creatures=JSON.parse(history);history=null;save();render()};
 E("bill").onclick=function(){if(!creatures.length)return;snap();for(var i=0;i<creatures.length;i++)creatures[i].c*=2;save();render()};
 load();render();
 </script>
