@@ -39,18 +39,25 @@ nav button{min-height:48px;font-size:12px}
 <div id="empty" class="empty">No creatures on the battlefield.</div>
 <div id="field"></div>
 </main>
+<div id="debug" style="position:fixed;left:8px;right:8px;bottom:68px;z-index:9999;background:#111;border:1px solid #777;border-radius:8px;padding:7px;font:12px monospace;color:#fff;max-height:110px;overflow:auto">DEBUG: ready</div>
 <nav><button id="show" type="button">＋ Add</button><button id="undo" type="button" disabled>↶ Undo</button><button id="bill" type="button">×2 Bill: All</button></nav>
 <script>
 var creatures=[], history=null;
 var KEY="wolfLairV17", PREVKEY="wolfLairV17_prev";
 function E(id){return document.getElementById(id)}
+function dbg(m){var d=E("debug");if(d)d.textContent="DEBUG: "+m}
+window.onerror=function(msg,src,line,col,err){dbg("ERROR "+msg+" line "+line+":"+col);return false};
+
 function save(){try{localStorage.setItem(KEY,JSON.stringify(creatures))}catch(e){}}
 function load(){try{var x=JSON.parse(localStorage.getItem(KEY)||"[]");if(Array.isArray(x))creatures=x}catch(e){}}
 function getPrev(){try{return localStorage.getItem(PREVKEY)}catch(e){return history}}
 function syncUndo(){var u=E("undo");if(u)u.disabled=!getPrev()}
 function snap(){
- history=JSON.stringify(creatures);
- try{localStorage.setItem(PREVKEY,history)}catch(e){}
+ try{
+  history=JSON.stringify(creatures);
+  localStorage.setItem(PREVKEY,history);
+  dbg("SNAP saved "+history);
+ }catch(e){dbg("SNAP ERROR "+e.message)}
  syncUndo()
 }
 function safe(s){var d=document.createElement("div");d.textContent=String(s);return d.innerHTML}
@@ -119,14 +126,16 @@ E("add").onclick=function(){
 E("show").onclick=function(){E("form").className="";E("nm").focus();window.scrollTo(0,0)};
 E("undo").onclick=function(){
  var prev=getPrev();
+ dbg("UNDO pressed; saved="+(prev||"NONE"));
  if(!prev)return;
  try{
    creatures=JSON.parse(prev);
    history=null;
    localStorage.removeItem(PREVKEY);
    save();
-   render()
- }catch(e){}
+   render();
+   dbg("UNDO restored; creatures="+creatures.length)
+ }catch(e){dbg("UNDO ERROR "+e.message)}
 };
 E("bill").onclick=function(){if(!creatures.length)return;snap();for(var i=0;i<creatures.length;i++)creatures[i].c*=2;save();render()};
 load();render();
