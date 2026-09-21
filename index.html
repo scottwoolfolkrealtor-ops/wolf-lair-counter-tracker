@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Wolf Lair Counter Tracker</title>
+<title>The Wolf Lair</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#06100b;color:#f4f6f4;font-family:system-ui,-apple-system,sans-serif}
 main{max-width:900px;margin:auto;padding:14px 14px 92px}header{text-align:center;padding:18px 0}
@@ -25,10 +25,40 @@ button{background:#17291d;color:#fff;border:1px solid #58705f;border-radius:10px
 nav{position:fixed;z-index:50;left:0;right:0;bottom:0;background:#0b1710;border-top:1px solid #45604d;padding:8px max(10px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 nav button{min-height:52px}button:disabled{opacity:.4}
 @media(min-width:700px){#field{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+#home{max-width:900px;margin:auto;padding:22px 16px 40px}
+.brandHero{text-align:center;padding:34px 8px 24px}
+.brandMark{width:min(100%,360px);height:190px;margin:0 auto 14px;border:1px solid #496252;border-radius:18px;overflow:hidden;background:#07100b;box-shadow:0 0 30px rgba(105,150,117,.18)}.brandMark img{width:100%;height:100%;object-fit:cover;display:block}
+.brandHero h1{font-size:34px;margin:0}.brandHero p{margin:8px 0 0;color:#aebcaf}
+.appGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.appTile{min-height:150px;text-align:left;padding:16px;border-radius:18px;background:linear-gradient(145deg,#122319,#09120d);border:1px solid #496252}
+.appTile .ico{font-size:30px;display:block;margin-bottom:18px}.appTile strong{display:block;font-size:19px}.appTile small{display:block;margin-top:5px;color:#aebcaf;font-weight:500;line-height:1.3}
+.appTile.disabled{opacity:.55}
+.homeFoot{text-align:center;color:#718278;font-size:12px;margin-top:26px;letter-spacing:2px}
+#trackerView.hidden,#home.hidden{display:none!important}
+.backHome{margin-bottom:8px}
+@media(max-width:390px){.appGrid{gap:9px}.appTile{min-height:142px;padding:13px}}
+
 </style>
 </head>
 <body>
+<section id="home">
+  <div class="brandHero">
+    <div class="brandMark"><img src="wolf-lair-logo.jpeg" alt="The Wolf Lair logo"></div>
+    <h1>The Wolf Lair</h1>
+    <p>Your tabletop command center.</p>
+  </div>
+  <div class="appGrid">
+    <button class="appTile" id="openTracker" type="button"><span class="ico">⚔️</span><strong>Counter Tracker</strong><small>Track creatures, +1/+1 counters, linked effects and battlefield math.</small></button>
+    <button class="appTile disabled" type="button"><span class="ico">📚</span><strong>My Decks</strong><small>Save and organize your decks. Coming next.</small></button>
+    <button class="appTile disabled" type="button"><span class="ico">🎲</span><strong>Game Mode</strong><small>Tabletop tools built around the deck you're playing.</small></button>
+    <button class="appTile disabled" type="button"><span class="ico">🐺</span><strong>Wolf Lair Pro</strong><small>Account, sync and premium tools. Coming later.</small></button>
+  </div>
+  <div class="homeFoot">THE WOLF LAIR • BUILT FOR THE TABLE</div>
+</section>
+<section id="trackerView" class="hidden">
 <main>
+<button id="backHome" class="backHome" type="button">‹ Wolf Lair Home</button>
 <header><div class="wolf">🐺</div><h1>The Wolf Lair</h1><small>COUNTER TRACKER</small></header>
 <div id="form" class="hidden">
 <input id="nm" placeholder="Creature name">
@@ -39,6 +69,7 @@ nav button{min-height:52px}button:disabled{opacity:.4}
 <div id="field"></div>
 </main>
 <nav><button id="show" type="button">＋ Add</button><button id="undo" type="button" disabled>↶ Undo</button><button id="bill" type="button">×2 Bill: All</button></nav>
+</section>
 <script>
 (function(){
 "use strict";
@@ -129,6 +160,18 @@ el("bill").onclick=function(){
  if(!creatures.length)return;snapshot();
  for(var i=0;i<creatures.length;i++)creatures[i].c*=2;finish();
 };
+
+el("openTracker").onclick=function(){
+ el("home").className="hidden";
+ el("trackerView").className="";
+ window.scrollTo(0,0);
+};
+el("backHome").onclick=function(){
+ el("trackerView").className="hidden";
+ el("home").className="";
+ window.scrollTo(0,0);
+};
+
 load();render();
 })();
 </script>
