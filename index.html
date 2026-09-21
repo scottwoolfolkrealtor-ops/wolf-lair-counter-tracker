@@ -5,145 +5,132 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Wolf Lair Counter Tracker</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#08110d;color:#fff;font-family:Arial,sans-serif;padding-bottom:72px}
-main{max-width:900px;margin:auto;padding:10px}header{text-align:center;margin-bottom:10px}
-header h1{font-size:21px;margin:2px}header small{color:#9fbaa9;letter-spacing:3px}
-#form{background:#121d17;border:1px solid #30493a;border-radius:14px;padding:10px;margin-bottom:10px}
-input{background:#08110d;color:#fff;border:1px solid #48614f;border-radius:8px;padding:10px;width:100%}
-.pt{display:grid;grid-template-columns:1fr 16px 1fr;align-items:center;text-align:center;margin:5px 0}
-button{background:#1b2b21;color:#fff;border:1px solid #48614f;border-radius:8px;font-weight:700}
-#form button{width:100%;padding:12px}
-#field{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
-.card{background:#121d17;border:1px solid #30493a;border-radius:13px;padding:8px;min-width:0}
-.head{display:flex;justify-content:space-between;gap:4px}.name{font-size:14px;font-weight:800;overflow-wrap:anywhere}.base{font-size:10px;color:#a9c1b1}.stats{font-size:24px;font-weight:900;white-space:nowrap}
-.count{display:flex;justify-content:space-between;align-items:center;margin:7px 0;font-size:10px}.count strong{font-size:24px}
-.controls{display:grid;grid-template-columns:1fr 1fr;gap:4px}.controls button{min-height:38px;font-size:11px}
-.custom{display:grid;grid-template-columns:1fr 42px;gap:4px;margin-top:4px}.custom button{font-size:11px}
-.links{margin-top:5px;padding:5px;border:1px solid #30493a;border-radius:8px;font-size:10px}.links label{display:flex;align-items:center;gap:3px;margin:3px 0}.links input{width:auto}
-.wide{width:100%;padding:6px;margin-top:4px;font-size:10px}.empty{text-align:center;color:#8eac99;padding:20px}
-.hidden{display:none!important}
-nav{position:fixed;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:#0b1510;border-top:1px solid #30493a;padding:7px 7px calc(7px + env(safe-area-inset-bottom))}
-nav button{min-height:48px;font-size:12px}
-@media(min-width:700px){#field{grid-template-columns:repeat(3,1fr)}}
+*{box-sizing:border-box}body{margin:0;background:#06100b;color:#f4f6f4;font-family:system-ui,-apple-system,sans-serif}
+main{max-width:900px;margin:auto;padding:14px 14px 92px}header{text-align:center;padding:18px 0}
+header .wolf{font-size:28px}h1{margin:4px 0;font-size:28px}header small{letter-spacing:7px;color:#b7c8bb}
+#form{border:1px solid #45604d;border-radius:16px;padding:10px;margin-bottom:14px;background:#0b1710}
+#form.hidden{display:none}input{width:100%;background:#06100b;color:white;border:1px solid #4c6654;border-radius:10px;padding:12px;font-size:16px}
+.pt,.custom{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.custom{grid-template-columns:1fr 80px}
+button{background:#17291d;color:#fff;border:1px solid #58705f;border-radius:10px;padding:10px;font-weight:700;font-size:15px}
+#add{width:100%;margin-top:8px}.msg{color:#ffc7c7;margin-top:6px}
+#field{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.card{background:#0b1710;border:1px solid #45604d;border-radius:16px;padding:10px;min-width:0}
+.head,.count{display:flex;justify-content:space-between;align-items:flex-start;gap:6px}.name{font-size:18px;font-weight:800;overflow-wrap:anywhere}
+.power{font-size:32px;font-weight:900}.base{color:#aebcaf;font-size:13px}.count{margin:14px 0 8px}.count strong{font-size:27px}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:7px}.controls button{min-height:52px}
+.links{margin-top:8px;border:1px solid #45604d;border-radius:10px;padding:7px;font-size:13px}
+.linkrow{display:flex;align-items:center;gap:6px;margin:6px 0}.linkrow input{width:22px;height:22px}
+.wide{width:100%;margin-top:6px}.remove{width:100%;margin-top:8px}
+.empty{text-align:center;color:#93a598;padding:40px 5px}.hidden{display:none!important}
+nav{position:fixed;z-index:50;left:0;right:0;bottom:0;background:#0b1710;border-top:1px solid #45604d;padding:8px max(10px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+nav button{min-height:52px}button:disabled{opacity:.4}
+@media(min-width:700px){#field{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
 </head>
 <body>
 <main>
-<header><div>🐺</div><h1>The Wolf Lair</h1><small>COUNTER TRACKER</small></header>
-<div id="form">
+<header><div class="wolf">🐺</div><h1>The Wolf Lair</h1><small>COUNTER TRACKER</small></header>
+<div id="form" class="hidden">
 <input id="nm" placeholder="Creature name">
-<div class="pt"><input id="pw" type="number" inputmode="numeric" placeholder="Power"><span>/</span><input id="th" type="number" inputmode="numeric" placeholder="Toughness"></div>
-<button id="add" type="button">+ Add Creature</button>
-<div id="msg"></div>
+<div class="pt"><input id="pw" inputmode="numeric" placeholder="Power"><input id="th" inputmode="numeric" placeholder="Toughness"></div>
+<button id="add" type="button">+ Add Creature</button><div id="msg" class="msg"></div>
 </div>
-<div id="empty" class="empty">No creatures on the battlefield.</div>
+<div id="empty" class="empty">Tap + Add to start tracking creatures.</div>
 <div id="field"></div>
 </main>
-<div id="debug" style="position:fixed;left:8px;right:8px;bottom:68px;z-index:9999;background:#111;border:1px solid #777;border-radius:8px;padding:7px;font:12px monospace;color:#fff;max-height:110px;overflow:auto">DEBUG: ready</div>
 <nav><button id="show" type="button">＋ Add</button><button id="undo" type="button" disabled>↶ Undo</button><button id="bill" type="button">×2 Bill: All</button></nav>
 <script>
-var creatures=[], history=null;
-var KEY="wolfLairV17", PREVKEY="wolfLairV17_prev";
-function E(id){return document.getElementById(id)}
-function dbg(m){var d=E("debug");if(d)d.textContent="DEBUG: "+m}
-window.onerror=function(msg,src,line,col,err){dbg("ERROR "+msg+" line "+line+":"+col);return false};
-
+(function(){
+"use strict";
+var KEY="wolfLairClean1", creatures=[], undoState=null;
+function el(id){return document.getElementById(id)}
+function clone(x){return JSON.parse(JSON.stringify(x))}
+function normalize(c){
+ c.id=String(c.id||("c"+Date.now()+Math.random()));
+ c.name=String(c.name||"Creature");
+ c.p=Number(c.p)||0;c.t=Number(c.t)||0;c.c=Math.max(0,Number(c.c)||0);
+ if(!Array.isArray(c.links))c.links=[];
+}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(creatures))}catch(e){}}
-function load(){try{var x=JSON.parse(localStorage.getItem(KEY)||"[]");if(Array.isArray(x))creatures=x}catch(e){}}
-function normalize(c){c.p=Number(c.p)||0;c.t=Number(c.t)||0;c.c=Number(c.c)||0;if(!Array.isArray(c.links))c.links=[]}
-function getPrev(){
+function load(){
  try{
-  var v=localStorage.getItem(PREVKEY);
-  return (typeof v==="string" && v.charAt(0)==="[") ? v : null;
- }catch(e){return null}
+  var raw=localStorage.getItem(KEY), data=raw?JSON.parse(raw):[];
+  if(Array.isArray(data)){creatures=data;for(var i=0;i<creatures.length;i++)normalize(creatures[i])}
+ }catch(e){creatures=[]}
 }
-function syncUndo(){var u=E("undo");if(u)u.disabled=!getPrev()}
-function snap(){
- try{
-  var snapshot=JSON.stringify(creatures);
-  localStorage.setItem(PREVKEY,snapshot);
-  history=snapshot;
-  dbg("SNAP saved");
- }catch(e){dbg("SNAP ERROR "+e.message)}
- syncUndo()
-}
-function change(id,n){snap();for(var i=0;i<creatures.length;i++){if(creatures[i].id===id){creatures[i].c=Math.max(0,creatures[i].c+n);break}}save();render()}
+function snapshot(){undoState=clone(creatures);el("undo").disabled=false}
+function finish(){save();render()}
+function escapeHTML(v){var d=document.createElement("div");d.textContent=String(v);return d.innerHTML}
+function find(id){for(var i=0;i<creatures.length;i++)if(creatures[i].id===id)return creatures[i];return null}
+function adjust(id,n){var c=find(id);if(!c)return;snapshot();c.c=Math.max(0,c.c+n);finish()}
 function render(){
- var field=E("field"); field.innerHTML="";
- E("empty").className=creatures.length?"empty hidden":"empty";
+ var f=el("field");f.innerHTML="";el("empty").className=creatures.length?"empty hidden":"empty";
  for(var i=0;i<creatures.length;i++){
-  normalize(creatures[i]);
   (function(c){
-   var card=document.createElement("div");card.className="card";
-   var linkHTML="";
+   normalize(c);
+   var targets="";
    for(var j=0;j<creatures.length;j++){
-    var x=creatures[j]; if(x.id===c.id)continue;
-    var checked=c.links.indexOf(x.id)>=0?" checked":"";
-    linkHTML+='<label><input type="checkbox" class="lnk" value="'+safe(x.id)+'"'+checked+'>'+safe(x.name)+'</label>';
+    var o=creatures[j];if(o.id===c.id)continue;
+    targets+='<label class="linkrow"><input class="lnk" type="checkbox" data-id="'+escapeHTML(o.id)+'" '+(c.links.indexOf(o.id)>=0?"checked":"")+'> '+escapeHTML(o.name)+'</label>';
    }
-   if(!linkHTML)linkHTML="<div>Add another creature first.</div>";
-   card.innerHTML='<div class="head"><div><div class="name">'+safe(c.name)+'</div><div class="base">Base '+c.p+'/'+c.t+'</div></div><div class="stats">'+(c.p+c.c)+'/'+(c.t+c.c)+'</div></div>'+
-   '<div class="count"><span>+1/+1 Counters</span><strong>'+c.c+'</strong></div>'+
-   '<div class="controls"><button class="minus">−1</button><button class="plus">+1</button><button class="power">+ Current Power</button><button class="reset">Reset to Base</button></div>'+
-   '<div class="custom"><input class="amt" type="number" inputmode="numeric" placeholder="Custom"><button class="addx">+X</button></div>'+
-   '<div class="links"><b>Target / Link to:</b>'+linkHTML+'<button class="wide linked">+ Current Power to Me + Linked</button><button class="wide counters">+ My Counters to Target(s)</button></div>'+
-   '<button class="wide remove">Remove Creature</button>';
-   card.querySelector(".minus").onclick=function(){change(c.id,-1)};
-   card.querySelector(".plus").onclick=function(){change(c.id,1)};
-   card.querySelector(".power").onclick=function(){change(c.id,c.p+c.c)};
-   card.querySelector(".reset").onclick=function(){snap();c.c=0;save();render()};
-   card.querySelector(".addx").onclick=function(){var n=parseInt(card.querySelector(".amt").value,10);if(n>0)change(c.id,n)};
+   if(!targets)targets="<div>Add another creature first.</div>";
+   var card=document.createElement("section");card.className="card";
+   card.innerHTML=
+    '<div class="head"><div><div class="name">'+escapeHTML(c.name)+'</div><div class="base">Base '+c.p+'/'+c.t+'</div></div><div class="power">'+(c.p+c.c)+'/'+(c.t+c.c)+'</div></div>'+
+    '<div class="count"><span>+1/+1 Counters</span><strong>'+c.c+'</strong></div>'+
+    '<div class="controls"><button class="minus">−1</button><button class="plus">+1</button><button class="current">+ Current Power</button><button class="reset">Reset to Base</button></div>'+
+    '<div class="custom"><input class="amt" inputmode="numeric" placeholder="Custom"><button class="addx">+X</button></div>'+
+    '<div class="links"><b>Target / Link to:</b>'+targets+
+    '<button class="wide linked">+ Current Power to Me + Linked</button>'+
+    '<button class="wide counters">+ My Counters to Target(s)</button></div>'+
+    '<button class="remove">Remove Creature</button>';
+   card.querySelector(".minus").onclick=function(){adjust(c.id,-1)};
+   card.querySelector(".plus").onclick=function(){adjust(c.id,1)};
+   card.querySelector(".current").onclick=function(){adjust(c.id,c.p+c.c)};
+   card.querySelector(".reset").onclick=function(){snapshot();c.c=0;finish()};
+   card.querySelector(".addx").onclick=function(){var n=parseInt(card.querySelector(".amt").value,10);if(!isNaN(n)&&n!==0)adjust(c.id,n)};
    var boxes=card.querySelectorAll(".lnk");
    for(var k=0;k<boxes.length;k++)boxes[k].onchange=function(){
-     c.links=[];var all=card.querySelectorAll(".lnk:checked");for(var q=0;q<all.length;q++)c.links.push(all[q].value);save()
+    var id=this.getAttribute("data-id"), ix=c.links.indexOf(id);
+    if(this.checked&&ix<0)c.links.push(id);else if(!this.checked&&ix>=0)c.links.splice(ix,1);
+    save();
    };
    card.querySelector(".linked").onclick=function(){
-     if(!c.links.length)return;snap();var amount=c.p+c.c;c.c+=amount;
-     for(var z=0;z<creatures.length;z++)if(c.links.indexOf(creatures[z].id)>=0)creatures[z].c+=amount;
-     save();render()
+    if(!c.links.length)return;snapshot();var amount=c.p+c.c;c.c+=amount;
+    for(var q=0;q<c.links.length;q++){var t=find(c.links[q]);if(t)t.c+=amount}finish();
    };
    card.querySelector(".counters").onclick=function(){
-     if(!c.links.length)return;
-     var amount=c.c;
-     if(amount<=0)return;
-     snap();
-     for(var z=0;z<creatures.length;z++)if(c.links.indexOf(creatures[z].id)>=0)creatures[z].c+=amount;
-     save();render()
+    if(!c.links.length||c.c<=0)return;snapshot();var amount=c.c;
+    for(var q=0;q<c.links.length;q++){var t=find(c.links[q]);if(t)t.c+=amount}finish();
    };
    card.querySelector(".remove").onclick=function(){
-     snap();var kept=[];for(var r=0;r<creatures.length;r++)if(creatures[r].id!==c.id)kept.push(creatures[r]);creatures=kept;
-     for(var s=0;s<creatures.length;s++){normalize(creatures[s]);creatures[s].links=creatures[s].links.filter(function(v){return v!==c.id})}
-     save();render()
+    snapshot();creatures=creatures.filter(function(x){return x.id!==c.id});
+    for(var q=0;q<creatures.length;q++)creatures[q].links=creatures[q].links.filter(function(x){return x!==c.id});
+    finish();
    };
-   field.appendChild(card);
+   f.appendChild(card);
   })(creatures[i]);
  }
- syncUndo();
+ el("undo").disabled=(undoState===null);
 }
-E("add").onclick=function(){
- E("msg").textContent="";
- var n=E("nm").value.trim(), ps=E("pw").value, ts=E("th").value;
- if(!n||ps===""||ts===""){E("msg").textContent="Enter name, power, and toughness.";return}
- var p=parseInt(ps,10),t=parseInt(ts,10);
- creatures.push({id:"c"+Date.now()+"_"+Math.floor(Math.random()*999999),name:n,p:p,t:t,c:0,links:[]});
- save();E("nm").value="";E("pw").value="";E("th").value="";E("form").className="hidden";render()
+el("show").onclick=function(){el("form").className="";el("nm").focus();window.scrollTo(0,0)};
+el("add").onclick=function(){
+ el("msg").textContent="";
+ var name=el("nm").value.trim(), p=parseInt(el("pw").value,10), t=parseInt(el("th").value,10);
+ if(!name||isNaN(p)||isNaN(t)){el("msg").textContent="Enter name, power, and toughness.";return}
+ snapshot();creatures.push({id:"c"+Date.now()+"_"+Math.floor(Math.random()*1000000),name:name,p:p,t:t,c:0,links:[]});
+ el("nm").value="";el("pw").value="";el("th").value="";el("form").className="hidden";finish();
 };
-E("show").onclick=function(){E("form").className="";E("nm").focus();window.scrollTo(0,0)};
-E("undo").onclick=function(){
- var prev=getPrev();
- if(!prev){dbg("UNDO: no valid snapshot");return}
- try{
-  var restored=JSON.parse(prev);
-  if(!Array.isArray(restored))throw new Error("snapshot is not a creature list");
-  creatures=restored;
-  history=null;
-  localStorage.removeItem(PREVKEY);
-  save();
-  render();
-  dbg("UNDO OK")
- }catch(e){dbg("UNDO ERROR "+e.message)}
+el("undo").onclick=function(){
+ if(undoState===null)return;
+ creatures=clone(undoState);undoState=null;finish();
 };
-E("bill").onclick=function(){if(!creatures.length)return;snap();for(var i=0;i<creatures.length;i++)creatures[i].c*=2;save();render()};
+el("bill").onclick=function(){
+ if(!creatures.length)return;snapshot();
+ for(var i=0;i<creatures.length;i++)creatures[i].c*=2;finish();
+};
 load();render();
+})();
 </script>
-</body></html>
+</body>
+</html>
