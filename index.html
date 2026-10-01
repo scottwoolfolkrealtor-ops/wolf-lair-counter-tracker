@@ -22,23 +22,28 @@ button{background:#17291d;color:#fff;border:1px solid #58705f;border-radius:10px
 .linkrow{display:flex;align-items:center;gap:6px;margin:6px 0}.linkrow input{width:22px;height:22px}
 .wide{width:100%;margin-top:6px}.remove{width:100%;margin-top:8px}
 .empty{text-align:center;color:#93a598;padding:40px 5px}.hidden{display:none!important}
-nav{position:fixed;z-index:50;left:0;right:0;bottom:0;background:#0b1710;border-top:1px solid #45604d;padding:8px max(10px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(1px,env(safe-area-inset-left));display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+nav{position:fixed;z-index:50;left:0;right:0;bottom:0;background:#0b1710;border-top:1px solid #45604d;padding:8px max(10px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(1px)}
 nav button{min-height:52px}button:disabled{opacity:.4}
 @media(min-width:700px){#field{grid-template-columns:repeat(3,minmax(0,1fr))}}
 
 #home{max-width:900px;margin:auto;padding:22px 16px 40px}
 .brandHero{text-align:center;padding:34px 8px 24px}
-.brandMark{width:min(100%,360px);height:190px;margin:0 auto 14px;border:1px solid #496252;border-radius:18px;overflow:hidden;background:#07100b;box-shadow:0 0 30px rgba(105,150,117,.18)}
-.brandMark img{display:block;width:100%;height:100%;object-fit:cover}
-.brandHero h1{font-size:34px;margin:0}.brandHero p{margin:8px 0 0;color:#aebcaf}
+.brandMark{width:min(100%,360px);height:190px;margin:0 auto 14px;border:none;border-radius:18px;overflow:hidden;background:linear-gradient(135deg,#1a3a2e 0%,#0f2818 100%);box-shadow:0 8px 32px rgba(69,96,77,.35),inset 0 1px 0 rgba(255,255,255,.1)}
+.brandMark svg{display:block;width:100%;height:100%;filter:drop-shadow(0 2px 8px rgba(0,0,0,.3))}
+.brandHero h1{font-size:34px;margin:0;background:linear-gradient(135deg,#f4f6f4,#b7c8bb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:900}
+.brandHero p{margin:8px 0 0;color:#aebcaf;font-size:15px}
 .appGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.appTile{min-height:150px;text-align:left;padding:16px;border-radius:18px;background:linear-gradient(145deg,#122319,#09120d);border:1px solid #496252;cursor:pointer}
-.appTile .ico{font-size:30px;display:block;margin-bottom:18px}.appTile strong{display:block;font-size:19px}.appTile small{display:block;margin-top:5px;color:#aebcaf;font-weight:500;line-height:1.3}
+.appTile{min-height:150px;text-align:left;padding:16px;border-radius:18px;background:linear-gradient(145deg,#122319,#09120d);border:1px solid #496252;cursor:pointer;transition:all 0.3s ease;position:relative;overflow:hidden}
+.appTile::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(135deg,rgba(105,150,117,.1) 0%,transparent 100%);opacity:0;transition:opacity 0.3s ease}
+.appTile:hover{border-color:#5a8063;box-shadow:0 8px 24px rgba(69,96,77,.25),inset 0 1px 0 rgba(255,255,255,.05);transform:translateY(-2px)}
+.appTile:hover::before{opacity:1}
+.appTile .ico{font-size:40px;display:block;margin-bottom:12px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.2))}
+.appTile strong{display:block;font-size:19px;font-weight:800}.appTile small{display:block;margin-top:5px;color:#aebcaf;font-weight:500;line-height:1.3;font-size:13px}
 .appTile.disabled{opacity:.55;cursor:not-allowed}
-.homeFoot{text-align:center;color:#718278;font-size:12px;margin-top:26px;letter-spacing:2px}
+.homeFoot{text-align:center;color:#718278;font-size:12px;margin-top:26px;letter-spacing:2px;font-weight:600}
 #trackerView.hidden,#home.hidden,#decksView.hidden,#gameView.hidden,#proView.hidden{display:none!important}
 .backHome{margin-bottom:8px}
-@media(max-width:390px){.appGrid{gap:9px}.appTile{min-height:142px;padding:13px}}
+@media(max-width:390px){.appGrid{gap:9px}.appTile{min-height:142px;padding:13px}.appTile .ico{font-size:32px}}
 
 .deckForm{margin-top:12px;border:1px solid #45604d;border-radius:16px;padding:12px;background:#0b1710}
 .deckForm textarea{width:100%;min-height:230px;margin-top:8px;background:#06100b;color:#fff;border:1px solid #4c6654;border-radius:10px;padding:12px;font:15px system-ui,-apple-system,sans-serif;resize:vertical}
@@ -49,17 +54,14 @@ nav button{min-height:52px}button:disabled{opacity:.4}
 .gameShell{display:grid;gap:12px}
 .gameBoard{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .playerCard{background:#0b1710;border:1px solid #45604d;border-radius:18px;padding:12px}
-.playerHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px}
-.playerHeader input{background:#06100b;color:#fff;border:1px solid #4c6654;border-radius:8px;padding:8px;font-size:16px;flex:1}
-.playerHeader button{flex:0 0 auto;padding:8px 12px}
+.playerHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .playerName{font-size:18px;font-weight:800}
-.trackerGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
-.trackerBlock{background:#07110d;border:1px solid #45604d;border-radius:10px;padding:8px;text-align:center}
-.trackerBlock.poison-alert{border-color:#8d4a4a;background:rgba(89,18,18,.38)}
-.trackerLabel{display:block;color:#aebcaf;font-size:11px;text-transform:uppercase;letter-spacing:1px}
-.trackerValue{display:block;font-size:26px;font-weight:800;margin:4px 0 8px;line-height:1}
-.trackerValue.poison-warning{color:#ffd7d7}
-.counterActions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lifeTotal{font-size:52px;font-weight:900;line-height:1;text-align:center;padding:8px 0 12px}
+.statRow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.statBox{background:#07110d;border:1px solid #45604d;border-radius:10px;padding:8px;text-align:center}
+.statLabel{display:block;color:#aebcaf;font-size:11px;text-transform:uppercase;letter-spacing:1px}
+.statValue{display:block;font-size:26px;font-weight:800;margin-top:4px}
+.lifeControls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
 .gameTools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
 .phaseBanner{text-align:center;border:1px solid #45604d;border-radius:12px;background:#0b1710;padding:12px}
 .phaseBanner strong{display:block;font-size:14px;color:#aebcaf;text-transform:uppercase;letter-spacing:2px;margin-bottom:6px}
@@ -70,18 +72,70 @@ nav button{min-height:52px}button:disabled{opacity:.4}
 .proGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .proGrid button{width:100%}
 textarea.proArea{width:100%;min-height:180px;background:#06100b;color:#fff;border:1px solid #4c6654;border-radius:10px;padding:12px;font:15px system-ui,-apple-system,sans-serif;resize:vertical}
-@media(max-width:640px){.gameBoard,.appGrid,.proGrid,.trackerGrid{grid-template-columns:1fr}}
+@media(max-width:640px){.gameBoard,.appGrid,.proGrid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <section id="home">
   <div class="brandHero">
-    <div class="brandMark"><img src="wolf-lair-logo.jpeg" alt="The Wolf Lair logo"></div>
+    <div class="brandMark">
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <!-- Gradient defs -->
+        <defs>
+          <linearGradient id="wolfGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#69967d;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#3d6a52;stop-opacity:1" />
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+        
+        <!-- Shield background -->
+        <path d="M 100 20 L 160 50 L 160 110 Q 100 170 100 170 Q 100 170 40 110 L 40 50 Z" fill="url(#wolfGrad)" stroke="#b7c8bb" stroke-width="2" filter="url(#glow)"/>
+        
+        <!-- Wolf head -->
+        <g transform="translate(100, 85)">
+          <!-- Head -->
+          <circle cx="0" cy="-5" r="25" fill="#f4f6f4" opacity="0.95"/>
+          
+          <!-- Ears -->
+          <path d="M -18 -25 L -22 -45 L -12 -20 Z" fill="#f4f6f4"/>
+          <path d="M 18 -25 L 22 -45 L 12 -20 Z" fill="#f4f6f4"/>
+          <path d="M -15 -22 L -18 -35 L -10 -18 Z" fill="#3d6a52" opacity="0.6"/>
+          <path d="M 15 -22 L 18 -35 L 10 -18 Z" fill="#3d6a52" opacity="0.6"/>
+          
+          <!-- Eyes -->
+          <circle cx="-8" cy="-8" r="3.5" fill="#06100b"/>
+          <circle cx="8" cy="-8" r="3.5" fill="#06100b"/>
+          <circle cx="-7" cy="-9" r="1.2" fill="#f4f6f4"/>
+          <circle cx="9" cy="-9" r="1.2" fill="#f4f6f4"/>
+          
+          <!-- Snout -->
+          <ellipse cx="0" cy="8" rx="14" ry="12" fill="#f4f6f4" opacity="0.9"/>
+          
+          <!-- Nose -->
+          <ellipse cx="0" cy="5" rx="4" ry="3" fill="#06100b"/>
+          
+          <!-- Mouth -->
+          <path d="M 0 5 L 0 12" stroke="#06100b" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <path d="M -4 10 Q -2 12 0 11" stroke="#06100b" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <path d="M 4 10 Q 2 12 0 11" stroke="#06100b" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+        </g>
+        
+        <!-- Crown accent (power indicator) -->
+        <path d="M 85 35 L 90 25 L 95 30 L 100 22 L 105 30 L 110 25 L 115 35" fill="none" stroke="#ffd700" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
     <h1>The Wolf Lair</h1>
     <p>Your tabletop command center.</p>
   </div>
   <div class="appGrid">
-    <button class="appTile" id="openTracker" type="button"><span class="ico">⚔️</span><strong>Counter Tracker</strong><small>Track creatures, +1/+1 counters, linked effects and battlefield math.</small></button>
+    <button class="appTile" id="openTracker" type="button"><span class="ico">⚔️</span><strong>Counter Tracker</strong><small>Track creatures, +1/+1 counters, linked effects and battlefield state.</small></button>
     <button class="appTile" id="openDecks" type="button"><span class="ico">📚</span><strong>My Decks</strong><small>Create, save and reopen your Commander decks.</small></button>
     <button class="appTile" id="openGame" type="button"><span class="ico">🎲</span><strong>Game Mode</strong><small>Life totals, commander damage, poison and turn flow for the table.</small></button>
     <button class="appTile" id="openPro" type="button"><span class="ico">🐺</span><strong>Wolf Lair Pro</strong><small>Export, import and save your local session data.</small></button>
@@ -109,7 +163,7 @@ textarea.proArea{width:100%;min-height:180px;background:#06100b;color:#fff;borde
 <section id="trackerView" class="hidden">
 <main>
 <button id="backHome" class="backHome" type="button">‹ Wolf Lair Home</button>
-<header><div class="wolf">🐺</div><h1>The Wolf Lair</h1><small>COUNTER TRACKER</small></header>
+<header><div class="wolf">⚔️</div><h1>The Wolf Lair</h1><small>COUNTER TRACKER</small></header>
 <div id="form" class="hidden">
 <input id="nm" placeholder="Creature name">
 <div class="pt"><input id="pw" inputmode="numeric" placeholder="Power"><input id="th" inputmode="numeric" placeholder="Toughness"></div>
@@ -118,7 +172,7 @@ textarea.proArea{width:100%;min-height:180px;background:#06100b;color:#fff;borde
 <div id="empty" class="empty">Tap + Add to start tracking creatures.</div>
 <div id="field"></div>
 </main>
-<nav><button id="show" type="button">＋ Add</button><button id="undo" type="button" disabled>↶ Undo</button><button id="bill" type="button">Double All Counters</button></nav>
+<nav><button id="show" type="button">＋ Add</button><button id="undo" type="button" disabled>↶ Undo</button><button id="bill" type="button">×2 Double All</button></nav>
 </section>
 
 <section id="gameView" class="hidden">
@@ -200,7 +254,7 @@ function render(){
     card.innerHTML=
      '<div class="head"><div><div class="name">'+escapeHTML(c.name)+'</div><div class="base">Base '+c.p+'/'+c.t+'</div></div><div class="power">'+(c.p+c.c)+'/'+(c.t+c.c)+'</div></div>'+ 
      '<div class="count"><span>+1/+1 Counters</span><strong>'+c.c+'</strong></div>'+ 
-     '<div class="controls"><button class="minus">−1</button><button class="plus">+1</button><button class="current">+ Current Power</button><button class="reset">Reset to Base</button></div>'+ 
+     '<div class="controls"><button class="minus">−1</button><button class="plus">+1</button><button class="current">+ Current Power</button><button class="reset">Reset to Base</button></div>'+
      '<div class="custom"><input class="amt" inputmode="numeric" placeholder="Custom"><button class="addx">+X</button></div>'+ 
      '<div class="links"><b>Target / Link to:</b>'+targets+
      '<button class="wide linked">+ Current Power to Me + Linked</button>'+ 
@@ -252,137 +306,69 @@ el("bill").onclick=function(){
   for(var i=0;i<creatures.length;i++)creatures[i].c*=2;finish();
 };
 
-var GAME_COUNTERS=Object.freeze({
-  life:{label:"Life", defaultValue:20, min:0, max:999, step:1},
-  poison:{label:"Poison", defaultValue:0, min:0, max:10, step:1, threshold:10},
-  commanderDamage:{label:"Commander Damage", defaultValue:0, min:0, max:999, step:1},
-  energy:{label:"Energy", defaultValue:0, min:0, max:999, step:1},
-  monarch:{label:"Monarch", defaultValue:false, kind:"toggle"}
-});
-var ACTIVE_GAME_COUNTERS=["life","poison","commanderDamage"];
-var gameState={players:[{name:"Player 1", counters:{life:20,poison:0,commanderDamage:0,energy:0,monarch:false}},{name:"Player 2", counters:{life:20,poison:0,commanderDamage:0,energy:0,monarch:false}}], phases:["Beginning","Precombat","Combat","Postcombat","Ending"], phaseIndex:0};
-function createDefaultPlayer(name){
-  var player={name:name, counters:{}};
-  Object.keys(GAME_COUNTERS).forEach(function(id){
-    var def=GAME_COUNTERS[id];
-    if(def.kind==="toggle")player.counters[id]=!!def.defaultValue;else player.counters[id]=Number(def.defaultValue)||0;
-  });
-  return player;
-}
-function ensureGameStateShape(rawState){
-  var baseState={players:[createDefaultPlayer("Player 1"), createDefaultPlayer("Player 2")], phases:["Beginning","Precombat","Combat","Postcombat","Ending"], phaseIndex:0};
-  if(!rawState||!rawState.players||!rawState.players.length){return baseState;}
-  var players=[];
-  for(var i=0;i<rawState.players.length;i++){
-    var incoming=rawState.players[i]||{};
-    var normalized=createDefaultPlayer(incoming.name||("Player "+(i+1)));
-    if(incoming.counters&&typeof incoming.counters==="object"){
-      Object.keys(GAME_COUNTERS).forEach(function(id){
-        if(typeof incoming.counters[id]!=="undefined")normalized.counters[id]=incoming.counters[id];
-      });
-    }
-    players.push(normalized);
-  }
-  baseState.players=players;
-  if(Array.isArray(rawState.phases)&&rawState.phases.length)baseState.phases=rawState.phases.slice(0);
-  baseState.phaseIndex=Number(rawState.phaseIndex)||0;
-  return baseState;
-}
+var gameState={
+  players:[
+    {name:'Player 1', life:20, commander:0, poison:0},
+    {name:'Player 2', life:20, commander:0, poison:0}
+  ],
+  phases:['Beginning','Precombat','Combat','Postcombat','Ending'],
+  phaseIndex:0
+};
 function loadGame(){
   try{
-    var raw=localStorage.getItem("wolfLairGame1");
-    if(raw)gameState=ensureGameStateShape(JSON.parse(raw));
-  }catch(e){gameState=ensureGameStateShape(null);}
-  gameState=ensureGameStateShape(gameState);
+    var raw=localStorage.getItem('wolfLairGame1');
+    if(raw){var parsed=JSON.parse(raw); if(parsed&&Array.isArray(parsed.players)){gameState=parsed;}}
+  }catch(e){}
+  if(!gameState.players||gameState.players.length!==2){
+    gameState={players:[{name:'Player 1', life:20, commander:0, poison:0},{name:'Player 2', life:20, commander:0, poison:0}], phases:['Beginning','Precombat','Combat','Postcombat','Ending'], phaseIndex:0};
+  }
+  if(!gameState.phases||!gameState.phases.length){gameState.phases=['Beginning','Precombat','Combat','Postcombat','Ending'];}
 }
 function saveGame(){
-  try{localStorage.setItem("wolfLairGame1",JSON.stringify(gameState))}catch(e){}
-}
-function getCounterValue(player,id){
-  if(!player||!player.counters)return GAME_COUNTERS[id].defaultValue;
-  if(GAME_COUNTERS[id].kind==="toggle")return !!player.counters[id];
-  return Number(player.counters[id])||0;
-}
-function clampCounter(id,value){
-  var def=GAME_COUNTERS[id];
-  if(def.kind==="toggle")return !!value;
-  var numeric=Number(value)||0;
-  if(typeof def.min==="number"&&numeric<def.min)numeric=def.min;
-  if(typeof def.max==="number"&&numeric>def.max)numeric=def.max;
-  return numeric;
-}
-function setCounterValue(player,id,value){
-  if(!player||!player.counters)player={counters:{}};
-  if(GAME_COUNTERS[id].kind==="toggle")player.counters[id]=!!value;else player.counters[id]=clampCounter(id,value);
-}
-function adjustCounter(player,id,delta){
-  var def=GAME_COUNTERS[id];
-  if(!player||!def)return;
-  var current=getCounterValue(player,id);
-  if(def.kind==="toggle"){
-    setCounterValue(player,id,!current);
-    return;
-  }
-  setCounterValue(player,id,current+delta);
+  try{localStorage.setItem('wolfLairGame1',JSON.stringify(gameState))}catch(e){}
 }
 function renderGame(){
-  var board=el("gameBoard");
-  board.innerHTML="";
+  var board=el('gameBoard');
+  board.innerHTML='';
   for(var i=0;i<gameState.players.length;i++){
     (function(player,index){
-      var card=document.createElement("div");
-      card.className="playerCard";
-      var countersMarkup="";
-      for(var c=0;c<ACTIVE_GAME_COUNTERS.length;c++){
-        var id=ACTIVE_GAME_COUNTERS[c], def=GAME_COUNTERS[id], value=getCounterValue(player,id), isPoisonWarning=id==="poison" && value>=(def.threshold||10);
-        countersMarkup+='<div class="trackerBlock '+(isPoisonWarning?"poison-alert":"")+'">'+
-          '<span class="trackerLabel">'+def.label+'</span>'+ 
-          '<span class="trackerValue '+(isPoisonWarning?"poison-warning":"")+'">'+value+'</span>'+ 
-          '<div class="counterActions">'+
-          '<button type="button" data-counter-action="-1" data-player-index="'+index+'" data-counter-id="'+id+'">−1</button>'+ 
-          '<button type="button" data-counter-action="+1" data-player-index="'+index+'" data-counter-id="'+id+'">+1</button>'+ 
-          '</div>'+
-        '</div>';
-      }
+      var card=document.createElement('div');
+      card.className='playerCard';
       card.innerHTML='\
-        <div class="playerHeader">\
-          <input type="text" class="playerNameInput" value="'+escapeHTML(player.name)+'" aria-label="Player name">\
-          <button class="resetPlayer" type="button">Reset</button>\
+        <div class="playerHeader"><span class="playerName">'+escapeHTML(player.name)+'</span><button class="resetPlayer" type="button">Reset</button></div>\
+        <div class="lifeTotal">'+player.life+'</div>\
+        <div class="lifeControls">\
+          <button class="lifeDown" type="button">−1 Life</button>\
+          <button class="lifeUp" type="button">+1 Life</button>\
+          <button class="cmdDown" type="button">−1 Cmd</button>\
+          <button class="cmdUp" type="button">+1 Cmd</button>\
+          <button class="poisonDown" type="button">−1 Poison</button>\
+          <button class="poisonUp" type="button">+1 Poison</button>\
         </div>\
-        <div class="trackerGrid">'+countersMarkup+'</div>';
-      var nameInput=card.querySelector(".playerNameInput");
-      nameInput.onchange=function(){
-        player.name=(this.value||"Player").trim()||"Player";
-        saveGame();
-        renderGame();
-      };
-      nameInput.onkeydown=function(e){if(e.key==="Enter"){this.blur();}};
-      card.querySelector(".resetPlayer").onclick=function(){
-        Object.keys(GAME_COUNTERS).forEach(function(id){
-          if(GAME_COUNTERS[id].kind==="toggle")player.counters[id]=!!GAME_COUNTERS[id].defaultValue;else player.counters[id]=Number(GAME_COUNTERS[id].defaultValue)||0;
-        });
-        saveGame();renderGame();
-      };
-      card.querySelectorAll("[data-counter-action]").forEach(function(button){
-        button.onclick=function(){
-          var counterId=this.getAttribute("data-counter-id");
-          var delta=this.getAttribute("data-counter-action")=="+1"?1:-1;
-          adjustCounter(player,counterId,delta);
-          saveGame();renderGame();
-        };
-      });
+        <div class="statRow">\
+          <div class="statBox"><span class="statLabel">Life</span><span class="statValue">'+player.life+'</span></div>\
+          <div class="statBox"><span class="statLabel">Cmd</span><span class="statValue">'+player.commander+'</span></div>\
+          <div class="statBox"><span class="statLabel">Poison</span><span class="statValue">'+player.poison+'</span></div>\
+        </div>';
+      card.querySelector('.lifeDown').onclick=function(){player.life--;saveGame();renderGame();};
+      card.querySelector('.lifeUp').onclick=function(){player.life++;saveGame();renderGame();};
+      card.querySelector('.cmdDown').onclick=function(){player.commander=Math.max(0,player.commander-1);saveGame();renderGame();};
+      card.querySelector('.cmdUp').onclick=function(){player.commander++;saveGame();renderGame();};
+      card.querySelector('.poisonDown').onclick=function(){player.poison=Math.max(0,player.poison-1);saveGame();renderGame();};
+      card.querySelector('.poisonUp').onclick=function(){player.poison++;saveGame();renderGame();};
+      card.querySelector('.resetPlayer').onclick=function(){player.life=20;player.commander=0;player.poison=0;saveGame();renderGame();};
       board.appendChild(card);
     })(gameState.players[i],i);
   }
-  el("phaseName").textContent=gameState.phases[gameState.phaseIndex] || "Beginning";
+  el('phaseName').textContent=gameState.phases[gameState.phaseIndex] || 'Beginning';
 }
-el("nextPhase").onclick=function(){
+el('nextPhase').onclick=function(){
   gameState.phaseIndex=(gameState.phaseIndex+1) % gameState.phases.length;
   saveGame();renderGame();
 };
-el("resetMatch").onclick=function(){
-  gameState={players:[createDefaultPlayer("Player 1"), createDefaultPlayer("Player 2")], phases:["Beginning","Precombat","Combat","Postcombat","Ending"], phaseIndex:0};
-  saveGame();renderGame();
+el('resetMatch').onclick=function(){
+  gameState.players=[{name:'Player 1', life:20, commander:0, poison:0},{name:'Player 2', life:20, commander:0, poison:0}];
+  gameState.phaseIndex=0;saveGame();renderGame();
 };
 
 var proState={
@@ -393,30 +379,30 @@ var proState={
 };
 function snapshotPro(){
   proState={lastSaved:new Date().toISOString(), tracker:{count:creatures.length, creatures:creatures.slice(0,10)}, decks:{count:decks.length}, game:clone(gameState)};
-  var json=JSON.stringify(proState,null,2);el("proArea").value=json;
-  try{localStorage.setItem("wolfLairPro1", json)}catch(e){}
+  var json=JSON.stringify(proState,null,2);el('proArea').value=json;
+  try{localStorage.setItem('wolfLairPro1', json)}catch(e){}
 }
 function loadPro(){
-  try{var raw=localStorage.getItem("wolfLairPro1"); if(raw){proState=JSON.parse(raw);}}catch(e){}
+  try{var raw=localStorage.getItem('wolfLairPro1'); if(raw){proState=JSON.parse(raw);}}catch(e){}
   if(!proState||!proState.game){proState={lastSaved:new Date().toISOString(), tracker:{count:creatures.length}, decks:{count:decks.length}, game:clone(gameState)};}
-  el("proArea").value=JSON.stringify(proState,null,2);
+  el('proArea').value=JSON.stringify(proState,null,2);
 }
-el("saveProfile").onclick=function(){snapshotPro();};
-el("loadProfile").onclick=function(){loadPro(); gameState=ensureGameStateShape(proState.game || gameState); renderGame();};
-el("copyJson").onclick=function(){var text=el("proArea").value; if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).catch(function(){})} else {el("proArea").focus();el("proArea").select();document.execCommand("copy");}};
-el("resetProfile").onclick=function(){try{localStorage.removeItem("wolfLairPro1")}catch(e){}; proState={lastSaved:new Date().toISOString(), tracker:{count:creatures.length}, decks:{count:decks.length}, game:clone(gameState)}; el("proArea").value=JSON.stringify(proState,null,2);};
+el('saveProfile').onclick=function(){snapshotPro();};
+el('loadProfile').onclick=function(){loadPro(); gameState=clone(proState.game || gameState); renderGame();};
+el('copyJson').onclick=function(){var text=el('proArea').value; if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).catch(function(){})} else {el('proArea').select();document.execCommand('copy')}};
+el('resetProfile').onclick=function(){try{localStorage.removeItem('wolfLairPro1')}catch(e){}; proState={lastSaved:new Date().toISOString(), tracker:{count:creatures.length}, decks:{count:decks.length}, game:clone(gameState)}; el('proArea').value=JSON.stringify(proState,null,2);};
 
-el("openTracker").onclick=function(){el("home").className="hidden";el("trackerView").className="";window.scrollTo(0,0)};
-el("backHome").onclick=function(){el("trackerView").className="hidden";el("home").className="";window.scrollTo(0,0)};
+el('openTracker').onclick=function(){el('home').className='hidden';el('trackerView').className='';window.scrollTo(0,0)};
+el('backHome').onclick=function(){el('trackerView').className='hidden';el('home').className='';window.scrollTo(0,0)};
 
-el("openDecks").onclick=function(){el("home").className="hidden";el("decksView").className="";renderDecks();window.scrollTo(0,0)};
-el("backDecksHome").onclick=function(){closeDeckForm();el("decksView").className="hidden";el("home").className="";window.scrollTo(0,0)};
+el('openDecks').onclick=function(){el('home').className='hidden';el('decksView').className='';renderDecks();window.scrollTo(0,0)};
+el('backDecksHome').onclick=function(){closeDeckForm();el('decksView').className='hidden';el('home').className='';window.scrollTo(0,0)};
 
-el("openGame").onclick=function(){el("home").className="hidden";el("gameView").className="";renderGame();window.scrollTo(0,0)};
-el("backGameHome").onclick=function(){el("gameView").className="hidden";el("home").className="";window.scrollTo(0,0)};
+el('openGame').onclick=function(){el('home').className='hidden';el('gameView').className='';renderGame();window.scrollTo(0,0)};
+el('backGameHome').onclick=function(){el('gameView').className='hidden';el('home').className='';window.scrollTo(0,0)};
 
-el("openPro").onclick=function(){el("home").className="hidden";el("proView").className="";loadPro();window.scrollTo(0,0)};
-el("backProHome").onclick=function(){el("proView").className="hidden";el("home").className="";window.scrollTo(0,0)};
+el('openPro').onclick=function(){el('home').className='hidden';el('proView').className='';loadPro();window.scrollTo(0,0)};
+el('backProHome').onclick=function(){el('proView').className='hidden';el('home').className='';window.scrollTo(0,0)};
 
 var DECKKEY="wolfLairDecks1", decks=[], editingDeck=null;
 function loadDecks(){try{var x=JSON.parse(localStorage.getItem(DECKKEY)||"[]");if(Array.isArray(x))decks=x}catch(e){decks=[]}}
