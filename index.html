@@ -22,23 +22,23 @@ button{background:#17291d;color:#fff;border:1px solid #58705f;border-radius:10px
 .linkrow{display:flex;align-items:center;gap:6px;margin:6px 0}.linkrow input{width:22px;height:22px}
 .wide{width:100%;margin-top:6px}.remove{width:100%;margin-top:8px}
 .empty{text-align:center;color:#93a598;padding:40px 5px}.hidden{display:none!important}
-nav{position:fixed;z-index:50;left:0;right:0;bottom:0;background:#0b1710;border-top:1px solid #45604d;padding:8px max(10px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+nav{position:fixed;z-index:50;left:0;right:0;bottom:0;background:#0b1710;border-top:1px solid #45604d;padding:8px max(10px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(1px,env(safe-area-inset-left));display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 nav button{min-height:52px}button:disabled{opacity:.4}
 @media(min-width:700px){#field{grid-template-columns:repeat(3,minmax(0,1fr))}}
 
 #home{max-width:900px;margin:auto;padding:22px 16px 40px}
 .brandHero{text-align:center;padding:34px 8px 24px}
-.brandMark{width:min(100%,360px);height:190px;margin:0 auto 14px;border:1px solid #496252;border-radius:18px;overflow:hidden;background:#07100b;box-shadow:0 0 30px rgba(105,150,117,.18)}.brandMark img{width:100%;height:100%;object-fit:cover;display:block}
+.brandMark{width:min(100%,360px);height:190px;margin:0 auto 14px;border:1px solid #496252;border-radius:18px;overflow:hidden;background:#07100b;box-shadow:0 0 30px rgba(105,150,117,.18)}
+.brandMark img{display:block;width:100%;height:100%;object-fit:cover}
 .brandHero h1{font-size:34px;margin:0}.brandHero p{margin:8px 0 0;color:#aebcaf}
 .appGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.appTile{min-height:150px;text-align:left;padding:16px;border-radius:18px;background:linear-gradient(145deg,#122319,#09120d);border:1px solid #496252}
+.appTile{min-height:150px;text-align:left;padding:16px;border-radius:18px;background:linear-gradient(145deg,#122319,#09120d);border:1px solid #496252;cursor:pointer}
 .appTile .ico{font-size:30px;display:block;margin-bottom:18px}.appTile strong{display:block;font-size:19px}.appTile small{display:block;margin-top:5px;color:#aebcaf;font-weight:500;line-height:1.3}
-.appTile.disabled{opacity:.55}
+.appTile.disabled{opacity:.55;cursor:not-allowed}
 .homeFoot{text-align:center;color:#718278;font-size:12px;margin-top:26px;letter-spacing:2px}
-#trackerView.hidden,#home.hidden{display:none!important}
+#trackerView.hidden,#home.hidden,#decksView.hidden,#gameView.hidden,#proView.hidden{display:none!important}
 .backHome{margin-bottom:8px}
 @media(max-width:390px){.appGrid{gap:9px}.appTile{min-height:142px;padding:13px}}
-
 
 .deckForm{margin-top:12px;border:1px solid #45604d;border-radius:16px;padding:12px;background:#0b1710}
 .deckForm textarea{width:100%;min-height:230px;margin-top:8px;background:#06100b;color:#fff;border:1px solid #4c6654;border-radius:10px;padding:12px;font:15px system-ui,-apple-system,sans-serif;resize:vertical}
@@ -46,6 +46,28 @@ nav button{min-height:52px}button:disabled{opacity:.4}
 .deckCard h3{margin:0 0 5px;font-size:20px}.deckMeta{color:#aebcaf;font-size:13px;margin-bottom:10px}
 .deckActions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.deckPreview{font-size:13px;color:#c7d2ca;white-space:pre-line;max-height:100px;overflow:hidden;margin:8px 0}
 
+.gameShell{display:grid;gap:12px}
+.gameBoard{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.playerCard{background:#0b1710;border:1px solid #45604d;border-radius:18px;padding:12px}
+.playerHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.playerName{font-size:18px;font-weight:800}
+.lifeTotal{font-size:52px;font-weight:900;line-height:1;text-align:center;padding:8px 0 12px}
+.statRow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.statBox{background:#07110d;border:1px solid #45604d;border-radius:10px;padding:8px;text-align:center}
+.statLabel{display:block;color:#aebcaf;font-size:11px;text-transform:uppercase;letter-spacing:1px}
+.statValue{display:block;font-size:26px;font-weight:800;margin-top:4px}
+.lifeControls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.gameTools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.phaseBanner{text-align:center;border:1px solid #45604d;border-radius:12px;background:#0b1710;padding:12px}
+.phaseBanner strong{display:block;font-size:14px;color:#aebcaf;text-transform:uppercase;letter-spacing:2px;margin-bottom:6px}
+.phaseBanner span{font-size:22px;font-weight:800}
+.proPanel{display:grid;gap:12px}
+.quickCard{background:#0b1710;border:1px solid #45604d;border-radius:16px;padding:12px}
+.quickCard h3{margin:0 0 8px;font-size:18px}
+.proGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.proGrid button{width:100%}
+textarea.proArea{width:100%;min-height:180px;background:#06100b;color:#fff;border:1px solid #4c6654;border-radius:10px;padding:12px;font:15px system-ui,-apple-system,sans-serif;resize:vertical}
+@media(max-width:640px){.gameBoard,.appGrid,.proGrid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -58,8 +80,8 @@ nav button{min-height:52px}button:disabled{opacity:.4}
   <div class="appGrid">
     <button class="appTile" id="openTracker" type="button"><span class="ico">⚔️</span><strong>Counter Tracker</strong><small>Track creatures, +1/+1 counters, linked effects and battlefield math.</small></button>
     <button class="appTile" id="openDecks" type="button"><span class="ico">📚</span><strong>My Decks</strong><small>Create, save and reopen your Commander decks.</small></button>
-    <button class="appTile disabled" type="button"><span class="ico">🎲</span><strong>Game Mode</strong><small>Tabletop tools built around the deck you're playing.</small></button>
-    <button class="appTile disabled" type="button"><span class="ico">🐺</span><strong>Wolf Lair Pro</strong><small>Account, sync and premium tools. Coming later.</small></button>
+    <button class="appTile" id="openGame" type="button"><span class="ico">🎲</span><strong>Game Mode</strong><small>Life totals, commander damage, poison and turn flow for the table.</small></button>
+    <button class="appTile" id="openPro" type="button"><span class="ico">🐺</span><strong>Wolf Lair Pro</strong><small>Export, import and save your local session data.</small></button>
   </div>
   <div class="homeFoot">THE WOLF LAIR • BUILT FOR THE TABLE</div>
 </section>
@@ -80,6 +102,7 @@ nav button{min-height:52px}button:disabled{opacity:.4}
   </div>
  </main>
 </section>
+
 <section id="trackerView" class="hidden">
 <main>
 <button id="backHome" class="backHome" type="button">‹ Wolf Lair Home</button>
@@ -94,6 +117,47 @@ nav button{min-height:52px}button:disabled{opacity:.4}
 </main>
 <nav><button id="show" type="button">＋ Add</button><button id="undo" type="button" disabled>↶ Undo</button><button id="bill" type="button">×2 Bill: All</button></nav>
 </section>
+
+<section id="gameView" class="hidden">
+  <main>
+    <button id="backGameHome" class="backHome" type="button">‹ Wolf Lair Home</button>
+    <header><div class="wolf">🎲</div><h1>Game Mode</h1><small>TABLETOP</small></header>
+    <div class="gameShell">
+      <div id="gameBoard" class="gameBoard"></div>
+      <div class="gameTools">
+        <button id="nextPhase" type="button">Next Phase</button>
+        <button id="resetMatch" type="button">Reset Match</button>
+      </div>
+      <div class="phaseBanner">
+        <strong>Current Phase</strong>
+        <span id="phaseName">Beginning</span>
+      </div>
+    </div>
+  </main>
+</section>
+
+<section id="proView" class="hidden">
+  <main>
+    <button id="backProHome" class="backHome" type="button">‹ Wolf Lair Home</button>
+    <header><div class="wolf">🐺</div><h1>Wolf Lair Pro</h1><small>LOCAL SYNC</small></header>
+    <div class="proPanel">
+      <div class="quickCard">
+        <h3>Session Status</h3>
+        <div class="proGrid">
+          <button id="saveProfile" type="button">Save Profile</button>
+          <button id="loadProfile" type="button">Load Profile</button>
+          <button id="copyJson" type="button">Copy JSON</button>
+          <button id="resetProfile" type="button">Reset</button>
+        </div>
+      </div>
+      <div class="quickCard">
+        <h3>Profile Snapshot</h3>
+        <textarea id="proArea" class="proArea" readonly></textarea>
+      </div>
+    </div>
+  </main>
+</section>
+
 <script>
 (function(){
 "use strict";
@@ -101,17 +165,17 @@ var KEY="wolfLairClean1", creatures=[], undoState=null;
 function el(id){return document.getElementById(id)}
 function clone(x){return JSON.parse(JSON.stringify(x))}
 function normalize(c){
- c.id=String(c.id||("c"+Date.now()+Math.random()));
- c.name=String(c.name||"Creature");
- c.p=Number(c.p)||0;c.t=Number(c.t)||0;c.c=Math.max(0,Number(c.c)||0);
- if(!Array.isArray(c.links))c.links=[];
+  c.id=String(c.id||("c"+Date.now()+Math.random()));
+  c.name=String(c.name||"Creature");
+  c.p=Number(c.p)||0;c.t=Number(c.t)||0;c.c=Math.max(0,Number(c.c)||0);
+  if(!Array.isArray(c.links))c.links=[];
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(creatures))}catch(e){}}
 function load(){
- try{
-  var raw=localStorage.getItem(KEY), data=raw?JSON.parse(raw):[];
-  if(Array.isArray(data)){creatures=data;for(var i=0;i<creatures.length;i++)normalize(creatures[i])}
- }catch(e){creatures=[]}
+  try{
+   var raw=localStorage.getItem(KEY), data=raw?JSON.parse(raw):[];
+   if(Array.isArray(data)){creatures=data;for(var i=0;i<creatures.length;i++)normalize(creatures[i])}
+  }catch(e){creatures=[]}
 }
 function snapshot(){undoState=clone(creatures);el("undo").disabled=false}
 function finish(){save();render()}
@@ -119,134 +183,220 @@ function escapeHTML(v){var d=document.createElement("div");d.textContent=String(
 function find(id){for(var i=0;i<creatures.length;i++)if(creatures[i].id===id)return creatures[i];return null}
 function adjust(id,n){var c=find(id);if(!c)return;snapshot();c.c=Math.max(0,c.c+n);finish()}
 function render(){
- var f=el("field");f.innerHTML="";el("empty").className=creatures.length?"empty hidden":"empty";
- for(var i=0;i<creatures.length;i++){
-  (function(c){
-   normalize(c);
-   var targets="";
-   for(var j=0;j<creatures.length;j++){
-    var o=creatures[j];if(o.id===c.id)continue;
-    targets+='<label class="linkrow"><input class="lnk" type="checkbox" data-id="'+escapeHTML(o.id)+'" '+(c.links.indexOf(o.id)>=0?"checked":"")+'> '+escapeHTML(o.name)+'</label>';
-   }
-   if(!targets)targets="<div>Add another creature first.</div>";
-   var card=document.createElement("section");card.className="card";
-   card.innerHTML=
-    '<div class="head"><div><div class="name">'+escapeHTML(c.name)+'</div><div class="base">Base '+c.p+'/'+c.t+'</div></div><div class="power">'+(c.p+c.c)+'/'+(c.t+c.c)+'</div></div>'+
-    '<div class="count"><span>+1/+1 Counters</span><strong>'+c.c+'</strong></div>'+
-    '<div class="controls"><button class="minus">−1</button><button class="plus">+1</button><button class="current">+ Current Power</button><button class="reset">Reset to Base</button></div>'+
-    '<div class="custom"><input class="amt" inputmode="numeric" placeholder="Custom"><button class="addx">+X</button></div>'+
-    '<div class="links"><b>Target / Link to:</b>'+targets+
-    '<button class="wide linked">+ Current Power to Me + Linked</button>'+
-    '<button class="wide counters">+ My Counters to Target(s)</button></div>'+
-    '<button class="remove">Remove Creature</button>';
-   card.querySelector(".minus").onclick=function(){adjust(c.id,-1)};
-   card.querySelector(".plus").onclick=function(){adjust(c.id,1)};
-   card.querySelector(".current").onclick=function(){adjust(c.id,c.p+c.c)};
-   card.querySelector(".reset").onclick=function(){snapshot();c.c=0;finish()};
-   card.querySelector(".addx").onclick=function(){var n=parseInt(card.querySelector(".amt").value,10);if(!isNaN(n)&&n!==0)adjust(c.id,n)};
-   var boxes=card.querySelectorAll(".lnk");
-   for(var k=0;k<boxes.length;k++)boxes[k].onchange=function(){
-    var id=this.getAttribute("data-id"), ix=c.links.indexOf(id);
-    if(this.checked&&ix<0)c.links.push(id);else if(!this.checked&&ix>=0)c.links.splice(ix,1);
-    save();
-   };
-   card.querySelector(".linked").onclick=function(){
-    if(!c.links.length)return;snapshot();var amount=c.p+c.c;c.c+=amount;
-    for(var q=0;q<c.links.length;q++){var t=find(c.links[q]);if(t)t.c+=amount}finish();
-   };
-   card.querySelector(".counters").onclick=function(){
-    if(!c.links.length||c.c<=0)return;snapshot();var amount=c.c;
-    for(var q=0;q<c.links.length;q++){var t=find(c.links[q]);if(t)t.c+=amount}finish();
-   };
-   card.querySelector(".remove").onclick=function(){
-    snapshot();creatures=creatures.filter(function(x){return x.id!==c.id});
-    for(var q=0;q<creatures.length;q++)creatures[q].links=creatures[q].links.filter(function(x){return x!==c.id});
-    finish();
-   };
-   f.appendChild(card);
-  })(creatures[i]);
- }
- el("undo").disabled=(undoState===null);
+  var f=el("field");f.innerHTML="";el("empty").className=creatures.length?"empty hidden":"empty";
+  for(var i=0;i<creatures.length;i++){
+   (function(c){
+    normalize(c);
+    var targets="";
+    for(var j=0;j<creatures.length;j++){
+     var o=creatures[j];if(o.id===c.id)continue;
+     targets+='<label class="linkrow"><input class="lnk" type="checkbox" data-id="'+escapeHTML(o.id)+'" '+(c.links.indexOf(o.id)>=0?"checked":"")+'> '+escapeHTML(o.name)+'</label>';
+    }
+    if(!targets)targets="<div>Add another creature first.</div>";
+    var card=document.createElement("section");card.className="card";
+    card.innerHTML=
+     '<div class="head"><div><div class="name">'+escapeHTML(c.name)+'</div><div class="base">Base '+c.p+'/'+c.t+'</div></div><div class="power">'+(c.p+c.c)+'/'+(c.t+c.c)+'</div></div>'+ 
+     '<div class="count"><span>+1/+1 Counters</span><strong>'+c.c+'</strong></div>'+ 
+     '<div class="controls"><button class="minus">−1</button><button class="plus">+1</button><button class="current">+ Current Power</button><button class="reset">Reset to Base</button></div>'+ 
+     '<div class="custom"><input class="amt" inputmode="numeric" placeholder="Custom"><button class="addx">+X</button></div>'+ 
+     '<div class="links"><b>Target / Link to:</b>'+targets+
+     '<button class="wide linked">+ Current Power to Me + Linked</button>'+ 
+     '<button class="wide counters">+ My Counters to Target(s)</button></div>'+ 
+     '<button class="remove">Remove Creature</button>';
+    card.querySelector(".minus").onclick=function(){adjust(c.id,-1)};
+    card.querySelector(".plus").onclick=function(){adjust(c.id,1)};
+    card.querySelector(".current").onclick=function(){adjust(c.id,c.p+c.c)};
+    card.querySelector(".reset").onclick=function(){snapshot();c.c=0;finish()};
+    card.querySelector(".addx").onclick=function(){var n=parseInt(card.querySelector(".amt").value,10);if(!isNaN(n)&&n!==0)adjust(c.id,n)};
+    var boxes=card.querySelectorAll(".lnk");
+    for(var k=0;k<boxes.length;k++)boxes[k].onchange=function(){
+     var id=this.getAttribute("data-id"), ix=c.links.indexOf(id);
+     if(this.checked&&ix<0)c.links.push(id);else if(!this.checked&&ix>=0)c.links.splice(ix,1);
+     save();
+    };
+    card.querySelector(".linked").onclick=function(){
+     if(!c.links.length)return;snapshot();var amount=c.p+c.c;c.c+=amount;
+     for(var q=0;q<c.links.length;q++){var t=find(c.links[q]);if(t)t.c+=amount}finish();
+    };
+    card.querySelector(".counters").onclick=function(){
+     if(!c.links.length||c.c<=0)return;snapshot();var amount=c.c;
+     for(var q=0;q<c.links.length;q++){var t=find(c.links[q]);if(t)t.c+=amount}finish();
+    };
+    card.querySelector(".remove").onclick=function(){
+     snapshot();creatures=creatures.filter(function(x){return x.id!==c.id});
+     for(var q=0;q<creatures.length;q++)creatures[q].links=creatures[q].links.filter(function(x){return x!==c.id});
+     finish();
+    };
+    f.appendChild(card);
+   })(creatures[i]);
+  }
+  el("undo").disabled=(undoState===null);
 }
 el("show").onclick=function(){el("form").className="";el("nm").focus();window.scrollTo(0,0)};
 el("add").onclick=function(){
- el("msg").textContent="";
- var name=el("nm").value.trim(), p=parseInt(el("pw").value,10), t=parseInt(el("th").value,10);
- if(!name||isNaN(p)||isNaN(t)){el("msg").textContent="Enter name, power, and toughness.";return}
- snapshot();creatures.push({id:"c"+Date.now()+"_"+Math.floor(Math.random()*1000000),name:name,p:p,t:t,c:0,links:[]});
- el("nm").value="";el("pw").value="";el("th").value="";el("form").className="hidden";finish();
+  el("msg").textContent="";
+  var name=el("nm").value.trim(), p=parseInt(el("pw").value,10), t=parseInt(el("th").value,10);
+  if(!name||isNaN(p)||isNaN(t)){el("msg").textContent="Enter name, power, and toughness.";return}
+  snapshot();creatures.push({id:"c"+Date.now()+"_"+Math.floor(Math.random()*1000000),name:name,p:p,t:t,c:0,links:[]});
+  el("nm").value="";el("pw").value="";el("th").value="";el("form").className="hidden";finish();
 };
 el("undo").onclick=function(){
- if(undoState===null)return;
- creatures=clone(undoState);undoState=null;finish();
+  if(undoState===null)return;
+  creatures=clone(undoState);undoState=null;finish();
 };
 el("bill").onclick=function(){
- if(!creatures.length)return;snapshot();
- for(var i=0;i<creatures.length;i++)creatures[i].c*=2;finish();
+  if(!creatures.length)return;snapshot();
+  for(var i=0;i<creatures.length;i++)creatures[i].c*=2;finish();
 };
 
-el("openTracker").onclick=function(){
- el("home").className="hidden";
- el("trackerView").className="";
- window.scrollTo(0,0);
+var gameState={
+  players:[
+    {name:'Player 1', life:20, commander:0, poison:0},
+    {name:'Player 2', life:20, commander:0, poison:0}
+  ],
+  phases:['Beginning','Precombat','Combat','Postcombat','Ending'],
+  phaseIndex:0
 };
-el("backHome").onclick=function(){
- el("trackerView").className="hidden";
- el("home").className="";
- window.scrollTo(0,0);
+function loadGame(){
+  try{
+    var raw=localStorage.getItem('wolfLairGame1');
+    if(raw){var parsed=JSON.parse(raw); if(parsed&&Array.isArray(parsed.players)){gameState=parsed;}}
+  }catch(e){}
+  if(!gameState.players||gameState.players.length!==2){
+    gameState={players:[{name:'Player 1', life:20, commander:0, poison:0},{name:'Player 2', life:20, commander:0, poison:0}], phases:['Beginning','Precombat','Combat','Postcombat','Ending'], phaseIndex:0};
+  }
+  if(!gameState.phases||!gameState.phases.length){gameState.phases=['Beginning','Precombat','Combat','Postcombat','Ending'];}
+}
+function saveGame(){
+  try{localStorage.setItem('wolfLairGame1',JSON.stringify(gameState))}catch(e){}
+}
+function renderGame(){
+  var board=el('gameBoard');
+  board.innerHTML='';
+  for(var i=0;i<gameState.players.length;i++){
+    (function(player,index){
+      var card=document.createElement('div');
+      card.className='playerCard';
+      card.innerHTML='\
+        <div class="playerHeader"><span class="playerName">'+escapeHTML(player.name)+'</span><button class="resetPlayer" type="button">Reset</button></div>\
+        <div class="lifeTotal">'+player.life+'</div>\
+        <div class="lifeControls">\
+          <button class="lifeDown" type="button">−1 Life</button>\
+          <button class="lifeUp" type="button">+1 Life</button>\
+          <button class="cmdDown" type="button">−1 Cmd</button>\
+          <button class="cmdUp" type="button">+1 Cmd</button>\
+          <button class="poisonDown" type="button">−1 Poison</button>\
+          <button class="poisonUp" type="button">+1 Poison</button>\
+        </div>\
+        <div class="statRow">\
+          <div class="statBox"><span class="statLabel">Life</span><span class="statValue">'+player.life+'</span></div>\
+          <div class="statBox"><span class="statLabel">Cmd</span><span class="statValue">'+player.commander+'</span></div>\
+          <div class="statBox"><span class="statLabel">Poison</span><span class="statValue">'+player.poison+'</span></div>\
+        </div>';
+      card.querySelector('.lifeDown').onclick=function(){player.life--;saveGame();renderGame();};
+      card.querySelector('.lifeUp').onclick=function(){player.life++;saveGame();renderGame();};
+      card.querySelector('.cmdDown').onclick=function(){player.commander=Math.max(0,player.commander-1);saveGame();renderGame();};
+      card.querySelector('.cmdUp').onclick=function(){player.commander++;saveGame();renderGame();};
+      card.querySelector('.poisonDown').onclick=function(){player.poison=Math.max(0,player.poison-1);saveGame();renderGame();};
+      card.querySelector('.poisonUp').onclick=function(){player.poison++;saveGame();renderGame();};
+      card.querySelector('.resetPlayer').onclick=function(){player.life=20;player.commander=0;player.poison=0;saveGame();renderGame();};
+      board.appendChild(card);
+    })(gameState.players[i],i);
+  }
+  el('phaseName').textContent=gameState.phases[gameState.phaseIndex] || 'Beginning';
+}
+el('nextPhase').onclick=function(){
+  gameState.phaseIndex=(gameState.phaseIndex+1) % gameState.phases.length;
+  saveGame();renderGame();
+};
+el('resetMatch').onclick=function(){
+  gameState.players=[{name:'Player 1', life:20, commander:0, poison:0},{name:'Player 2', life:20, commander:0, poison:0}];
+  gameState.phaseIndex=0;saveGame();renderGame();
 };
 
+var proState={
+  lastSaved: new Date().toISOString(),
+  tracker: {count: creatures.length},
+  decks: {count: 0},
+  game: gameState
+};
+function snapshotPro(){
+  proState={lastSaved:new Date().toISOString(), tracker:{count:creatures.length, creatures:creatures.slice(0,10)}, decks:{count:decks.length}, game:clone(gameState)};
+  var json=JSON.stringify(proState,null,2);el('proArea').value=json;
+  try{localStorage.setItem('wolfLairPro1', json)}catch(e){}
+}
+function loadPro(){
+  try{var raw=localStorage.getItem('wolfLairPro1'); if(raw){proState=JSON.parse(raw);}}catch(e){}
+  if(!proState||!proState.game){proState={lastSaved:new Date().toISOString(), tracker:{count:creatures.length}, decks:{count:decks.length}, game:clone(gameState)};}
+  el('proArea').value=JSON.stringify(proState,null,2);
+}
+el('saveProfile').onclick=function(){snapshotPro();};
+el('loadProfile').onclick=function(){loadPro(); gameState=clone(proState.game || gameState); renderGame();};
+el('copyJson').onclick=function(){var text=el('proArea').value; if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).catch(function(){})} else {el('proArea').focus();el('proArea').select();document.execCommand('copy');}};
+el('resetProfile').onclick=function(){try{localStorage.removeItem('wolfLairPro1')}catch(e){}; proState={lastSaved:new Date().toISOString(), tracker:{count:creatures.length}, decks:{count:decks.length}, game:clone(gameState)}; el('proArea').value=JSON.stringify(proState,null,2);};
+
+el('openTracker').onclick=function(){el('home').className='hidden';el('trackerView').className='';window.scrollTo(0,0)};
+el('backHome').onclick=function(){el('trackerView').className='hidden';el('home').className='';window.scrollTo(0,0)};
+
+el('openDecks').onclick=function(){el('home').className='hidden';el('decksView').className='';renderDecks();window.scrollTo(0,0)};
+el('backDecksHome').onclick=function(){closeDeckForm();el('decksView').className='hidden';el('home').className='';window.scrollTo(0,0)};
+
+el('openGame').onclick=function(){el('home').className='hidden';el('gameView').className='';renderGame();window.scrollTo(0,0)};
+el('backGameHome').onclick=function(){el('gameView').className='hidden';el('home').className='';window.scrollTo(0,0)};
+
+el('openPro').onclick=function(){el('home').className='hidden';el('proView').className='';loadPro();window.scrollTo(0,0)};
+el('backProHome').onclick=function(){el('proView').className='hidden';el('home').className='';window.scrollTo(0,0)};
 
 var DECKKEY="wolfLairDecks1", decks=[], editingDeck=null;
 function loadDecks(){try{var x=JSON.parse(localStorage.getItem(DECKKEY)||"[]");if(Array.isArray(x))decks=x}catch(e){decks=[]}}
 function saveDecks(){try{localStorage.setItem(DECKKEY,JSON.stringify(decks))}catch(e){}}
 function deckCardCount(txt){
- var lines=String(txt||"").split(/\n+/), total=0;
- for(var i=0;i<lines.length;i++){var m=lines[i].trim().match(/^(\d+)\s+/);if(m)total+=parseInt(m[1],10)}
- return total;
+  var lines=String(txt||"").split(/\n+/), total=0;
+  for(var i=0;i<lines.length;i++){var m=lines[i].trim().match(/^(\d+)\s+/);if(m)total+=parseInt(m[1],10)}
+  return total;
 }
 function renderDecks(){
- var box=el("deckList");box.innerHTML="";
- if(!decks.length){box.innerHTML='<div class="empty">No decks saved yet.<br>Create your first Wolf Lair deck.</div>';return}
- for(var i=0;i<decks.length;i++){
-  (function(d){
-   var c=document.createElement("div");c.className="deckCard";
-   var count=deckCardCount(d.cards);
-   c.innerHTML='<h3>'+escapeHTML(d.name)+'</h3><div class="deckMeta">Commander: '+escapeHTML(d.commander||"Not set")+' • '+count+' cards listed</div>'+
-    '<div class="deckPreview">'+escapeHTML((d.cards||"").split(/\n/).slice(0,5).join("\n"))+'</div>'+
-    '<div class="deckActions"><button class="editDeck">Edit</button><button class="deleteDeck">Delete</button></div>';
-   c.querySelector(".editDeck").onclick=function(){
-    editingDeck=d.id;el("deckName").value=d.name;el("commanderName").value=d.commander||"";el("deckCards").value=d.cards||"";
-    el("deckForm").className="deckForm";el("newDeck").className="wide hidden";window.scrollTo(0,0);
-   };
-   c.querySelector(".deleteDeck").onclick=function(){
-    decks=decks.filter(function(x){return x.id!==d.id});saveDecks();renderDecks();
-   };
-   box.appendChild(c);
-  })(decks[i]);
- }
+  var box=el("deckList");box.innerHTML="";
+  if(!decks.length){box.innerHTML='<div class="empty">No decks saved yet.<br>Create your first Wolf Lair deck.</div>';return}
+  for(var i=0;i<decks.length;i++){
+   (function(d){
+    var c=document.createElement("div");c.className="deckCard";
+    var count=deckCardCount(d.cards);
+    c.innerHTML='<h3>'+escapeHTML(d.name)+'</h3><div class="deckMeta">Commander: '+escapeHTML(d.commander||"Not set")+' • '+count+' cards listed</div>'+ 
+     '<div class="deckPreview">'+escapeHTML((d.cards||"").split(/\n/).slice(0,5).join("\n"))+'</div>'+ 
+     '<div class="deckActions"><button class="editDeck">Edit</button><button class="deleteDeck">Delete</button></div>';
+    c.querySelector(".editDeck").onclick=function(){
+     editingDeck=d.id;el("deckName").value=d.name;el("commanderName").value=d.commander||"";el("deckCards").value=d.cards||"";
+     el("deckForm").className="deckForm";el("newDeck").className="wide hidden";window.scrollTo(0,0);
+    };
+    c.querySelector(".deleteDeck").onclick=function(){
+     decks=decks.filter(function(x){return x.id!==d.id});saveDecks();renderDecks();
+    };
+    box.appendChild(c);
+   })(decks[i]);
+  }
 }
 function closeDeckForm(){
- editingDeck=null;el("deckForm").className="hidden deckForm";el("newDeck").className="wide";
- el("deckName").value="";el("commanderName").value="";el("deckCards").value="";el("deckMsg").textContent="";
+  editingDeck=null;el("deckForm").className="hidden deckForm";el("newDeck").className="wide";
+  el("deckName").value="";el("commanderName").value="";el("deckCards").value="";el("deckMsg").textContent="";
 }
-el("openDecks").onclick=function(){el("home").className="hidden";el("decksView").className="";renderDecks();window.scrollTo(0,0)};
-el("backDecksHome").onclick=function(){closeDeckForm();el("decksView").className="hidden";el("home").className="";window.scrollTo(0,0)};
 el("newDeck").onclick=function(){editingDeck=null;el("deckForm").className="deckForm";el("newDeck").className="wide hidden";el("deckName").focus()};
 el("cancelDeck").onclick=closeDeckForm;
 el("saveDeck").onclick=function(){
- var n=el("deckName").value.trim(), cmd=el("commanderName").value.trim(), cards=el("deckCards").value.trim();
- if(!n){el("deckMsg").textContent="Enter a deck name.";return}
- if(editingDeck){
-  for(var i=0;i<decks.length;i++)if(decks[i].id===editingDeck){decks[i].name=n;decks[i].commander=cmd;decks[i].cards=cards;break}
- }else{
-  decks.push({id:"d"+Date.now()+"_"+Math.floor(Math.random()*1000000),name:n,commander:cmd,cards:cards});
- }
- saveDecks();closeDeckForm();renderDecks();
+  var n=el("deckName").value.trim(), cmd=el("commanderName").value.trim(), cards=el("deckCards").value.trim();
+  if(!n){el("deckMsg").textContent="Enter a deck name.";return}
+  if(editingDeck){
+   for(var i=0;i<decks.length;i++)if(decks[i].id===editingDeck){decks[i].name=n;decks[i].commander=cmd;decks[i].cards=cards;break}
+  }else{
+   decks.push({id:"d"+Date.now()+"_"+Math.floor(Math.random()*1000000),name:n,commander:cmd,cards:cards});
+  }
+  saveDecks();closeDeckForm();renderDecks();
 };
 loadDecks();
-
+loadGame();
 load();render();
+renderDecks();
+renderGame();
 })();
 </script>
 </body>
