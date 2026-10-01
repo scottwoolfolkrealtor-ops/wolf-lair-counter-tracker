@@ -50,6 +50,8 @@ nav button{min-height:52px}button:disabled{opacity:.4}
 .gameBoard{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .playerCard{background:#0b1710;border:1px solid #45604d;border-radius:18px;padding:12px}
 .playerHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px}
+.playerHeader input{background:#06100b;color:#fff;border:1px solid #4c6654;border-radius:8px;padding:8px;font-size:16px;flex:1}
+.playerHeader button{flex:0 0 auto;padding:8px 12px}
 .playerName{font-size:18px;font-weight:800}
 .trackerGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
 .trackerBlock{background:#07110d;border:1px solid #45604d;border-radius:10px;padding:8px;text-align:center}
@@ -343,8 +345,18 @@ function renderGame(){
         '</div>';
       }
       card.innerHTML='\
-        <div class="playerHeader"><span class="playerName">'+escapeHTML(player.name)+'</span><button class="resetPlayer" type="button">Reset</button></div>\
+        <div class="playerHeader">\
+          <input type="text" class="playerNameInput" value="'+escapeHTML(player.name)+'" aria-label="Player name">\
+          <button class="resetPlayer" type="button">Reset</button>\
+        </div>\
         <div class="trackerGrid">'+countersMarkup+'</div>';
+      var nameInput=card.querySelector(".playerNameInput");
+      nameInput.onchange=function(){
+        player.name=(this.value||"Player").trim()||"Player";
+        saveGame();
+        renderGame();
+      };
+      nameInput.onkeydown=function(e){if(e.key==="Enter"){this.blur();}};
       card.querySelector(".resetPlayer").onclick=function(){
         Object.keys(GAME_COUNTERS).forEach(function(id){
           if(GAME_COUNTERS[id].kind==="toggle")player.counters[id]=!!GAME_COUNTERS[id].defaultValue;else player.counters[id]=Number(GAME_COUNTERS[id].defaultValue)||0;
