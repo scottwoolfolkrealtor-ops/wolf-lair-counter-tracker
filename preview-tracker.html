@@ -2364,28 +2364,53 @@ function detectCardFrame(cv){
     cv.findContours(edges,contours,hierarchy,cv.RETR_LIST,cv.CHAIN_APPROX_SIMPLE);
     var best=null,bestScore=0,frameArea=dw*dh,centerX=dw/2,centerY=dh/2;
     for(var i=0;i<contours.size();i++){
-      var cnt=contours.get(i), peri=cv.arcLength(cnt,true), approx=new cv.Mat();
-      cv.approxPolyDP(cnt,approx,0.022*peri,true);
+      var cnt=contours.get(i), area=Math.abs(cv.contourArea(cnt));
+      if(area<frameArea*.10){cnt.delete();continue}
+
+      var peri=cv.arcLength(cnt,true), approx=new cv.Mat();
+      cv.approxPolyDP(cnt,approx,0.028*peri,true);
+
+      var pts=null, ratioArea=0, width=0, height=0, cx=0, cy=0, ratioScore=0;
+
       if(approx.rows===4&&cv.isContourConvex(approx)){
-        var area=Math.abs(cv.contourArea(approx)), ratioArea=area/frameArea;
-        if(ratioArea>.12&&ratioArea<.94){
-          var raw=approx.data32S,pts=[];
-          for(var p=0;p<4;p++)pts.push({x:raw[p*2],y:raw[p*2+1]});
-          pts=orderCardPoints(pts);
-          function dist(a,b){var x=a.x-b.x,y=a.y-b.y;return Math.sqrt(x*x+y*y)}
-          var width=(dist(pts[0],pts[1])+dist(pts[3],pts[2]))/2;
-          var height=(dist(pts[0],pts[3])+dist(pts[1],pts[2]))/2;
-          var ar=width/Math.max(1,height), ratioScore=Math.max(0,1-Math.abs(ar-(2.5/3.5))/.32);
-          var cx=(pts[0].x+pts[1].x+pts[2].x+pts[3].x)/4,cy=(pts[0].y+pts[1].y+pts[2].y+pts[3].y)/4;
-          var centerDist=Math.sqrt(Math.pow((cx-centerX)/dw,2)+Math.pow((cy-centerY)/dh,2));
-          var centerScore=Math.max(0,1-centerDist*2.2);
-          var score=ratioArea*2.6+ratioScore*1.8+centerScore;
-          if(ratioScore>.48&&centerDist<.23&&ratioArea>.14&&ratioArea<.72&&score>bestScore){bestScore=score;best={points:pts,cx:cx,cy:cy,width:width,height:height,ratioScore:ratioScore,ratioArea:ratioArea}}
-        }
+        var raw=approx.data32S;pts=[];
+        for(var p=0;p<4;p++)pts.push({x:raw[p*2],y:raw[p*2+1]});
+        pts=orderCardPoints(pts);
+        function dist(a,b){var x=a.x-b.x,y=a.y-b.y;return Math.sqrt(x*x+y*y)}
+        width=(dist(pts[0],pts[1])+dist(pts[3],pts[2]))/2;
+        height=(dist(pts[0],pts[3])+dist(pts[1],pts[2]))/2;
+        ratioArea=Math.abs(cv.contourArea(approx))/frameArea;
+        cx=(pts[0].x+pts[1].x+pts[2].x+pts[3].x)/4;
+        cy=(pts[0].y+pts[1].y+pts[2].y+pts[3].y)/4;
+      }else{
+        // Phone cameras/glare often break one edge of a card. A centered,
+        // card-proportioned bounding box is a more forgiving backup.
+        var br=cv.boundingRect(cnt);
+        width=br.width;height=br.height;
+        ratioArea=(br.width*br.height)/frameArea;
+        cx=br.x+br.width/2;cy=br.y+br.height/2;
+        pts=[
+          {x:br.x,y:br.y},
+          {x:br.x+br.width,y:br.y},
+          {x:br.x+br.width,y:br.y+br.height},
+          {x:br.x,y:br.y+br.height}
+        ];
       }
+
+      var ar=width/Math.max(1,height);
+      ratioScore=Math.max(0,1-Math.abs(ar-(2.5/3.5))/.30);
+      var centerDist=Math.sqrt(Math.pow((cx-centerX)/dw,2)+Math.pow((cy-centerY)/dh,2));
+      var centerScore=Math.max(0,1-centerDist*2.4);
+      var score=ratioArea*2.2+ratioScore*2.2+centerScore;
+
+      if(ratioArea>.11&&ratioArea<.78&&ratioScore>.42&&centerDist<.25&&score>bestScore){
+        bestScore=score;
+        best={points:pts,cx:cx,cy:cy,width:width,height:height,ratioScore:ratioScore,ratioArea:ratioArea};
+      }
+
       approx.delete();cnt.delete();
     }
-    if(best&&bestScore>1.55){
+    if(best&&bestScore>1.35){
       missedCardFrames=0;
       var now={cx:best.cx/dw,cy:best.cy/dh,w:best.width/dw,h:best.height/dh};
 
@@ -2464,15 +2489,15 @@ function captureDetectedCard(cv,detected){
   cropCardFromVideo(cv,detected).then(function(file){
     stopCardCamera();
     var panel=el("scanPanel");panel.className="cardToolPanel scanPanel";
-    el("scanStatus").textContent="Card cropped. Reading the title…";
-    return scanImageFile(file);
+    el("scanStatus").textContent="Card cropped. Reading the title bar…";
+    return scanImageFile(file,{alreadyCropped:true});
   }).catch(function(){
     autoCaptureBusy=false;stableCardFrames=0;
-    setDeckStatus("Could not crop that frame. Keep the card inside the guide and try again.",true);
+    setDeckStatus("I couldn't crop that card cleanly. Keep the whole card inside the guide and tap Capture Now.",true);
   });
 }
 var fallbackFrameSample=null, fallbackStableFrames=0, fallbackDetectTimer=null, activeCV=null, guideCaptureFrames=0;
-var GUIDE_CAPTURE_FRAMES=4;
+var GUIDE_CAPTURE_FRAMES=5;
 
 function stopFallbackDetector(){
   if(fallbackDetectTimer){clearInterval(fallbackDetectTimer);fallbackDetectTimer=null}
@@ -2524,8 +2549,8 @@ function captureBasicCard(){
   cropCardFromVideoBasic().then(function(file){
     stopCardCamera();
     el("scanPanel").className="cardToolPanel scanPanel";
-    el("scanStatus").textContent="Card captured. Reading the title…";
-    return scanImageFile(file);
+    el("scanStatus").textContent="Card captured. Reading the title bar…";
+    return scanImageFile(file,{alreadyCropped:true});
   }).catch(function(){
     autoCaptureBusy=false;fallbackStableFrames=0;
     setDeckStatus("Could not capture that frame. Try Capture Now.",true);
@@ -2629,7 +2654,8 @@ function showScanChoices(cards,status,resolve){
   setDeckStatus("Scanner wasn't certain enough to choose for you.");
   if(resolve)resolve(unique);
 }
-function scanImageFile(file){
+function scanImageFile(file,options){
+  options=options||{};
   var preview=el("scanPreview"), panel=el("scanPanel"), status=el("scanStatus");
   panel.className="cardToolPanel scanPanel";
   status.textContent="Reading card title…";
@@ -2649,14 +2675,25 @@ function scanImageFile(file){
         var fctx=full.getContext("2d");
         fctx.drawImage(img,0,0,full.width,full.height);
 
-        var guide=defaultCardRect(full.width,full.height);
-        var gx=guide[0].x,gy=guide[0].y,gw=guide[1].x-guide[0].x,gh=guide[3].y-guide[0].y;
+        var imageRatio=full.width/Math.max(1,full.height);
+        var looksAlreadyCardShaped=imageRatio>.62&&imageRatio<.80;
+        var gx,gy,gw,gh;
+        if(options.alreadyCropped||looksAlreadyCardShaped){
+          gx=0;gy=0;gw=full.width;gh=full.height;
+        }else{
+          var guide=defaultCardRect(full.width,full.height);
+          gx=guide[0].x;gy=guide[0].y;gw=guide[1].x-guide[0].x;gh=guide[3].y-guide[0].y;
+        }
 
-        // Use the upper ~24% of the centered card area, where the MTG name lives.
+        // Read the actual title bar. Camera captures are already cropped to the card,
+        // so never crop them a second time.
+        var titleX=gx+gw*.025, titleY=gy+gh*.018;
+        var titleW=gw*.95, titleH=gh*.20;
         var titleCanvas=document.createElement("canvas");
-        titleCanvas.width=Math.max(1,Math.round(gw));
-        titleCanvas.height=Math.max(1,Math.round(gh*.24));
-        titleCanvas.getContext("2d").drawImage(full,gx,gy,gw,gh*.24,0,0,titleCanvas.width,titleCanvas.height);
+        titleCanvas.width=Math.max(1,Math.round(titleW*1.35));
+        titleCanvas.height=Math.max(1,Math.round(titleH*1.35));
+        var tctx=titleCanvas.getContext("2d");
+        tctx.drawImage(full,titleX,titleY,titleW,titleH,0,0,titleCanvas.width,titleCanvas.height);
 
         wolfOCRStatusTarget=status;
         warmOCRWorker().then(function(worker){
@@ -3106,10 +3143,10 @@ function captureDetectedCard(cv,detected){
     stopCardCamera();
     var panel=el("scanPanel");panel.className="cardToolPanel scanPanel";
     el("scanStatus").textContent="Card cropped. Reading the title…";
-    return scanImageFile(file);
+    return scanImageFile(file,{alreadyCropped:true});
   }).catch(function(){
     autoCaptureBusy=false;stableCardFrames=0;
-    setDeckStatus("Could not crop that frame. Keep the card inside the guide and try again.",true);
+    setDeckStatus("I couldn't crop that card cleanly. Keep the whole card inside the guide and tap Capture Now.",true);
   });
 }
 var fallbackFrameSample=null, fallbackStableFrames=0, fallbackDetectTimer=null, activeCV=null;
@@ -3175,7 +3212,7 @@ function captureBasicCard(){
     stopCardCamera();
     el("scanPanel").className="cardToolPanel scanPanel";
     el("scanStatus").textContent="Card captured. Reading the title…";
-    return scanImageFile(file);
+    return scanImageFile(file,{alreadyCropped:true});
   }).catch(function(){
     autoCaptureBusy=false;fallbackStableFrames=0;
     setDeckStatus("Could not capture that frame. Try Capture Now.",true);
@@ -3708,10 +3745,10 @@ function captureDetectedCard(cv,detected){
     stopCardCamera();
     var panel=el("scanPanel");panel.className="cardToolPanel scanPanel";
     el("scanStatus").textContent="Card cropped. Reading the title…";
-    return scanImageFile(file);
+    return scanImageFile(file,{alreadyCropped:true});
   }).catch(function(){
     autoCaptureBusy=false;stableCardFrames=0;
-    setDeckStatus("Could not crop that frame. Keep the card inside the guide and try again.",true);
+    setDeckStatus("I couldn't crop that card cleanly. Keep the whole card inside the guide and tap Capture Now.",true);
   });
 }
 var fallbackFrameSample=null, fallbackStableFrames=0, fallbackDetectTimer=null, activeCV=null;
@@ -3777,7 +3814,7 @@ function captureBasicCard(){
     stopCardCamera();
     el("scanPanel").className="cardToolPanel scanPanel";
     el("scanStatus").textContent="Card captured. Reading the title…";
-    return scanImageFile(file);
+    return scanImageFile(file,{alreadyCropped:true});
   }).catch(function(){
     autoCaptureBusy=false;fallbackStableFrames=0;
     setDeckStatus("Could not capture that frame. Try Capture Now.",true);
@@ -4303,10 +4340,10 @@ function captureDetectedCard(cv,detected){
     stopCardCamera();
     var panel=el("scanPanel");panel.className="cardToolPanel scanPanel";
     el("scanStatus").textContent="Card cropped. Reading the title…";
-    return scanImageFile(file);
+    return scanImageFile(file,{alreadyCropped:true});
   }).catch(function(){
     autoCaptureBusy=false;stableCardFrames=0;
-    setDeckStatus("Could not crop that frame. Keep the card inside the guide and try again.",true);
+    setDeckStatus("I couldn't crop that card cleanly. Keep the whole card inside the guide and tap Capture Now.",true);
   });
 }
 var fallbackFrameSample=null, fallbackStableFrames=0, fallbackDetectTimer=null, activeCV=null;
@@ -4372,7 +4409,7 @@ function captureBasicCard(){
     stopCardCamera();
     el("scanPanel").className="cardToolPanel scanPanel";
     el("scanStatus").textContent="Card captured. Reading the title…";
-    return scanImageFile(file);
+    return scanImageFile(file,{alreadyCropped:true});
   }).catch(function(){
     autoCaptureBusy=false;fallbackStableFrames=0;
     setDeckStatus("Could not capture that frame. Try Capture Now.",true);
