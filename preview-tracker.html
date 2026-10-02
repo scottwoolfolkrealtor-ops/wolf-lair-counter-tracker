@@ -999,6 +999,92 @@ body.trackerPreview #decksView #removeOneCopy{
   }
 }
 
+
+/* Multi-result card search */
+body.trackerPreview #decksView .cardSearchResults{
+  display:grid;
+  gap:7px;
+  margin-top:9px;
+  max-height:420px;
+  overflow:auto;
+  padding-right:2px;
+}
+body.trackerPreview #decksView .cardSearchChoice{
+  width:100%;
+  min-height:70px;
+  display:grid;
+  grid-template-columns:44px minmax(0,1fr) auto;
+  gap:9px;
+  align-items:center;
+  padding:7px 9px;
+  text-align:left;
+  border-radius:11px;
+  background:linear-gradient(145deg,rgba(17,22,18,.96),rgba(7,10,8,.98));
+  border:1px solid rgba(143,111,69,.4);
+}
+body.trackerPreview #decksView .cardSearchChoice img,
+body.trackerPreview #decksView .searchCardPlaceholder{
+  width:44px;
+  height:61px;
+  border-radius:5px;
+  object-fit:cover;
+  display:block;
+  background:rgba(5,8,6,.9);
+  border:1px solid rgba(145,112,69,.35);
+}
+body.trackerPreview #decksView .searchCardPlaceholder{
+  display:grid;
+  place-items:center;
+  color:#91836d;
+  font-size:9px;
+  font-weight:900;
+}
+body.trackerPreview #decksView .cardSearchChoiceText{
+  min-width:0;
+}
+body.trackerPreview #decksView .cardSearchChoiceText strong{
+  display:block;
+  color:#eee2cf;
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:15px;
+  overflow-wrap:anywhere;
+}
+body.trackerPreview #decksView .cardSearchChoiceText small{
+  display:block;
+  margin-top:3px;
+  color:#a39d91;
+  font-size:10px;
+}
+body.trackerPreview #decksView .chooseCard{
+  color:#a9d5a4;
+  font-size:10px;
+  font-weight:900;
+  white-space:nowrap;
+}
+body.trackerPreview #decksView .searchLoading,
+body.trackerPreview #decksView .searchEmpty{
+  padding:12px;
+  border-radius:10px;
+  color:#b8b2a6;
+  background:rgba(5,8,6,.68);
+  border:1px dashed rgba(145,112,69,.35);
+  font-size:12px;
+  line-height:1.4;
+}
+@media(max-width:420px){
+  body.trackerPreview #decksView .cardSearchChoice{
+    grid-template-columns:38px minmax(0,1fr);
+  }
+  body.trackerPreview #decksView .cardSearchChoice img,
+  body.trackerPreview #decksView .searchCardPlaceholder{
+    width:38px;height:53px;
+  }
+  body.trackerPreview #decksView .chooseCard{
+    grid-column:2;
+    justify-self:start;
+  }
+}
+
 </style>
 </head>
 <body class="trackerPreview">
@@ -1172,6 +1258,7 @@ body.trackerPreview #decksView #removeOneCopy{
      <input id="cardSearchInput" type="search" placeholder="Search a Magic card">
      <button id="runCardSearch" type="button">Search</button>
     </div>
+    <div id="cardSearchResults" class="hidden cardSearchResults"></div>
    </div>
 
    <div id="scanPanel" class="hidden cardToolPanel scanPanel">
@@ -1606,6 +1693,8 @@ function setDeckStatus(msg,isError){
 function closeDeckTools(){
   if(typeof stopCardCamera==="function")stopCardCamera();
   el("cardSearchPanel").className="hidden cardToolPanel";
+  var searchResults=el("cardSearchResults");
+  if(searchResults){searchResults.className="hidden cardSearchResults";searchResults.innerHTML="";}
   el("scanPanel").className="hidden cardToolPanel scanPanel";
   el("cardLookupResult").className="hidden cardLookupResult";
   el("cardLookupResult").innerHTML="";
@@ -1710,8 +1799,9 @@ function showCardResult(card,sourceLabel){
     el("cardLookupResult").className="hidden cardLookupResult";
     el("cardSearchPanel").className="cardToolPanel";
     el("cardSearchInput").value="";
+    var sr=el("cardSearchResults");if(sr){sr.className="hidden cardSearchResults";sr.innerHTML="";}
     el("cardSearchInput").focus();
-    setDeckStatus("Type the card name to correct the scan.");
+    setDeckStatus("Type part of the card name and choose the correct match.");
   };
   if(rescan)rescan.onclick=function(){
     closeDeckTools();
@@ -1723,11 +1813,63 @@ function showCardResult(card,sourceLabel){
 function lookupScryfall(query,sourceLabel){
   query=String(query||"").trim();
   if(!query){setDeckStatus("Enter a card name.",true);return Promise.reject(new Error("No card name"))}
-  setDeckStatus("Searching Magic card database…");
+  setDeckStatus("Matching card…");
   return fetch("https://api.scryfall.com/cards/named?fuzzy="+encodeURIComponent(query))
     .then(function(r){if(!r.ok)throw new Error("Card not found");return r.json()})
     .then(function(card){showCardResult(card,sourceLabel||"SEARCH RESULT");setDeckStatus("");return card})
     .catch(function(err){setDeckStatus("Could not match that card. Try typing the name instead.",true);throw err});
+}
+function renderCardSearchResults(cards,query){
+  var box=el("cardSearchResults");
+  box.innerHTML="";
+  if(!cards||!cards.length){
+    box.className="cardSearchResults";
+    box.innerHTML='<div class="searchEmpty">No cards found for “'+escapeHTML(query)+'”.</div>';
+    return;
+  }
+  var shown=cards.slice(0,24);
+  for(var i=0;i<shown.length;i++){
+    (function(card){
+      var item=document.createElement("button");
+      item.type="button";
+      item.className="cardSearchChoice";
+      var img="";
+      if(card.image_uris&&card.image_uris.small)img=card.image_uris.small;
+      else if(card.card_faces&&card.card_faces[0]&&card.card_faces[0].image_uris)img=card.card_faces[0].image_uris.small;
+      item.innerHTML=(img?'<img src="'+escapeHTML(img)+'" alt="">':'<span class="searchCardPlaceholder">MTG</span>')+
+        '<span class="cardSearchChoiceText"><strong>'+escapeHTML(card.name)+'</strong><small>'+escapeHTML(card.set_name||"")+(card.collector_number?' • #'+escapeHTML(card.collector_number):'')+'</small></span><span class="chooseCard">Choose ›</span>';
+      item.onclick=function(){
+        showCardResult(card,"SELECTED CARD");
+        box.className="hidden cardSearchResults";
+        setDeckStatus("Selected "+card.name+".");
+      };
+      box.appendChild(item);
+    })(shown[i]);
+  }
+  box.className="cardSearchResults";
+  setDeckStatus(cards.length>shown.length?"Showing the first "+shown.length+" of "+cards.length+" matches. Refine the name to narrow it down.":cards.length+" matching card"+(cards.length===1?"":"s")+" found.");
+}
+function searchScryfallChoices(query){
+  query=String(query||"").trim();
+  if(!query){setDeckStatus("Enter part of a card name.",true);return Promise.resolve([])}
+  setDeckStatus("Searching card names…");
+  var box=el("cardSearchResults");
+  box.className="cardSearchResults";
+  box.innerHTML='<div class="searchLoading">Searching for “'+escapeHTML(query)+'”…</div>';
+  var nameQuery='name:'+query;
+  return fetch("https://api.scryfall.com/cards/search?order=name&unique=prints&q="+encodeURIComponent(nameQuery))
+    .then(function(r){if(!r.ok)throw new Error("No cards found");return r.json()})
+    .then(function(data){
+      var cards=data&&Array.isArray(data.data)?data.data:[];
+      renderCardSearchResults(cards,query);
+      return cards;
+    })
+    .catch(function(){
+      box.className="cardSearchResults";
+      box.innerHTML='<div class="searchEmpty">No card names matched “'+escapeHTML(query)+'”. Try a different spelling.</div>';
+      setDeckStatus("No matching card names found.",true);
+      return [];
+    });
 }
 function renderDecks(){
   var box=el("deckList");box.innerHTML="";
@@ -1783,8 +1925,8 @@ el("searchCardBtn").onclick=function(){
   el("cardSearchPanel").className="cardToolPanel";
   el("cardSearchInput").focus();
 };
-el("runCardSearch").onclick=function(){lookupScryfall(el("cardSearchInput").value,"SEARCH RESULT").catch(function(){})};
-el("cardSearchInput").onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();lookupScryfall(this.value,"SEARCH RESULT").catch(function(){})}};
+el("runCardSearch").onclick=function(){searchScryfallChoices(el("cardSearchInput").value)};
+el("cardSearchInput").onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();searchScryfallChoices(this.value)}};
 el("pasteDeckBtn").onclick=function(){
   closeDeckTools();
   setDeckStatus("Paste one card per line. Quantities like “4 Lightning Bolt” are supported.");
