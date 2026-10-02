@@ -845,6 +845,26 @@ body.trackerPreview #decksView .deckEmpty strong{color:#e2d3bb}
   body.trackerPreview #decksView .cardLookupMedia img{width:72px}
 }
 
+
+/* Scanner confirmation / correction */
+body.trackerPreview #decksView .scanRecovery{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
+  margin-top:7px;
+}
+body.trackerPreview #decksView .scanRecovery button{
+  min-height:40px;
+  font-size:11px;
+  color:#d6c7ae;
+  border-color:rgba(151,112,68,.46);
+  background:rgba(11,14,11,.72);
+}
+body.trackerPreview #decksView #wrongCard{
+  border-color:rgba(169,99,76,.52);
+  color:#e1b7aa;
+}
+
 </style>
 </head>
 <body class="trackerPreview">
@@ -1023,7 +1043,7 @@ body.trackerPreview #decksView .deckEmpty strong{color:#e2d3bb}
    <div id="scanPanel" class="hidden cardToolPanel scanPanel">
     <div class="scanPreviewWrap">
      <img id="scanPreview" class="hidden" alt="Card scan preview">
-     <div id="scanStatus">Take a clear photo with the card upright. Wolf Lair will read the card name.</div>
+     <div id="scanStatus">Fill most of the photo with the card and keep it upright. Wolf Lair will read the card name.</div>
     </div>
    </div>
 
@@ -1463,9 +1483,23 @@ function showCardResult(card,sourceLabel){
   var image="";
   if(card&&card.image_uris&&card.image_uris.small)image='<img src="'+escapeHTML(card.image_uris.small)+'" alt="'+escapeHTML(card.name)+'">';
   else if(card&&card.card_faces&&card.card_faces[0]&&card.card_faces[0].image_uris)image='<img src="'+escapeHTML(card.card_faces[0].image_uris.small)+'" alt="'+escapeHTML(card.name)+'">';
-  box.innerHTML='<div class="cardLookupMedia">'+image+'</div><div class="cardLookupInfo"><span class="lookupSource">'+escapeHTML(sourceLabel||"CARD FOUND")+'</span><strong>'+escapeHTML(card.name)+'</strong><small>'+escapeHTML(card.set_name||"")+(card.collector_number?' • #'+escapeHTML(card.collector_number):'')+'</small><button id="addFoundCard" type="button">＋ Add to Deck</button></div>';
+  box.innerHTML='<div class="cardLookupMedia">'+image+'</div><div class="cardLookupInfo"><span class="lookupSource">'+escapeHTML(sourceLabel||"CARD FOUND")+'</span><strong>'+escapeHTML(card.name)+'</strong><small>'+escapeHTML(card.set_name||"")+(card.collector_number?' • #'+escapeHTML(card.collector_number):'')+'</small><button id="addFoundCard" type="button">＋ Add to Deck</button><div class="scanRecovery"><button id="wrongCard" type="button">Not This Card</button><button id="rescanCard" type="button">Rescan</button></div></div>';
   box.className="cardLookupResult";
   el("addFoundCard").onclick=function(){addCardLine(card.name)};
+  var wrong=el("wrongCard"), rescan=el("rescanCard");
+  if(wrong)wrong.onclick=function(){
+    el("cardLookupResult").className="hidden cardLookupResult";
+    el("cardSearchPanel").className="cardToolPanel";
+    el("cardSearchInput").value="";
+    el("cardSearchInput").focus();
+    setDeckStatus("Type the card name to correct the scan.");
+  };
+  if(rescan)rescan.onclick=function(){
+    closeDeckTools();
+    el("scanPanel").className="cardToolPanel scanPanel";
+    el("scanStatus").textContent="Fill most of the photo with the card and keep it upright.";
+    el("cardScanInput").click();
+  };
 }
 function lookupScryfall(query,sourceLabel){
   query=String(query||"").trim();
@@ -1597,42 +1631,81 @@ function loadTesseract(){
 function scanImageFile(file){
   var preview=el("scanPreview"), panel=el("scanPanel"), status=el("scanStatus");
   panel.className="cardToolPanel scanPanel";
-  status.textContent="Reading card name…";
+  status.textContent="Reading card…";
   var url=URL.createObjectURL(file);
   preview.src=url;preview.className="";
   return new Promise(function(resolve,reject){
     var img=new Image();
     img.onload=function(){
       try{
-        var cropH=Math.max(80,Math.round(img.naturalHeight*.24));
+        var maxSide=1300, scale=Math.min(1,maxSide/Math.max(img.naturalWidth,img.naturalHeight));
         var canvas=document.createElement("canvas");
-        var maxW=1100, scale=Math.min(1,maxW/img.naturalWidth);
         canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));
-        canvas.height=Math.max(1,Math.round(cropH*scale));
+        canvas.height=Math.max(1,Math.round(img.naturalHeight*scale));
         var ctx=canvas.getContext("2d");
-        ctx.drawImage(img,0,0,img.naturalWidth,cropH,0,0,canvas.width,canvas.height);
+        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+
         loadTesseract().then(function(T){
           return T.recognize(canvas,"eng",{logger:function(m){
-            if(m&&m.status==="recognizing text")status.textContent="Reading card name… "+Math.round((m.progress||0)*100)+"%";
+            if(m&&m.status==="recognizing text")status.textContent="Reading card… "+Math.round((m.progress||0)*100)+"%";
           }});
         }).then(function(result){
-          var raw=result&&result.data?String(result.data.text||""):"";
-          var lines=raw.split(/\r?\n/).map(function(x){
+          var data=result&&result.data?result.data:{};
+          var candidates=[];
+
+          if(Array.isArray(data.lines)){
+            data.lines
+              .filter(function(line){
+                var txt=String(line.text||"").replace(/[^A-Za-z0-9'’,:\- ]+/g," ").replace(/\s+/g," ").trim();
+                var y=line.bbox&&typeof line.bbox.y0==="number"?line.bbox.y0:99999;
+                return txt.length>=2&&txt.length<=60&&y<canvas.height*.58;
+              })
+              .sort(function(a,b){
+                var ay=a.bbox&&typeof a.bbox.y0==="number"?a.bbox.y0:99999;
+                var by=b.bbox&&typeof b.bbox.y0==="number"?b.bbox.y0:99999;
+                if(Math.abs(ay-by)>20)return ay-by;
+                return (b.confidence||0)-(a.confidence||0);
+              })
+              .forEach(function(line){
+                var txt=String(line.text||"").replace(/[^A-Za-z0-9'’,:\- ]+/g," ").replace(/\s+/g," ").trim();
+                if(txt&&candidates.indexOf(txt)<0)candidates.push(txt);
+              });
+          }
+
+          var raw=String(data.text||"");
+          raw.split(/\r?\n/).map(function(x){
             return x.replace(/[^A-Za-z0-9'’,:\- ]+/g," ").replace(/\s+/g," ").trim();
-          }).filter(function(x){return x.length>=2&&x.length<=60});
-          if(!lines.length)throw new Error("Could not read the card name");
-          status.textContent="Matching card…";
-          var candidates=lines.slice(0,5), chain=Promise.reject();
-          candidates.forEach(function(name){
-            chain=chain.catch(function(){return lookupScryfall(name,"SCANNED CARD")});
+          }).filter(function(x){return x.length>=2&&x.length<=60}).forEach(function(x){
+            if(candidates.indexOf(x)<0)candidates.push(x);
           });
-          return chain;
+
+          // Avoid rules-text fragments and keep a short list of likely title lines.
+          candidates=candidates.filter(function(x){
+            var low=x.toLowerCase();
+            return !/^(target|when |whenever |until |creature |instant |sorcery |enchantment |artifact |land |planeswalker |tap |add |draw |you |your |each |at the |if |as )/.test(low);
+          }).slice(0,10);
+
+          if(!candidates.length)throw new Error("Could not read a likely card title");
+          status.textContent="Matching card…";
+
+          var pos=0;
+          function tryNext(){
+            if(pos>=candidates.length)throw new Error("No card match");
+            var candidate=candidates[pos++];
+            return fetch("https://api.scryfall.com/cards/named?fuzzy="+encodeURIComponent(candidate))
+              .then(function(r){if(!r.ok)throw new Error("No match");return r.json()})
+              .catch(function(){return tryNext()});
+          }
+          return tryNext();
         }).then(function(card){
-          status.textContent="Card matched. Confirm it below.";
+          showCardResult(card,"SCANNED CARD");
+          status.textContent="Possible match — confirm the card below.";
+          setDeckStatus("Check the card image and name before adding it.");
           resolve(card);
         }).catch(function(err){
-          status.textContent="I couldn't confidently read that card. Try another photo or use Search Card.";
-          setDeckStatus("Scan did not match a card.",true);
+          status.textContent="I couldn't confidently identify that card.";
+          el("cardSearchPanel").className="cardToolPanel";
+          setDeckStatus("Try another photo with the card filling most of the frame, or type the card name.",true);
           reject(err);
         }).finally(function(){setTimeout(function(){URL.revokeObjectURL(url)},3000)});
       }catch(err){reject(err)}
@@ -1644,7 +1717,7 @@ function scanImageFile(file){
 el("scanCardBtn").onclick=function(){
   closeDeckTools();
   el("scanPanel").className="cardToolPanel scanPanel";
-  el("scanStatus").textContent="Take a clear photo with the card upright. Wolf Lair will read the card name.";
+  el("scanStatus").textContent="Fill most of the photo with the card and keep it upright. Wolf Lair will read the card name.";
   el("cardScanInput").click();
 };
 el("cardScanInput").onchange=function(){
