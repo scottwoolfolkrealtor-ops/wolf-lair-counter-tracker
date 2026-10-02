@@ -1195,6 +1195,166 @@ body.trackerPreview #decksView .deckSavedValue{
   font-weight:700;
 }
 
+
+/* Compact Table Command: keep the whole table visible on phones */
+@media(max-width:640px){
+  body.trackerPreview #gameView{
+    background-attachment:scroll;
+  }
+  body.trackerPreview #gameView main{
+    padding:8px 7px 18px;
+  }
+  body.trackerPreview #gameView .backHome{
+    margin-bottom:5px;
+    min-height:34px;
+    padding:6px 9px;
+    font-size:10px;
+  }
+  body.trackerPreview #gameView header.tableCommandTitle{
+    margin-bottom:7px;
+    padding:9px 11px 8px;
+    border-radius:12px;
+  }
+  body.trackerPreview #gameView header.tableCommandTitle .trackerBrand{
+    margin-bottom:2px;
+    font-size:7px;
+    letter-spacing:2.5px;
+  }
+  body.trackerPreview #gameView header.tableCommandTitle h1{
+    font-size:18px;
+  }
+  body.trackerPreview #gameView header.tableCommandTitle small{
+    margin-top:2px;
+    font-size:7px;
+    letter-spacing:1.25px;
+  }
+  body.trackerPreview #gameView .gameShell{
+    gap:7px;
+  }
+  body.trackerPreview #gameView .gameBoard{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:6px;
+    align-items:start;
+  }
+  body.trackerPreview #gameView .gameBoard[data-player-count="3"] .playerCard:last-child{
+    grid-column:1 / -1;
+  }
+  body.trackerPreview #gameView .playerCard{
+    min-width:0;
+    padding:7px;
+    border-radius:12px;
+  }
+  body.trackerPreview #gameView .playerHeader{
+    gap:3px;
+    margin-bottom:3px;
+    align-items:center;
+  }
+  body.trackerPreview #gameView .playerIdentity{
+    gap:3px;
+    flex-wrap:nowrap;
+  }
+  body.trackerPreview #gameView .playerName{
+    font-size:12px;
+  }
+  body.trackerPreview #gameView .editPlayerName,
+  body.trackerPreview #gameView .resetPlayer{
+    min-height:25px;
+    padding:4px 5px;
+    font-size:7px;
+  }
+  body.trackerPreview #gameView .lifePanel{
+    margin:0 0 4px;
+  }
+  body.trackerPreview #gameView .lifeTotal.editLife{
+    min-height:47px;
+    padding:1px 4px 0;
+    font-size:42px;
+  }
+  body.trackerPreview #gameView .lifeHint{
+    display:none;
+  }
+  body.trackerPreview #gameView .playerCreatures{
+    min-height:34px;
+    margin:0 0 5px;
+    padding:5px 6px;
+    gap:3px;
+    font-size:8px;
+    letter-spacing:.3px;
+  }
+  body.trackerPreview #gameView .playerCreatures span{
+    font-size:7px;
+  }
+  body.trackerPreview #gameView .playerCreatures::after{
+    font-size:14px;
+  }
+  body.trackerPreview #gameView .lifeControls{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:4px;
+    margin-top:4px;
+  }
+  body.trackerPreview #gameView .lifeControls button{
+    min-width:0;
+    min-height:31px;
+    padding:4px 3px;
+    font-size:8px;
+    border-radius:7px;
+  }
+  body.trackerPreview #gameView .statRow{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:4px;
+    margin-top:5px;
+  }
+  body.trackerPreview #gameView .statRow .statBox:first-child{
+    display:none;
+  }
+  body.trackerPreview #gameView .statBox{
+    padding:4px 2px;
+    border-radius:7px;
+  }
+  body.trackerPreview #gameView .statLabel{
+    font-size:7px;
+    letter-spacing:.5px;
+  }
+  body.trackerPreview #gameView .statValue{
+    margin-top:1px;
+    font-size:16px;
+  }
+  body.trackerPreview #gameView .playerRosterTools{
+    grid-template-columns:1fr 1fr;
+    gap:5px;
+    margin-top:0;
+  }
+  body.trackerPreview #gameView .playerRosterTools button{
+    min-height:34px;
+    padding:6px 5px;
+    font-size:9px;
+  }
+  body.trackerPreview #gameView .playerLimitMsg{
+    min-height:12px;
+    margin:-2px 0 0;
+    font-size:8px;
+  }
+  body.trackerPreview #gameView .lifeEditRow{
+    grid-template-columns:1fr;
+    gap:4px;
+    padding:3px 0;
+  }
+  body.trackerPreview #gameView .lifeEditInput{
+    height:40px;
+    font-size:22px;
+  }
+  body.trackerPreview #gameView .lifeEditRow button{
+    min-height:30px;
+    padding:4px;
+    font-size:8px;
+  }
+}
+@media(max-width:360px){
+  body.trackerPreview #gameView .playerName{font-size:11px}
+  body.trackerPreview #gameView .lifeTotal.editLife{font-size:38px}
+  body.trackerPreview #gameView .lifeControls button{font-size:7px}
+}
+
 </style>
 </head>
 <body class="trackerPreview">
@@ -1449,14 +1609,6 @@ body.trackerPreview #decksView .deckSavedValue{
         <button id="removePlayer" type="button">− Remove Last Player</button>
       </div>
       <div id="playerLimitMsg" class="playerLimitMsg" aria-live="polite"></div>
-      <div class="gameTools">
-        <button id="nextPhase" type="button">Next Phase</button>
-        <button id="resetMatch" type="button">Reset Match</button>
-      </div>
-      <div class="phaseBanner">
-        <strong>Current Phase</strong>
-        <span id="phaseName">Beginning</span>
-      </div>
     </div>
   </main>
 </section>
@@ -1635,6 +1787,7 @@ function saveGame(){
 function renderGame(){
   var board=el('gameBoard');
   board.innerHTML='';
+  board.setAttribute('data-player-count',String(gameState.players.length));
   for(var i=0;i<gameState.players.length;i++){
     (function(player,index){
       var card=document.createElement('div');
@@ -1719,7 +1872,6 @@ function renderGame(){
       board.appendChild(card);
     })(gameState.players[i],i);
   }
-  el('phaseName').textContent=gameState.phases[gameState.phaseIndex] || 'Beginning';
   var addBtn=el('addPlayer'), removeBtn=el('removePlayer'), limitMsg=el('playerLimitMsg');
   if(addBtn)addBtn.disabled=gameState.players.length>=6;
   if(removeBtn)removeBtn.disabled=gameState.players.length<=2;
@@ -1747,19 +1899,6 @@ el('removePlayer').onclick=function(){
   updateBattlefieldPlayerLabel();
   renderGame();
 };
-el('nextPhase').onclick=function(){
-  gameState.phaseIndex=(gameState.phaseIndex+1) % gameState.phases.length;
-  saveGame();renderGame();
-};
-el('resetMatch').onclick=function(){
-  for(var i=0;i<gameState.players.length;i++){
-    gameState.players[i].life=20;
-    gameState.players[i].commander=0;
-    gameState.players[i].poison=0;
-  }
-  gameState.phaseIndex=0;saveGame();renderGame();
-};
-
 var proState={
   lastSaved: new Date().toISOString(),
   tracker: {count: creatures.length},
