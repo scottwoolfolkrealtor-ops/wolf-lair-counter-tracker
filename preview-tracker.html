@@ -561,6 +561,61 @@ body.trackerPreview #trackerView #activePlayerLabel{
   body.trackerPreview #gameView header.tableCommandTitle small{font-size:9px;letter-spacing:1.7px}
 }
 
+
+/* Editable player names */
+body.trackerPreview #gameView .playerHeader{
+  align-items:center;
+  gap:8px;
+}
+body.trackerPreview #gameView .playerIdentity{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  flex:1;
+}
+body.trackerPreview #gameView .playerName{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-family:Georgia,'Times New Roman',serif;
+  color:#f2e7d5;
+}
+body.trackerPreview #gameView .editPlayerName{
+  min-height:30px;
+  padding:5px 8px;
+  border-radius:999px;
+  font-size:9px;
+  letter-spacing:1px;
+  color:#cdb88f;
+  border-color:rgba(167,126,72,.46);
+  background:rgba(11,14,11,.72);
+}
+body.trackerPreview #gameView .playerNameInput{
+  min-width:0;
+  flex:1;
+  height:42px;
+  padding:8px 10px;
+  font-size:16px;
+  font-weight:800;
+  border-color:rgba(104,184,103,.72);
+}
+body.trackerPreview #gameView .playerNameActions{
+  display:flex;
+  gap:5px;
+}
+body.trackerPreview #gameView .playerNameActions button{
+  min-height:38px;
+  padding:7px 9px;
+  font-size:11px;
+}
+@media(max-width:420px){
+  body.trackerPreview #gameView .playerHeader{align-items:flex-start}
+  body.trackerPreview #gameView .playerIdentity{flex-wrap:wrap}
+  body.trackerPreview #gameView .playerNameInput{flex-basis:100%}
+}
+
 </style>
 </head>
 <body class="trackerPreview">
@@ -938,7 +993,7 @@ function renderGame(){
       card.className='playerCard';
       var creatureCount=(playerCreatures[index]||[]).length;
       card.innerHTML='\
-        <div class="playerHeader"><span class="playerName">'+escapeHTML(player.name)+'</span><button class="resetPlayer" type="button">Reset</button></div>\
+        <div class="playerHeader"><div class="playerIdentity"><span class="playerName">'+escapeHTML(player.name)+'</span><button class="editPlayerName" type="button" aria-label="Edit player name">EDIT</button></div><button class="resetPlayer" type="button">Reset</button></div>\
         <div class="lifeTotal">'+player.life+'</div>\
         <button class="playerCreatures" type="button">BATTLEFIELD <span>'+creatureCount+' CREATURE'+(creatureCount===1?'':'S')+'</span></button>\
         <div class="lifeControls">\
@@ -961,6 +1016,31 @@ function renderGame(){
       card.querySelector('.poisonDown').onclick=function(){player.poison=Math.max(0,player.poison-1);saveGame();renderGame();};
       card.querySelector('.poisonUp').onclick=function(){player.poison++;saveGame();renderGame();};
       card.querySelector('.resetPlayer').onclick=function(){player.life=20;player.commander=0;player.poison=0;saveGame();renderGame();};
+      card.querySelector('.editPlayerName').onclick=function(){
+        var identity=card.querySelector('.playerIdentity');
+        if(!identity)return;
+        var current=String(player.name||('Player '+(index+1)));
+        identity.innerHTML='<input class="playerNameInput" type="text" maxlength="24" value="'+escapeHTML(current)+'" aria-label="Player name"><div class="playerNameActions"><button class="savePlayerName" type="button">Save</button><button class="cancelPlayerName" type="button">Cancel</button></div>';
+        var input=identity.querySelector('.playerNameInput');
+        var saveBtn=identity.querySelector('.savePlayerName');
+        var cancelBtn=identity.querySelector('.cancelPlayerName');
+        function commitName(){
+          var next=input.value.trim();
+          if(!next)next='Player '+(index+1);
+          player.name=next.slice(0,24);
+          saveGame();
+          if(index===activePlayerIndex)updateBattlefieldPlayerLabel();
+          renderGame();
+        }
+        saveBtn.onclick=commitName;
+        cancelBtn.onclick=function(){renderGame();};
+        input.onkeydown=function(e){
+          if(e.key==='Enter'){e.preventDefault();commitName();}
+          if(e.key==='Escape'){e.preventDefault();renderGame();}
+        };
+        input.focus();
+        input.select();
+      };
       card.querySelector('.playerCreatures').onclick=function(){
         setActivePlayer(index);
         el('gameView').className='hidden';
@@ -977,7 +1057,11 @@ el('nextPhase').onclick=function(){
   saveGame();renderGame();
 };
 el('resetMatch').onclick=function(){
-  gameState.players=[{name:'Player 1', life:20, commander:0, poison:0},{name:'Player 2', life:20, commander:0, poison:0}];
+  for(var i=0;i<gameState.players.length;i++){
+    gameState.players[i].life=20;
+    gameState.players[i].commander=0;
+    gameState.players[i].poison=0;
+  }
   gameState.phaseIndex=0;saveGame();renderGame();
 };
 
