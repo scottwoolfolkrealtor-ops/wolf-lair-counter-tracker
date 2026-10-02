@@ -28,7 +28,7 @@ nav button{min-height:52px}button:disabled{opacity:.4}
 
 #home{max-width:1500px;margin:auto;padding:24px 16px 40px}
 .brandHero{text-align:center;padding:8px 8px 24px}
-.brandMark{width:min(100%,1500px);height:auto;margin:0 auto 12px;border:none;border-radius:18px;overflow:hidden;background:transparent;box-shadow:none}
+.brandMark{width:min(100%,900px);height:auto;margin:0 auto 12px;border:none;border-radius:18px;overflow:hidden;background:transparent;box-shadow:none}
 .brandLogo{display:block;width:100%;height:auto;max-width:1500px;margin:0 auto;border-radius:18px;box-shadow:0 10px 26px rgba(0,0,0,.35);filter:drop-shadow(0 8px 16px rgba(0,0,0,.25));object-fit:cover}
 .brandHero h1{font-size:34px;margin:0;background:linear-gradient(135deg,#f4f6f4,#b7c8bb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:900}
 .brandHero p{margin:8px 0 0;color:#aebcaf;font-size:15px}
@@ -79,7 +79,34 @@ textarea.proArea{width:100%;min-height:180px;background:#06100b;color:#fff;borde
 <section id="home">
   <div class="brandHero">
     <div class="brandMark">
-      <img class="brandLogo" src="./wolf-lair-logo.png?v=20261002" width="1672" height="941" alt="The Wolf Lair — black wolf in a green fantasy lair with cards, d20, and life counter" loading="eager" decoding="async">
+      <img id="wolfLairLogo" class="brandLogo" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" width="500" height="281" alt="The Wolf Lair — black wolf in a green fantasy lair with cards, d20, and life counter">
+      <script>
+      (function(){
+        var parts=[
+          './assets/logo/wolf-logo-1.b64',
+          './assets/logo/wolf-logo-2.b64',
+          './assets/logo/wolf-logo-3.b64',
+          './assets/logo/wolf-logo-4.b64',
+          './assets/logo/wolf-logo-5.b64',
+          './assets/logo/wolf-logo-6.b64'
+        ];
+        Promise.all(parts.map(function(url){
+          return fetch(url+'?v=logo2',{cache:'no-store'}).then(function(r){
+            if(!r.ok) throw new Error('Logo part failed: '+r.status);
+            return r.text();
+          });
+        })).then(function(chunks){
+          var data=chunks.map(function(x){return x.trim();}).join('');
+          if(data.length<40000) throw new Error('Logo data incomplete');
+          var img=document.getElementById('wolfLairLogo');
+          if(img) img.src='data:image/webp;base64,'+data;
+        }).catch(function(err){
+          var img=document.getElementById('wolfLairLogo');
+          if(img){img.alt='The Wolf Lair logo could not load';}
+          console.error(err);
+        });
+      })();
+      </script>
     </div>
     <h1>The Wolf Lair</h1>
     <p>Your tabletop command center.</p>
