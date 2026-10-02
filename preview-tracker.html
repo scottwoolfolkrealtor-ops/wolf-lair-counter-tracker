@@ -1536,11 +1536,11 @@ body.trackerPreview #decksView .deckSavedValue{
      <div id="cameraStage" class="cameraStage">
       <video id="scanVideo" autoplay playsinline muted></video>
       <canvas id="scanOverlay" aria-hidden="true"></canvas>
-      <div class="cameraHint"><span id="cameraState">CENTER CARD</span><small>Fill the guide with the card, then tap Scan This Card</small></div>
+      <div class="cameraHint"><span id="cameraState">CENTER CARD</span><small>Tap Scan This Card — Phone Camera is the fallback</small></div>
      </div>
      <div class="scanCameraActions">
       <button id="manualCapture" type="button">Scan This Card</button>
-      <button id="photoFallback" type="button">Use Photo</button>
+      <button id="photoFallback" type="button">Phone Camera</button>
       <button id="cancelScanner" type="button">Cancel</button>
      </div>
     </div>
@@ -2670,29 +2670,92 @@ function runFallbackStability(){
   if(state)state.textContent="AUTO DETECTION LOADING";
 }
 function cropCardFromVideoBasic(){
-  var video=el("scanVideo");
-  if(!video||!video.videoWidth)return Promise.reject(new Error("Camera not ready"));
-  var rect=defaultCardRect(video.videoWidth,video.videoHeight);
-  var x=rect[0].x,y=rect[0].y,sw=rect[1].x-rect[0].x,sh=rect[3].y-rect[0].y;
-  var out=document.createElement("canvas");out.width=750;out.height=1050;
-  out.getContext("2d").drawImage(video,x,y,sw,sh,0,0,out.width,out.height);
   return new Promise(function(resolve,reject){
-    out.toBlob(function(blob){
-      if(!blob){reject(new Error("Could not crop card"));return}
-      resolve(new File([blob],"wolf-lair-card.jpg",{type:"image/jpeg"}));
-    },"image/jpeg",.92);
+    try{
+      var video=el("scanVideo");
+      if(!video||video.readyState<2||!video.videoWidth||!video.videoHeight){
+        reject(new Error("Camera frame is not ready"));
+        return;
+      }
+
+      var rect=defaultCardRect(video.videoWidth,video.videoHeight);
+      var x=Math.max(0,Math.round(rect[0].x));
+      var y=Math.max(0,Math.round(rect[0].y));
+      var sw=Math.min(video.videoWidth-x,Math.round(rect[1].x-rect[0].x));
+      var sh=Math.min(video.videoHeight-y,Math.round(rect[3].y-rect[0].y));
+      if(sw<20||sh<20){
+        reject(new Error("Card guide crop is invalid"));
+        return;
+      }
+
+      var out=document.createElement("canvas");
+      out.width=900;out.height=1260;
+      var ctx=out.getContext("2d",{alpha:false});
+      if(!ctx){reject(new Error("Canvas is unavailable"));return}
+
+      ctx.drawImage(video,x,y,sw,sh,0,0,out.width,out.height);
+
+      // Show the captured frame immediately so the user knows the shutter worked,
+      // even before OCR/network lookup starts.
+      try{
+        var preview=el("scanPreview");
+        if(preview){
+          preview.src=out.toDataURL("image/jpeg",.88);
+          preview.className="";
+        }
+      }catch(previewErr){}
+
+      function finishBlob(blob){
+        if(!blob){reject(new Error("Phone could not create the photo"));return}
+        resolve(blob);
+      }
+
+      if(typeof out.toBlob==="function"){
+        out.toBlob(finishBlob,"image/jpeg",.92);
+      }else{
+        // Older/mobile fallback.
+        try{
+          var data=out.toDataURL("image/jpeg",.92);
+          fetch(data).then(function(r){return r.blob()}).then(finishBlob).catch(reject);
+        }catch(e){reject(e)}
+      }
+    }catch(e){
+      reject(e);
+    }
   });
 }
 function captureBasicCard(){
-  var state=el("cameraState");if(state)state.textContent="CAPTURING";
-  cropCardFromVideoBasic().then(function(file){
+  var state=el("cameraState"), status=el("scanStatus"), btn=el("manualCapture");
+  if(state)state.textContent="CAPTURING";
+  if(status)status.textContent="Taking photo…";
+  if(btn)btn.disabled=true;
+
+  // Give the browser one fresh painted video frame before copying it to canvas.
+  var waitForFrame=new Promise(function(resolve){
+    var video=el("scanVideo");
+    if(video&&typeof video.requestVideoFrameCallback==="function"){
+      var done=false;
+      var timer=setTimeout(function(){if(!done){done=true;resolve()}},350);
+      video.requestVideoFrameCallback(function(){
+        if(done)return;
+        done=true;clearTimeout(timer);resolve();
+      });
+    }else{
+      requestAnimationFrame(function(){requestAnimationFrame(resolve)});
+    }
+  });
+
+  waitForFrame.then(cropCardFromVideoBasic).then(function(blob){
     stopCardCamera();
     el("scanPanel").className="cardToolPanel scanPanel";
-    el("scanStatus").textContent="Card captured. Reading the title bar…";
-    return scanImageFile(file,{alreadyCropped:true});
-  }).catch(function(){
+    el("scanStatus").textContent="Photo taken. Reading the card title…";
+    return scanImageFile(blob,{alreadyCropped:true});
+  }).catch(function(err){
     autoCaptureBusy=false;fallbackStableFrames=0;
-    setDeckStatus("Could not capture that frame. Try Capture Now.",true);
+    if(btn)btn.disabled=false;
+    if(state)state.textContent="READY";
+    if(status)status.textContent="The live-camera shutter failed. Tap Phone Camera instead.";
+    setDeckStatus((err&&err.message?err.message+". ":"")+"Use Phone Camera to take the picture with your phone's native camera.",true);
   });
 }
 function startCardCamera(){
@@ -2702,7 +2765,9 @@ function startCardCamera(){
   el("scanStatus").textContent="Opening camera…";
   el("cameraState").textContent="CENTER CARD";
   activeCV=null;
+  autoCaptureBusy=false;
   stopFallbackDetector();
+  var shutter=el("manualCapture");if(shutter)shutter.disabled=false;
 
   // Warm OCR while the camera opens. The phone scanner now uses the fixed
   // card guide instead of depending on fragile browser edge detection.
