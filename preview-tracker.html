@@ -710,6 +710,141 @@ body.trackerPreview #gameView .playerLimitMsg{
   }
 }
 
+
+/* === DECK VAULT PREVIEW — STATIC / PHONE + TABLET FRIENDLY === */
+body.trackerPreview #decksView{
+  min-height:100vh;
+  position:relative;
+  isolation:isolate;
+  background:
+    linear-gradient(180deg,rgba(3,6,5,.48),rgba(3,6,5,.88)),
+    var(--lair-scene),
+    #030605;
+  background-size:cover;
+  background-position:center;
+}
+body.trackerPreview #decksView main{
+  position:relative;
+  z-index:2;
+  max-width:980px;
+  padding:12px 12px 42px;
+}
+body.trackerPreview #decksView header.deckTitle{
+  display:block;
+  text-align:left;
+  padding:15px 16px 14px;
+  margin:0 0 12px;
+  border:1px solid rgba(196,142,77,.48);
+  border-radius:16px;
+  background:linear-gradient(135deg,rgba(22,24,21,.96),rgba(8,11,9,.96));
+  box-shadow:0 12px 28px rgba(0,0,0,.34);
+}
+body.trackerPreview #decksView header.deckTitle .trackerBrand{
+  color:#b69a6b;font-size:10px;font-weight:900;letter-spacing:4px;margin-bottom:5px;
+}
+body.trackerPreview #decksView header.deckTitle h1{
+  margin:0;font-family:Georgia,'Times New Roman',serif;font-size:25px;letter-spacing:1px;color:#f3e8d5;
+}
+body.trackerPreview #decksView header.deckTitle small{
+  display:block;margin-top:5px;color:#91b68b;font-size:10px;font-weight:800;letter-spacing:2.2px;
+}
+body.trackerPreview #decksView .deckForm,
+body.trackerPreview #decksView .deckCard{
+  background:linear-gradient(160deg,rgba(18,21,18,.97),rgba(6,9,7,.98));
+  border-color:rgba(190,136,73,.45);
+  box-shadow:0 10px 24px rgba(0,0,0,.3);
+}
+body.trackerPreview #decksView .deckFormHead{
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;
+}
+body.trackerPreview #decksView .deckEyebrow{
+  color:#9fae9d;font-size:9px;letter-spacing:1.8px;font-weight:800;
+}
+body.trackerPreview #decksView .deckFormHead strong{
+  display:block;margin-top:3px;font-family:Georgia,'Times New Roman',serif;font-size:20px;color:#f0e4d1;
+}
+body.trackerPreview #decksView .deckEntryTools{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0;
+}
+body.trackerPreview #decksView .deckEntryTools button{
+  min-height:52px;border-color:rgba(167,126,72,.52);
+}
+body.trackerPreview #decksView #scanCardBtn,
+body.trackerPreview #decksView #searchCardBtn{
+  border-color:rgba(82,174,89,.64);
+  background:linear-gradient(180deg,rgba(29,72,35,.96),rgba(12,33,17,.98));
+}
+body.trackerPreview #decksView .cardToolPanel{
+  margin:8px 0 10px;padding:10px;border-radius:12px;
+  background:rgba(4,8,5,.82);border:1px solid rgba(144,112,69,.4);
+}
+body.trackerPreview #decksView .cardSearchRow{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;
+}
+body.trackerPreview #decksView .cardSearchRow button{min-width:88px}
+body.trackerPreview #decksView .scanPreviewWrap{
+  display:grid;grid-template-columns:minmax(0,110px) 1fr;gap:10px;align-items:center;
+  color:#bcb5a9;font-size:12px;line-height:1.4;
+}
+body.trackerPreview #decksView #scanPreview{
+  width:100%;max-height:145px;object-fit:cover;object-position:top;border-radius:9px;border:1px solid rgba(170,128,73,.42);
+}
+body.trackerPreview #decksView .cardLookupResult{
+  display:grid;grid-template-columns:92px minmax(0,1fr);gap:12px;align-items:center;
+  margin:8px 0 10px;padding:10px;border-radius:13px;
+  border:1px solid rgba(83,172,88,.54);
+  background:linear-gradient(145deg,rgba(17,36,20,.95),rgba(6,11,7,.98));
+}
+body.trackerPreview #decksView .cardLookupMedia img{
+  display:block;width:92px;border-radius:7px;
+}
+body.trackerPreview #decksView .cardLookupInfo{min-width:0}
+body.trackerPreview #decksView .cardLookupInfo .lookupSource{
+  display:block;color:#8fbd8c;font-size:9px;letter-spacing:1.6px;font-weight:900;margin-bottom:4px;
+}
+body.trackerPreview #decksView .cardLookupInfo strong{
+  display:block;font-family:Georgia,'Times New Roman',serif;font-size:18px;color:#f0e5d3;overflow-wrap:anywhere;
+}
+body.trackerPreview #decksView .cardLookupInfo small{display:block;color:#a9a498;margin:4px 0 9px}
+body.trackerPreview #decksView .cardLookupInfo button{min-height:44px;width:100%;border-color:rgba(83,172,88,.62)}
+body.trackerPreview #decksView .deckToolStatus{
+  min-height:19px;margin:4px 1px 7px;color:#a7b49f;font-size:11px;
+}
+body.trackerPreview #decksView .deckToolStatus.error{color:#e3a79a}
+body.trackerPreview #decksView .deckListLabel{
+  display:block;margin:8px 1px 4px;color:#c8b285;font-size:10px;letter-spacing:1.5px;font-weight:900;text-transform:uppercase;
+}
+body.trackerPreview #decksView textarea#deckCards{
+  min-height:220px;background:rgba(2,5,4,.92);border-color:rgba(135,117,87,.58);
+}
+body.trackerPreview #decksView .deckFormActions{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px;
+}
+body.trackerPreview #decksView .deckFormActions button{min-height:50px}
+body.trackerPreview #decksView #saveDeck{
+  border-color:rgba(82,174,89,.68);
+  background:linear-gradient(180deg,rgba(29,72,35,.96),rgba(12,33,17,.98));
+}
+body.trackerPreview #decksView .deckCardTop{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+}
+body.trackerPreview #decksView .deckCount{
+  min-width:42px;height:42px;display:grid;place-items:center;border-radius:50%;
+  border:1px solid rgba(167,126,72,.5);color:#e3c692;background:rgba(7,10,8,.78);font-weight:900;
+}
+body.trackerPreview #decksView .deckEmpty strong{color:#e2d3bb}
+@media(min-width:700px){
+  body.trackerPreview #decksView #deckList{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  body.trackerPreview #decksView .deckCard{margin-bottom:0}
+}
+@media(max-width:420px){
+  body.trackerPreview #decksView .deckEntryTools{grid-template-columns:1fr 1fr;gap:6px}
+  body.trackerPreview #decksView .deckEntryTools button{font-size:12px;padding:8px 5px}
+  body.trackerPreview #decksView .scanPreviewWrap{grid-template-columns:78px 1fr}
+  body.trackerPreview #decksView .cardLookupResult{grid-template-columns:72px minmax(0,1fr)}
+  body.trackerPreview #decksView .cardLookupMedia img{width:72px}
+}
+
 </style>
 </head>
 <body class="trackerPreview">
@@ -851,15 +986,56 @@ body.trackerPreview #gameView .playerLimitMsg{
 <section id="decksView" class="hidden">
  <main>
   <button id="backDecksHome" class="backHome" type="button">‹ Wolf Lair Home</button>
-  <header><div class="wolf">📚</div><h1>My Decks</h1><small>WOLF LAIR</small></header>
+  <header class="deckTitle">
+   <div class="trackerBrand">THE WOLF LAIR</div>
+   <h1>DECK VAULT</h1>
+   <small>BUILD • SCAN • IMPORT</small>
+  </header>
   <div id="deckList"></div>
   <button id="newDeck" class="wide" type="button">＋ New Deck</button>
   <div id="deckForm" class="hidden deckForm">
+   <div class="deckFormHead">
+    <div>
+     <div class="deckEyebrow">DECK WORKBENCH</div>
+     <strong id="deckFormTitle">New Deck</strong>
+    </div>
+   </div>
    <input id="deckName" placeholder="Deck name">
    <input id="commanderName" placeholder="Commander" style="margin-top:8px">
+
+   <div class="deckEntryTools">
+    <button id="scanCardBtn" type="button">📷 Scan Card</button>
+    <button id="searchCardBtn" type="button">⌕ Search Card</button>
+    <button id="pasteDeckBtn" type="button">▤ Paste Decklist</button>
+    <button id="importDeckBtn" type="button">⇩ Import File</button>
+   </div>
+
+   <input id="cardScanInput" class="hidden" type="file" accept="image/*" capture="environment">
+   <input id="deckImportInput" class="hidden" type="file" accept=".txt,.csv,text/plain,text/csv">
+
+   <div id="cardSearchPanel" class="hidden cardToolPanel">
+    <div class="cardSearchRow">
+     <input id="cardSearchInput" type="search" placeholder="Search a Magic card">
+     <button id="runCardSearch" type="button">Search</button>
+    </div>
+   </div>
+
+   <div id="scanPanel" class="hidden cardToolPanel scanPanel">
+    <div class="scanPreviewWrap">
+     <img id="scanPreview" class="hidden" alt="Card scan preview">
+     <div id="scanStatus">Take a clear photo with the card upright. Wolf Lair will read the card name.</div>
+    </div>
+   </div>
+
+   <div id="cardLookupResult" class="hidden cardLookupResult"></div>
+   <div id="deckToolStatus" class="deckToolStatus" aria-live="polite"></div>
+
+   <label class="deckListLabel" for="deckCards">Deck List</label>
    <textarea id="deckCards" placeholder="Paste deck list here&#10;&#10;Example:&#10;1 Sol Ring&#10;1 Command Tower"></textarea>
-   <button id="saveDeck" class="wide" type="button">Save Deck</button>
-   <button id="cancelDeck" class="wide" type="button">Cancel</button>
+   <div class="deckFormActions">
+    <button id="saveDeck" type="button">Save Deck</button>
+    <button id="cancelDeck" type="button">Cancel</button>
+   </div>
    <div id="deckMsg" class="msg"></div>
   </div>
  </main>
@@ -1244,7 +1420,7 @@ el('backGameHome').onclick=function(){el('gameView').className='hidden';el('home
 el('openPro').onclick=function(){el('home').className='hidden';el('proView').className='';loadPro();window.scrollTo(0,0)};
 el('backProHome').onclick=function(){el('proView').className='hidden';el('home').className='';window.scrollTo(0,0)};
 
-var DECKKEY="wolfLairDecks1", decks=[], editingDeck=null;
+var DECKKEY="wolfLairDecks1", decks=[], editingDeck=null, lastCardResult=null;
 function loadDecks(){try{var x=JSON.parse(localStorage.getItem(DECKKEY)||"[]");if(Array.isArray(x))decks=x}catch(e){decks=[]}}
 function saveDecks(){try{localStorage.setItem(DECKKEY,JSON.stringify(decks))}catch(e){}}
 function deckCardCount(txt){
@@ -1252,32 +1428,90 @@ function deckCardCount(txt){
   for(var i=0;i<lines.length;i++){var m=lines[i].trim().match(/^(\d+)\s+/);if(m)total+=parseInt(m[1],10)}
   return total;
 }
+function setDeckStatus(msg,isError){
+  var box=el("deckToolStatus");
+  if(!box)return;
+  box.textContent=msg||"";
+  box.className=isError?"deckToolStatus error":"deckToolStatus";
+}
+function closeDeckTools(){
+  el("cardSearchPanel").className="hidden cardToolPanel";
+  el("scanPanel").className="hidden cardToolPanel scanPanel";
+  el("cardLookupResult").className="hidden cardLookupResult";
+  el("cardLookupResult").innerHTML="";
+  lastCardResult=null;
+  setDeckStatus("");
+}
+function addCardLine(name){
+  name=String(name||"").trim();
+  if(!name)return;
+  var area=el("deckCards"), lines=area.value.split(/\n/), found=false;
+  for(var i=0;i<lines.length;i++){
+    var m=lines[i].trim().match(/^(\d+)\s+(.+)$/);
+    if(m&&m[2].trim().toLowerCase()===name.toLowerCase()){
+      lines[i]=(parseInt(m[1],10)+1)+" "+m[2].trim();
+      found=true;break;
+    }
+  }
+  if(!found)lines.push("1 "+name);
+  area.value=lines.filter(function(x){return x.trim()!==""}).join("\n");
+  setDeckStatus(name+" added to deck.");
+}
+function showCardResult(card,sourceLabel){
+  lastCardResult=card;
+  var box=el("cardLookupResult");
+  var image="";
+  if(card&&card.image_uris&&card.image_uris.small)image='<img src="'+escapeHTML(card.image_uris.small)+'" alt="'+escapeHTML(card.name)+'">';
+  else if(card&&card.card_faces&&card.card_faces[0]&&card.card_faces[0].image_uris)image='<img src="'+escapeHTML(card.card_faces[0].image_uris.small)+'" alt="'+escapeHTML(card.name)+'">';
+  box.innerHTML='<div class="cardLookupMedia">'+image+'</div><div class="cardLookupInfo"><span class="lookupSource">'+escapeHTML(sourceLabel||"CARD FOUND")+'</span><strong>'+escapeHTML(card.name)+'</strong><small>'+escapeHTML(card.set_name||"")+(card.collector_number?' • #'+escapeHTML(card.collector_number):'')+'</small><button id="addFoundCard" type="button">＋ Add to Deck</button></div>';
+  box.className="cardLookupResult";
+  el("addFoundCard").onclick=function(){addCardLine(card.name)};
+}
+function lookupScryfall(query,sourceLabel){
+  query=String(query||"").trim();
+  if(!query){setDeckStatus("Enter a card name.",true);return Promise.reject(new Error("No card name"))}
+  setDeckStatus("Searching Magic card database…");
+  return fetch("https://api.scryfall.com/cards/named?fuzzy="+encodeURIComponent(query))
+    .then(function(r){if(!r.ok)throw new Error("Card not found");return r.json()})
+    .then(function(card){showCardResult(card,sourceLabel||"SEARCH RESULT");setDeckStatus("");return card})
+    .catch(function(err){setDeckStatus("Could not match that card. Try typing the name instead.",true);throw err});
+}
 function renderDecks(){
   var box=el("deckList");box.innerHTML="";
-  if(!decks.length){box.innerHTML='<div class="empty">No decks saved yet.<br>Create your first Wolf Lair deck.</div>';return}
+  if(!decks.length){box.innerHTML='<div class="empty deckEmpty"><strong>Your vault is empty.</strong><br>Create a deck, scan cards, search by name, paste a list, or import a file.</div>';return}
   for(var i=0;i<decks.length;i++){
    (function(d){
-   var c=document.createElement("div");c.className="deckCard";
+   var card=document.createElement("div");card.className="deckCard";
    var count=deckCardCount(d.cards);
-   c.innerHTML='<h3>'+escapeHTML(d.name)+'</h3><div class="deckMeta">Commander: '+escapeHTML(d.commander||"Not set")+' • '+count+' cards listed</div>'+ 
-    '<div class="deckPreview">'+escapeHTML((d.cards||"").split(/\n/).slice(0,5).join("\n"))+'</div>'+ 
-    '<div class="deckActions"><button class="editDeck">Edit</button><button class="deleteDeck">Delete</button></div>';
-   c.querySelector(".editDeck").onclick=function(){
+   card.innerHTML='<div class="deckCardTop"><div><h3>'+escapeHTML(d.name)+'</h3><div class="deckMeta">Commander: '+escapeHTML(d.commander||"Not set")+' • '+count+' cards listed</div></div><span class="deckCount">'+count+'</span></div>'+
+    '<div class="deckPreview">'+escapeHTML((d.cards||"").split(/\n/).slice(0,5).join("\n"))+'</div>'+
+    '<div class="deckActions"><button class="editDeck">Open Deck</button><button class="deleteDeck">Delete</button></div>';
+   card.querySelector(".editDeck").onclick=function(){
      editingDeck=d.id;el("deckName").value=d.name;el("commanderName").value=d.commander||"";el("deckCards").value=d.cards||"";
-     el("deckForm").className="deckForm";el("newDeck").className="wide hidden";window.scrollTo(0,0);
+     el("deckFormTitle").textContent="Edit "+d.name;
+     el("deckForm").className="deckForm";el("newDeck").className="wide hidden";closeDeckTools();window.scrollTo(0,0);
    };
-   c.querySelector(".deleteDeck").onclick=function(){
+   card.querySelector(".deleteDeck").onclick=function(){
      decks=decks.filter(function(x){return x.id!==d.id});saveDecks();renderDecks();
    };
-   box.appendChild(c);
+   box.appendChild(card);
    })(decks[i]);
   }
 }
 function closeDeckForm(){
   editingDeck=null;el("deckForm").className="hidden deckForm";el("newDeck").className="wide";
   el("deckName").value="";el("commanderName").value="";el("deckCards").value="";el("deckMsg").textContent="";
+  el("deckFormTitle").textContent="New Deck";
+  closeDeckTools();
 }
-el("newDeck").onclick=function(){editingDeck=null;el("deckForm").className="deckForm";el("newDeck").className="wide hidden";el("deckName").focus()};
+el("newDeck").onclick=function(){
+  editingDeck=null;
+  el("deckFormTitle").textContent="New Deck";
+  el("deckForm").className="deckForm";
+  el("newDeck").className="wide hidden";
+  closeDeckTools();
+  el("deckName").focus();
+};
 el("cancelDeck").onclick=closeDeckForm;
 el("saveDeck").onclick=function(){
   var n=el("deckName").value.trim(), cmd=el("commanderName").value.trim(), cards=el("deckCards").value.trim();
@@ -1288,6 +1522,135 @@ el("saveDeck").onclick=function(){
    decks.push({id:"d"+Date.now()+"_"+Math.floor(Math.random()*1000000),name:n,commander:cmd,cards:cards});
   }
   saveDecks();closeDeckForm();renderDecks();
+};
+el("searchCardBtn").onclick=function(){
+  closeDeckTools();
+  el("cardSearchPanel").className="cardToolPanel";
+  el("cardSearchInput").focus();
+};
+el("runCardSearch").onclick=function(){lookupScryfall(el("cardSearchInput").value,"SEARCH RESULT").catch(function(){})};
+el("cardSearchInput").onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();lookupScryfall(this.value,"SEARCH RESULT").catch(function(){})}};
+el("pasteDeckBtn").onclick=function(){
+  closeDeckTools();
+  setDeckStatus("Paste one card per line. Quantities like “4 Lightning Bolt” are supported.");
+  el("deckCards").focus();
+};
+el("importDeckBtn").onclick=function(){el("deckImportInput").click()};
+el("deckImportInput").onchange=function(){
+  var file=this.files&&this.files[0]; if(!file)return;
+  setDeckStatus("Importing "+file.name+"…");
+  var reader=new FileReader();
+  reader.onload=function(){
+    try{
+      var text=String(reader.result||"");
+      if(/\.csv$/i.test(file.name)){
+        var rows=text.split(/\r?\n/).filter(function(x){return x.trim()});
+        if(!rows.length)throw new Error("Empty file");
+        function parseCSV(line){
+          var out=[], cur="", q=false;
+          for(var i=0;i<line.length;i++){var ch=line[i];if(ch==='"'){if(q&&line[i+1]==='"'){cur+='"';i++}else q=!q}else if(ch===','&&!q){out.push(cur);cur=""}else cur+=ch}
+          out.push(cur);return out;
+        }
+        var heads=parseCSV(rows[0]).map(function(x){return x.trim().toLowerCase()});
+        var nameIndex=heads.indexOf("product name");
+        if(nameIndex<0)nameIndex=heads.indexOf("card name");
+        if(nameIndex<0)nameIndex=heads.indexOf("name");
+        if(nameIndex<0)nameIndex=heads.indexOf("title");
+        var qtyIndex=heads.indexOf("quantity");
+        if(qtyIndex<0)qtyIndex=heads.indexOf("qty");
+        if(qtyIndex<0)qtyIndex=heads.indexOf("count");
+        if(nameIndex<0)throw new Error("Could not find a card-name column");
+        var lines=[];
+        for(var r=1;r<rows.length;r++){
+          var cols=parseCSV(rows[r]), name=(cols[nameIndex]||"").trim();
+          if(!name)continue;
+          var qty=qtyIndex>=0?parseInt(cols[qtyIndex],10):1;
+          if(!qty||qty<1)qty=1;
+          lines.push(qty+" "+name);
+        }
+        if(!lines.length)throw new Error("No cards found");
+        el("deckCards").value=lines.join("\n");
+        setDeckStatus(lines.length+" card rows imported from CSV.");
+      }else{
+        el("deckCards").value=text.trim();
+        setDeckStatus("Deck list imported.");
+      }
+    }catch(err){setDeckStatus(err.message||"Could not import that file.",true)}
+    el("deckImportInput").value="";
+  };
+  reader.onerror=function(){setDeckStatus("Could not read that file.",true)};
+  reader.readAsText(file);
+};
+function loadTesseract(){
+  if(window.Tesseract)return Promise.resolve(window.Tesseract);
+  if(window.__wolfTesseractPromise)return window.__wolfTesseractPromise;
+  window.__wolfTesseractPromise=new Promise(function(resolve,reject){
+    var s=document.createElement("script");
+    s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+    s.async=true;
+    s.onload=function(){window.Tesseract?resolve(window.Tesseract):reject(new Error("Scanner failed to load"))};
+    s.onerror=function(){reject(new Error("Scanner failed to load"))};
+    document.head.appendChild(s);
+  });
+  return window.__wolfTesseractPromise;
+}
+function scanImageFile(file){
+  var preview=el("scanPreview"), panel=el("scanPanel"), status=el("scanStatus");
+  panel.className="cardToolPanel scanPanel";
+  status.textContent="Reading card name…";
+  var url=URL.createObjectURL(file);
+  preview.src=url;preview.className="";
+  return new Promise(function(resolve,reject){
+    var img=new Image();
+    img.onload=function(){
+      try{
+        var cropH=Math.max(80,Math.round(img.naturalHeight*.24));
+        var canvas=document.createElement("canvas");
+        var maxW=1100, scale=Math.min(1,maxW/img.naturalWidth);
+        canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));
+        canvas.height=Math.max(1,Math.round(cropH*scale));
+        var ctx=canvas.getContext("2d");
+        ctx.drawImage(img,0,0,img.naturalWidth,cropH,0,0,canvas.width,canvas.height);
+        loadTesseract().then(function(T){
+          return T.recognize(canvas,"eng",{logger:function(m){
+            if(m&&m.status==="recognizing text")status.textContent="Reading card name… "+Math.round((m.progress||0)*100)+"%";
+          }});
+        }).then(function(result){
+          var raw=result&&result.data?String(result.data.text||""):"";
+          var lines=raw.split(/\r?\n/).map(function(x){
+            return x.replace(/[^A-Za-z0-9'’,:\- ]+/g," ").replace(/\s+/g," ").trim();
+          }).filter(function(x){return x.length>=2&&x.length<=60});
+          if(!lines.length)throw new Error("Could not read the card name");
+          status.textContent="Matching card…";
+          var candidates=lines.slice(0,5), chain=Promise.reject();
+          candidates.forEach(function(name){
+            chain=chain.catch(function(){return lookupScryfall(name,"SCANNED CARD")});
+          });
+          return chain;
+        }).then(function(card){
+          status.textContent="Card matched. Confirm it below.";
+          resolve(card);
+        }).catch(function(err){
+          status.textContent="I couldn't confidently read that card. Try another photo or use Search Card.";
+          setDeckStatus("Scan did not match a card.",true);
+          reject(err);
+        }).finally(function(){setTimeout(function(){URL.revokeObjectURL(url)},3000)});
+      }catch(err){reject(err)}
+    };
+    img.onerror=function(){reject(new Error("Could not open image"))};
+    img.src=url;
+  });
+}
+el("scanCardBtn").onclick=function(){
+  closeDeckTools();
+  el("scanPanel").className="cardToolPanel scanPanel";
+  el("scanStatus").textContent="Take a clear photo with the card upright. Wolf Lair will read the card name.";
+  el("cardScanInput").click();
+};
+el("cardScanInput").onchange=function(){
+  var file=this.files&&this.files[0]; if(!file)return;
+  scanImageFile(file).catch(function(){});
+  this.value="";
 };
 loadDecks();
 loadGame();
@@ -1305,18 +1668,30 @@ renderGame();
   }
   function showGame(){
     document.getElementById('trackerView').className='hidden';
+    document.getElementById('decksView').className='hidden';
     document.getElementById('gameView').className='';
     if(typeof renderGame==='function') renderGame();
     window.scrollTo(0,0);
   }
+  function showDecks(){
+    document.getElementById('trackerView').className='hidden';
+    document.getElementById('gameView').className='hidden';
+    document.getElementById('decksView').className='';
+    if(typeof renderDecks==='function') renderDecks();
+    window.scrollTo(0,0);
+  }
   var back=document.getElementById('backHome');
   var backGame=document.getElementById('backGameHome');
+  var backDecks=document.getElementById('backDecksHome');
   var toGame=document.getElementById('quickGameMode');
-  if(back)back.onclick=function(){location.href='./preview-home.html?preview=5';};
-  if(backGame)backGame.onclick=function(){location.href='./preview-home.html?preview=5';};
+  if(back)back.onclick=function(){location.href='./preview-home.html?preview=6';};
+  if(backGame)backGame.onclick=function(){location.href='./preview-home.html?preview=6';};
+  if(backDecks)backDecks.onclick=function(){location.href='./preview-home.html?preview=6';};
   if(toGame)toGame.onclick=showGame;
   var params=new URLSearchParams(location.search);
-  if(params.get('mode')==='game') showGame(); else showTracker();
+  if(params.get('mode')==='game') showGame();
+  else if(params.get('mode')==='decks') showDecks();
+  else showTracker();
 })();
 </script>
 </body>
