@@ -945,6 +945,60 @@ body.trackerPreview #decksView #cancelScanner{
   }
 }
 
+
+/* Deck add safety + quick undo/removal */
+body.trackerPreview #decksView .deckListHead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-top:8px;
+}
+body.trackerPreview #decksView .deckListHead .deckListLabel{
+  margin:0;
+}
+body.trackerPreview #decksView #undoDeckChange{
+  min-height:36px;
+  padding:6px 9px;
+  border-radius:999px;
+  font-size:10px;
+  color:#d8c8ae;
+  border-color:rgba(166,124,71,.48);
+  background:rgba(11,14,11,.72);
+}
+body.trackerPreview #decksView #undoDeckChange:disabled{
+  opacity:.32;
+}
+body.trackerPreview #decksView #addFoundCard:disabled{
+  opacity:1;
+  color:#dff3da;
+  border-color:rgba(83,172,88,.62);
+  background:linear-gradient(180deg,rgba(27,66,32,.94),rgba(11,29,15,.98));
+}
+body.trackerPreview #decksView .afterAddActions{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:5px;
+  margin-top:7px;
+}
+body.trackerPreview #decksView .afterAddActions button{
+  min-height:38px;
+  padding:6px 5px;
+  font-size:10px;
+}
+body.trackerPreview #decksView #removeOneCopy{
+  border-color:rgba(166,91,69,.5);
+  color:#e5b9aa;
+}
+@media(max-width:390px){
+  body.trackerPreview #decksView .afterAddActions{
+    grid-template-columns:1fr 1fr;
+  }
+  body.trackerPreview #decksView #undoThisAdd{
+    grid-column:1 / -1;
+  }
+}
+
 </style>
 </head>
 <body class="trackerPreview">
@@ -1142,7 +1196,10 @@ body.trackerPreview #decksView #cancelScanner{
    <div id="cardLookupResult" class="hidden cardLookupResult"></div>
    <div id="deckToolStatus" class="deckToolStatus" aria-live="polite"></div>
 
-   <label class="deckListLabel" for="deckCards">Deck List</label>
+   <div class="deckListHead">
+    <label class="deckListLabel" for="deckCards">Deck List</label>
+    <button id="undoDeckChange" type="button" disabled>↶ Undo Last Change</button>
+   </div>
    <textarea id="deckCards" placeholder="Paste deck list here&#10;&#10;Example:&#10;1 Sol Ring&#10;1 Command Tower"></textarea>
    <div class="deckFormActions">
     <button id="saveDeck" type="button">Save Deck</button>
@@ -1532,7 +1589,7 @@ el('backGameHome').onclick=function(){el('gameView').className='hidden';el('home
 el('openPro').onclick=function(){el('home').className='hidden';el('proView').className='';loadPro();window.scrollTo(0,0)};
 el('backProHome').onclick=function(){el('proView').className='hidden';el('home').className='';window.scrollTo(0,0)};
 
-var DECKKEY="wolfLairDecks1", decks=[], editingDeck=null, lastCardResult=null;
+var DECKKEY="wolfLairDecks1", decks=[], editingDeck=null, lastCardResult=null, deckUndoState=null;
 function loadDecks(){try{var x=JSON.parse(localStorage.getItem(DECKKEY)||"[]");if(Array.isArray(x))decks=x}catch(e){decks=[]}}
 function saveDecks(){try{localStorage.setItem(DECKKEY,JSON.stringify(decks))}catch(e){}}
 function deckCardCount(txt){
@@ -1555,20 +1612,67 @@ function closeDeckTools(){
   lastCardResult=null;
   setDeckStatus("");
 }
+function updateDeckUndoButton(){
+  var b=el("undoDeckChange");
+  if(b)b.disabled=!deckUndoState;
+}
+function rememberDeckChange(label){
+  deckUndoState={before:el("deckCards").value,label:label||"Deck change"};
+  updateDeckUndoButton();
+}
+function undoDeckChange(){
+  if(!deckUndoState)return;
+  var state=deckUndoState;
+  el("deckCards").value=state.before;
+  deckUndoState=null;
+  updateDeckUndoButton();
+  setDeckStatus("Undid: "+state.label+".");
+}
+function cardQuantity(name){
+  var lines=el("deckCards").value.split(/\n/);
+  for(var i=0;i<lines.length;i++){
+    var m=lines[i].trim().match(/^(\d+)\s+(.+)$/);
+    if(m&&m[2].trim().toLowerCase()===String(name).toLowerCase())return parseInt(m[1],10)||0;
+  }
+  return 0;
+}
 function addCardLine(name){
   name=String(name||"").trim();
-  if(!name)return;
-  var area=el("deckCards"), lines=area.value.split(/\n/), found=false;
+  if(!name)return 0;
+  rememberDeckChange("Added "+name);
+  var area=el("deckCards"), lines=area.value.split(/\n/), found=false, qty=1;
   for(var i=0;i<lines.length;i++){
     var m=lines[i].trim().match(/^(\d+)\s+(.+)$/);
     if(m&&m[2].trim().toLowerCase()===name.toLowerCase()){
-      lines[i]=(parseInt(m[1],10)+1)+" "+m[2].trim();
+      qty=parseInt(m[1],10)+1;
+      lines[i]=qty+" "+m[2].trim();
       found=true;break;
     }
   }
   if(!found)lines.push("1 "+name);
   area.value=lines.filter(function(x){return x.trim()!==""}).join("\n");
-  setDeckStatus(name+" added to deck.");
+  setDeckStatus(name+" added to deck. Quantity: "+qty+".");
+  return qty;
+}
+function removeCardLine(name){
+  name=String(name||"").trim();
+  if(!name)return 0;
+  var area=el("deckCards"), lines=area.value.split(/\n/), changed=false, qty=0;
+  for(var i=0;i<lines.length;i++){
+    var m=lines[i].trim().match(/^(\d+)\s+(.+)$/);
+    if(m&&m[2].trim().toLowerCase()===name.toLowerCase()){
+      var current=parseInt(m[1],10)||1;
+      rememberDeckChange("Removed one "+name);
+      qty=Math.max(0,current-1);
+      if(qty===0)lines.splice(i,1);
+      else lines[i]=qty+" "+m[2].trim();
+      changed=true;break;
+    }
+  }
+  if(!changed){setDeckStatus(name+" is not currently in this deck.",true);return 0}
+  area.value=lines.filter(function(x){return x.trim()!==""}).join("\n");
+  setDeckStatus(qty?name+" quantity is now "+qty+".":name+" removed from deck.");
+  return qty;
 }
 function showCardResult(card,sourceLabel){
   lastCardResult=card;
@@ -1576,9 +1680,31 @@ function showCardResult(card,sourceLabel){
   var image="";
   if(card&&card.image_uris&&card.image_uris.small)image='<img src="'+escapeHTML(card.image_uris.small)+'" alt="'+escapeHTML(card.name)+'">';
   else if(card&&card.card_faces&&card.card_faces[0]&&card.card_faces[0].image_uris)image='<img src="'+escapeHTML(card.card_faces[0].image_uris.small)+'" alt="'+escapeHTML(card.name)+'">';
-  box.innerHTML='<div class="cardLookupMedia">'+image+'</div><div class="cardLookupInfo"><span class="lookupSource">'+escapeHTML(sourceLabel||"CARD FOUND")+'</span><strong>'+escapeHTML(card.name)+'</strong><small>'+escapeHTML(card.set_name||"")+(card.collector_number?' • #'+escapeHTML(card.collector_number):'')+'</small><button id="addFoundCard" type="button">＋ Add to Deck</button><div class="scanRecovery"><button id="wrongCard" type="button">Not This Card</button><button id="rescanCard" type="button">Rescan</button></div></div>';
+  box.innerHTML='<div class="cardLookupMedia">'+image+'</div><div class="cardLookupInfo"><span class="lookupSource">'+escapeHTML(sourceLabel||"CARD FOUND")+'</span><strong>'+escapeHTML(card.name)+'</strong><small>'+escapeHTML(card.set_name||"")+(card.collector_number?' • #'+escapeHTML(card.collector_number):'')+'</small><button id="addFoundCard" type="button">＋ Add to Deck</button><div id="afterAddActions" class="hidden afterAddActions"><button id="addAnotherCopy" type="button">＋ Another Copy</button><button id="removeOneCopy" type="button">− Remove One</button><button id="undoThisAdd" type="button">↶ Undo</button></div><div class="scanRecovery"><button id="wrongCard" type="button">Not This Card</button><button id="rescanCard" type="button">Rescan</button></div></div>';
   box.className="cardLookupResult";
-  el("addFoundCard").onclick=function(){addCardLine(card.name)};
+
+  var addBtn=el("addFoundCard"), after=el("afterAddActions");
+  function reflectQuantity(){
+    var qty=cardQuantity(card.name);
+    if(qty>0){
+      addBtn.disabled=true;
+      addBtn.textContent="✓ Added to Deck ("+qty+")";
+      after.className="afterAddActions";
+    }else{
+      addBtn.disabled=false;
+      addBtn.textContent="＋ Add to Deck";
+      after.className="hidden afterAddActions";
+    }
+  }
+  addBtn.onclick=function(){
+    addCardLine(card.name);
+    // Disable immediately so a double tap cannot add a second copy.
+    reflectQuantity();
+  };
+  el("addAnotherCopy").onclick=function(){addCardLine(card.name);reflectQuantity()};
+  el("removeOneCopy").onclick=function(){removeCardLine(card.name);reflectQuantity()};
+  el("undoThisAdd").onclick=function(){undoDeckChange();reflectQuantity()};
+
   var wrong=el("wrongCard"), rescan=el("rescanCard");
   if(wrong)wrong.onclick=function(){
     el("cardLookupResult").className="hidden cardLookupResult";
@@ -1591,7 +1717,7 @@ function showCardResult(card,sourceLabel){
     closeDeckTools();
     el("scanPanel").className="cardToolPanel scanPanel";
     el("scanStatus").textContent="Fill most of the photo with the card and keep it upright.";
-    el("cardScanInput").click();
+    if(typeof startCardCamera==="function")startCardCamera(); else el("cardScanInput").click();
   };
 }
 function lookupScryfall(query,sourceLabel){
@@ -1614,7 +1740,7 @@ function renderDecks(){
     '<div class="deckPreview">'+escapeHTML((d.cards||"").split(/\n/).slice(0,5).join("\n"))+'</div>'+
     '<div class="deckActions"><button class="editDeck">Open Deck</button><button class="deleteDeck">Delete</button></div>';
    card.querySelector(".editDeck").onclick=function(){
-     editingDeck=d.id;el("deckName").value=d.name;el("commanderName").value=d.commander||"";el("deckCards").value=d.cards||"";
+     editingDeck=d.id;deckUndoState=null;updateDeckUndoButton();el("deckName").value=d.name;el("commanderName").value=d.commander||"";el("deckCards").value=d.cards||"";
      el("deckFormTitle").textContent="Edit "+d.name;
      el("deckForm").className="deckForm";el("newDeck").className="wide hidden";closeDeckTools();window.scrollTo(0,0);
    };
@@ -1626,13 +1752,15 @@ function renderDecks(){
   }
 }
 function closeDeckForm(){
-  editingDeck=null;el("deckForm").className="hidden deckForm";el("newDeck").className="wide";
+  editingDeck=null;deckUndoState=null;updateDeckUndoButton();el("deckForm").className="hidden deckForm";el("newDeck").className="wide";
   el("deckName").value="";el("commanderName").value="";el("deckCards").value="";el("deckMsg").textContent="";
   el("deckFormTitle").textContent="New Deck";
   closeDeckTools();
 }
+el("undoDeckChange").onclick=undoDeckChange;
+updateDeckUndoButton();
 el("newDeck").onclick=function(){
-  editingDeck=null;
+  editingDeck=null;deckUndoState=null;updateDeckUndoButton();
   el("deckFormTitle").textContent="New Deck";
   el("deckForm").className="deckForm";
   el("newDeck").className="wide hidden";
