@@ -1,0 +1,12 @@
+{
+  "name": "The Wolf Lair",
+  "short_name": "Wolf Lair",
+  "description": "Tabletop command center for Commander games, creature counters, decks, life, poison and game tracking.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#06100b",
+  "theme_color": "#0b1710",
+  "orientation": "any",
+  "categories": ["games", "utilities"]
+}
