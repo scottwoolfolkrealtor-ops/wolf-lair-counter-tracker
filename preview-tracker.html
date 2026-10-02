@@ -1135,6 +1135,66 @@ body.trackerPreview #decksView .searchPrice{
   font-weight:800;
 }
 
+
+/* Exact printing + deck value */
+body.trackerPreview #decksView .deckValuePanel{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin:10px 0 4px;
+  padding:10px 12px;
+  border-radius:13px;
+  border:1px solid rgba(82,174,89,.46);
+  background:linear-gradient(145deg,rgba(16,34,19,.92),rgba(6,11,7,.96));
+}
+body.trackerPreview #decksView .deckValuePanel span{
+  display:block;
+  color:#8fa88d;
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:1.6px;
+}
+body.trackerPreview #decksView .deckValuePanel strong{
+  display:block;
+  margin-top:2px;
+  color:#ead6aa;
+  font-size:22px;
+  line-height:1;
+}
+body.trackerPreview #decksView .deckValuePanel small{
+  display:block;
+  margin-top:4px;
+  color:#9e9a90;
+  font-size:9px;
+}
+body.trackerPreview #decksView .finishLabel{
+  display:block;
+  margin:7px 0 3px;
+  color:#bba781;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:1.1px;
+  text-transform:uppercase;
+}
+body.trackerPreview #decksView .finishChoice{
+  width:100%;
+  min-height:44px;
+  margin:0 0 8px;
+  padding:8px 10px;
+  border-radius:9px;
+  color:#f0e7d8;
+  background:#06100b;
+  border:1px solid rgba(135,117,87,.58);
+  font-size:16px;
+}
+body.trackerPreview #decksView .deckSavedValue{
+  margin-top:4px;
+  color:#d1b77f;
+  font-size:10px;
+  font-weight:700;
+}
+
 </style>
 </head>
 <body class="trackerPreview">
@@ -1333,6 +1393,13 @@ body.trackerPreview #decksView .searchPrice{
    <div id="cardLookupResult" class="hidden cardLookupResult"></div>
    <div id="deckToolStatus" class="deckToolStatus" aria-live="polite"></div>
 
+   <div id="deckValuePanel" class="deckValuePanel">
+    <div>
+     <span>ESTIMATED DECK VALUE</span>
+     <strong id="deckValueTotal">$0.00</strong>
+     <small id="deckValueCoverage">0 priced cards</small>
+    </div>
+   </div>
    <div class="deckListHead">
     <label class="deckListLabel" for="deckCards">Deck List</label>
     <button id="undoDeckChange" type="button" disabled>↶ Undo Last Change</button>
@@ -1726,7 +1793,7 @@ el('backGameHome').onclick=function(){el('gameView').className='hidden';el('home
 el('openPro').onclick=function(){el('home').className='hidden';el('proView').className='';loadPro();window.scrollTo(0,0)};
 el('backProHome').onclick=function(){el('proView').className='hidden';el('home').className='';window.scrollTo(0,0)};
 
-var DECKKEY="wolfLairDecks1", decks=[], editingDeck=null, lastCardResult=null, deckUndoState=null;
+var DECKKEY="wolfLairDecks1", decks=[], editingDeck=null, lastCardResult=null, deckUndoState=null, deckEntries=[];
 function loadDecks(){try{var x=JSON.parse(localStorage.getItem(DECKKEY)||"[]");if(Array.isArray(x))decks=x}catch(e){decks=[]}}
 function saveDecks(){try{localStorage.setItem(DECKKEY,JSON.stringify(decks))}catch(e){}}
 function deckCardCount(txt){
@@ -1751,18 +1818,120 @@ function closeDeckTools(){
   lastCardResult=null;
   setDeckStatus("");
 }
+function finishLabel(finish){
+  if(finish==="foil")return "Foil";
+  if(finish==="etched")return "Etched";
+  return "Regular";
+}
+function finishPrice(card,finish){
+  var p=(card&&card.prices)||{};
+  var raw=finish==="foil"?p.usd_foil:(finish==="etched"?p.usd_etched:p.usd);
+  var n=parseFloat(raw);
+  return isFinite(n)?n:null;
+}
+function chooseDefaultFinish(card){
+  var finishes=(card&&Array.isArray(card.finishes))?card.finishes:[];
+  if(finishes.indexOf("nonfoil")>=0&&finishPrice(card,"nonfoil")!==null)return "nonfoil";
+  if(finishes.indexOf("foil")>=0&&finishPrice(card,"foil")!==null)return "foil";
+  if(finishes.indexOf("etched")>=0&&finishPrice(card,"etched")!==null)return "etched";
+  return finishes[0]||"nonfoil";
+}
+function entryKey(card,finish){
+  return String(card&&card.id||"")+"|"+String(finish||"nonfoil");
+}
+function addStructuredEntry(card,finish){
+  if(!card||!card.id)return;
+  finish=finish||chooseDefaultFinish(card);
+  var key=entryKey(card,finish), price=finishPrice(card,finish);
+  for(var i=0;i<deckEntries.length;i++){
+    if(deckEntries[i].key===key){
+      deckEntries[i].qty=(deckEntries[i].qty||0)+1;
+      deckEntries[i].price=price;
+      renderDeckValue();
+      return;
+    }
+  }
+  var img="";
+  if(card.image_uris&&card.image_uris.small)img=card.image_uris.small;
+  else if(card.card_faces&&card.card_faces[0]&&card.card_faces[0].image_uris)img=card.card_faces[0].image_uris.small;
+  deckEntries.push({
+    key:key,
+    scryfallId:card.id,
+    name:card.name,
+    set:card.set,
+    setName:card.set_name,
+    collector:card.collector_number,
+    finish:finish,
+    qty:1,
+    price:price,
+    image:img
+  });
+  renderDeckValue();
+}
+function removeStructuredEntry(card,finish){
+  if(!card||!card.id)return;
+  var key=entryKey(card,finish);
+  for(var i=0;i<deckEntries.length;i++){
+    if(deckEntries[i].key===key){
+      deckEntries[i].qty=Math.max(0,(deckEntries[i].qty||0)-1);
+      if(deckEntries[i].qty===0)deckEntries.splice(i,1);
+      break;
+    }
+  }
+  renderDeckValue();
+}
+function deckValueData(entries){
+  entries=Array.isArray(entries)?entries:[];
+  var total=0,priced=0,tracked=0;
+  for(var i=0;i<entries.length;i++){
+    var q=Math.max(0,Number(entries[i].qty)||0);
+    tracked+=q;
+    var p=Number(entries[i].price);
+    if(isFinite(p)&&p>=0){total+=p*q;priced+=q}
+  }
+  return {total:total,priced:priced,tracked:tracked};
+}
+function renderDeckValue(){
+  var data=deckValueData(deckEntries);
+  var total=el("deckValueTotal"),coverage=el("deckValueCoverage");
+  if(total)total.textContent="$"+data.total.toFixed(2);
+  if(coverage){
+    var deckCount=deckCardCount(el("deckCards")?el("deckCards").value:"");
+    coverage.textContent=data.priced+" priced exact "+(data.priced===1?"card":"cards")+(deckCount>data.priced?" • "+(deckCount-data.priced)+" unpriced/manual":"");
+  }
+}
+function syncStructuredEntriesToText(){
+  // If a user manually lowers/removes a card quantity, never leave more priced copies than the text list contains.
+  var byName={};
+  var lines=el("deckCards").value.split(/\n/);
+  for(var i=0;i<lines.length;i++){
+    var m=lines[i].trim().match(/^(\d+)\s+(.+)$/);
+    if(m)byName[m[2].trim().toLowerCase()]=(byName[m[2].trim().toLowerCase()]||0)+(parseInt(m[1],10)||0);
+  }
+  var used={};
+  for(var j=0;j<deckEntries.length;j++){
+    var key=String(deckEntries[j].name||"").toLowerCase(), available=byName[key]||0, already=used[key]||0;
+    var allowed=Math.max(0,available-already);
+    deckEntries[j].qty=Math.min(Number(deckEntries[j].qty)||0,allowed);
+    used[key]=already+deckEntries[j].qty;
+  }
+  deckEntries=deckEntries.filter(function(e){return e.qty>0});
+  renderDeckValue();
+}
 function updateDeckUndoButton(){
   var b=el("undoDeckChange");
   if(b)b.disabled=!deckUndoState;
 }
 function rememberDeckChange(label){
-  deckUndoState={before:el("deckCards").value,label:label||"Deck change"};
+  deckUndoState={before:el("deckCards").value,beforeEntries:clone(deckEntries),label:label||"Deck change"};
   updateDeckUndoButton();
 }
 function undoDeckChange(){
   if(!deckUndoState)return;
   var state=deckUndoState;
   el("deckCards").value=state.before;
+  deckEntries=Array.isArray(state.beforeEntries)?clone(state.beforeEntries):[];
+  renderDeckValue();
   deckUndoState=null;
   updateDeckUndoButton();
   setDeckStatus("Undid: "+state.label+".");
@@ -1775,7 +1944,7 @@ function cardQuantity(name){
   }
   return 0;
 }
-function addCardLine(name){
+function addCardLine(name,card,finish){
   name=String(name||"").trim();
   if(!name)return 0;
   rememberDeckChange("Added "+name);
@@ -1790,10 +1959,12 @@ function addCardLine(name){
   }
   if(!found)lines.push("1 "+name);
   area.value=lines.filter(function(x){return x.trim()!==""}).join("\n");
+  if(card)addStructuredEntry(card,finish);
+  renderDeckValue();
   setDeckStatus(name+" added to deck. Quantity: "+qty+".");
   return qty;
 }
-function removeCardLine(name){
+function removeCardLine(name,card,finish){
   name=String(name||"").trim();
   if(!name)return 0;
   var area=el("deckCards"), lines=area.value.split(/\n/), changed=false, qty=0;
@@ -1810,6 +1981,8 @@ function removeCardLine(name){
   }
   if(!changed){setDeckStatus(name+" is not currently in this deck.",true);return 0}
   area.value=lines.filter(function(x){return x.trim()!==""}).join("\n");
+  if(card)removeStructuredEntry(card,finish);
+  renderDeckValue();
   setDeckStatus(qty?name+" quantity is now "+qty+".":name+" removed from deck.");
   return qty;
 }
@@ -1832,10 +2005,13 @@ function showCardResult(card,sourceLabel){
   var image="";
   if(card&&card.image_uris&&card.image_uris.small)image='<img src="'+escapeHTML(card.image_uris.small)+'" alt="'+escapeHTML(card.name)+'">';
   else if(card&&card.card_faces&&card.card_faces[0]&&card.card_faces[0].image_uris)image='<img src="'+escapeHTML(card.card_faces[0].image_uris.small)+'" alt="'+escapeHTML(card.name)+'">';
-  box.innerHTML='<div class="cardLookupMedia">'+image+'</div><div class="cardLookupInfo"><span class="lookupSource">'+escapeHTML(sourceLabel||"CARD FOUND")+'</span><strong>'+escapeHTML(card.name)+'</strong><small>'+escapeHTML(card.set_name||"")+(card.collector_number?' • #'+escapeHTML(card.collector_number):'')+'</small>'+cardPriceSummary(card)+'<button id="addFoundCard" type="button">＋ Add to Deck</button><div id="afterAddActions" class="hidden afterAddActions"><button id="addAnotherCopy" type="button">＋ Another Copy</button><button id="removeOneCopy" type="button">− Remove One</button><button id="undoThisAdd" type="button">↶ Undo</button></div><div class="scanRecovery"><button id="wrongCard" type="button">Not This Card</button><button id="rescanCard" type="button">Rescan</button></div></div>';
+  var finishes=(card&&Array.isArray(card.finishes)&&card.finishes.length)?card.finishes:["nonfoil"];
+  var finishOptions=finishes.map(function(f){return '<option value="'+escapeHTML(f)+'" '+(f===chooseDefaultFinish(card)?'selected':'')+'>'+finishLabel(f)+(finishPrice(card,f)!==null?' • '+moneyOrDash(finishPrice(card,f)):'')+'</option>'}).join('');
+  box.innerHTML='<div class="cardLookupMedia">'+image+'</div><div class="cardLookupInfo"><span class="lookupSource">'+escapeHTML(sourceLabel||"CARD FOUND")+'</span><strong>'+escapeHTML(card.name)+'</strong><small>'+escapeHTML(card.set_name||"")+(card.collector_number?' • #'+escapeHTML(card.collector_number):'')+'</small>'+cardPriceSummary(card)+'<label class="finishLabel" for="finishChoice">Printing finish</label><select id="finishChoice" class="finishChoice">'+finishOptions+'</select><button id="addFoundCard" type="button">＋ Add to Deck</button><div id="afterAddActions" class="hidden afterAddActions"><button id="addAnotherCopy" type="button">＋ Another Copy</button><button id="removeOneCopy" type="button">− Remove One</button><button id="undoThisAdd" type="button">↶ Undo</button></div><div class="scanRecovery"><button id="wrongCard" type="button">Not This Card</button><button id="rescanCard" type="button">Rescan</button></div></div>';
   box.className="cardLookupResult";
 
-  var addBtn=el("addFoundCard"), after=el("afterAddActions");
+  var addBtn=el("addFoundCard"), after=el("afterAddActions"), finishChoice=el("finishChoice");
+  function selectedFinish(){return finishChoice?finishChoice.value:chooseDefaultFinish(card)};
   function reflectQuantity(){
     var qty=cardQuantity(card.name);
     if(qty>0){
@@ -1849,12 +2025,12 @@ function showCardResult(card,sourceLabel){
     }
   }
   addBtn.onclick=function(){
-    addCardLine(card.name);
+    addCardLine(card.name,card,selectedFinish());
     // Disable immediately so a double tap cannot add a second copy.
     reflectQuantity();
   };
-  el("addAnotherCopy").onclick=function(){addCardLine(card.name);reflectQuantity()};
-  el("removeOneCopy").onclick=function(){removeCardLine(card.name);reflectQuantity()};
+  el("addAnotherCopy").onclick=function(){addCardLine(card.name,card,selectedFinish());reflectQuantity()};
+  el("removeOneCopy").onclick=function(){removeCardLine(card.name,card,selectedFinish());reflectQuantity()};
   el("undoThisAdd").onclick=function(){undoDeckChange();reflectQuantity()};
 
   var wrong=el("wrongCard"), rescan=el("rescanCard");
@@ -1940,8 +2116,610 @@ function renderDecks(){
   for(var i=0;i<decks.length;i++){
    (function(d){
    var card=document.createElement("div");card.className="deckCard";
-   var count=deckCardCount(d.cards);
-   card.innerHTML='<div class="deckCardTop"><div><h3>'+escapeHTML(d.name)+'</h3><div class="deckMeta">Commander: '+escapeHTML(d.commander||"Not set")+' • '+count+' cards listed</div></div><span class="deckCount">'+count+'</span></div>'+
+   var count=deckCardCount(d.cards), valueData=deckValueData(d.entries||[]);
+   card.innerHTML='<div class="deckCardTop"><div><h3>'+escapeHTML(d.name)+'</h3><div class="deckMeta">Commander: '+escapeHTML(d.commander||"Not set")+' • '+count+' cards listed</div><div class="deckSavedValue">Estimated value: 
+    '<div class="deckPreview">'+escapeHTML((d.cards||"").split(/\n/).slice(0,5).join("\n"))+'</div>'+
+    '<div class="deckActions"><button class="editDeck">Open Deck</button><button class="deleteDeck">Delete</button></div>';
+   card.querySelector(".editDeck").onclick=function(){
+     editingDeck=d.id;deckUndoState=null;updateDeckUndoButton();deckEntries=Array.isArray(d.entries)?clone(d.entries):[];el("deckName").value=d.name;el("commanderName").value=d.commander||"";el("deckCards").value=d.cards||"";renderDeckValue();
+     el("deckFormTitle").textContent="Edit "+d.name;
+     el("deckForm").className="deckForm";el("newDeck").className="wide hidden";closeDeckTools();window.scrollTo(0,0);
+   };
+   card.querySelector(".deleteDeck").onclick=function(){
+     decks=decks.filter(function(x){return x.id!==d.id});saveDecks();renderDecks();
+   };
+   box.appendChild(card);
+   })(decks[i]);
+  }
+}
+function closeDeckForm(){
+  editingDeck=null;deckUndoState=null;deckEntries=[];updateDeckUndoButton();renderDeckValue();el("deckForm").className="hidden deckForm";el("newDeck").className="wide";
+  el("deckName").value="";el("commanderName").value="";el("deckCards").value="";el("deckMsg").textContent="";
+  el("deckFormTitle").textContent="New Deck";
+  closeDeckTools();
+}
+el("undoDeckChange").onclick=undoDeckChange;
+updateDeckUndoButton();
+renderDeckValue();
+el("newDeck").onclick=function(){
+  editingDeck=null;deckUndoState=null;deckEntries=[];updateDeckUndoButton();renderDeckValue();
+  el("deckFormTitle").textContent="New Deck";
+  el("deckForm").className="deckForm";
+  el("newDeck").className="wide hidden";
+  closeDeckTools();
+  el("deckName").focus();
+};
+el("cancelDeck").onclick=closeDeckForm;
+el("saveDeck").onclick=function(){
+  var n=el("deckName").value.trim(), cmd=el("commanderName").value.trim(), cards=el("deckCards").value.trim();
+  if(!n){el("deckMsg").textContent="Enter a deck name.";return}
+  syncStructuredEntriesToText();
+  if(editingDeck){
+   for(var i=0;i<decks.length;i++)if(decks[i].id===editingDeck){decks[i].name=n;decks[i].commander=cmd;decks[i].cards=cards;decks[i].entries=clone(deckEntries);break}
+  }else{
+   decks.push({id:"d"+Date.now()+"_"+Math.floor(Math.random()*1000000),name:n,commander:cmd,cards:cards,entries:clone(deckEntries)});
+  }
+  saveDecks();closeDeckForm();renderDecks();
+};
+el("searchCardBtn").onclick=function(){
+  closeDeckTools();
+  el("cardSearchPanel").className="cardToolPanel";
+  el("cardSearchInput").focus();
+};
+el("runCardSearch").onclick=function(){searchScryfallChoices(el("cardSearchInput").value)};
+el("cardSearchInput").onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();searchScryfallChoices(this.value)}};
+el("deckCards").addEventListener("input",function(){syncStructuredEntriesToText()});
+el("pasteDeckBtn").onclick=function(){
+  closeDeckTools();
+  setDeckStatus("Paste one card per line. Quantities like “4 Lightning Bolt” are supported.");
+  el("deckCards").focus();
+};
+el("importDeckBtn").onclick=function(){el("deckImportInput").click()};
+el("deckImportInput").onchange=function(){
+  var file=this.files&&this.files[0]; if(!file)return;
+  setDeckStatus("Importing "+file.name+"…");
+  var reader=new FileReader();
+  reader.onload=function(){
+    try{
+      var text=String(reader.result||"");
+      if(/\.csv$/i.test(file.name)){
+        var rows=text.split(/\r?\n/).filter(function(x){return x.trim()});
+        if(!rows.length)throw new Error("Empty file");
+        function parseCSV(line){
+          var out=[], cur="", q=false;
+          for(var i=0;i<line.length;i++){var ch=line[i];if(ch==='"'){if(q&&line[i+1]==='"'){cur+='"';i++}else q=!q}else if(ch===','&&!q){out.push(cur);cur=""}else cur+=ch}
+          out.push(cur);return out;
+        }
+        var heads=parseCSV(rows[0]).map(function(x){return x.trim().toLowerCase()});
+        var nameIndex=heads.indexOf("product name");
+        if(nameIndex<0)nameIndex=heads.indexOf("card name");
+        if(nameIndex<0)nameIndex=heads.indexOf("name");
+        if(nameIndex<0)nameIndex=heads.indexOf("title");
+        var qtyIndex=heads.indexOf("quantity");
+        if(qtyIndex<0)qtyIndex=heads.indexOf("qty");
+        if(qtyIndex<0)qtyIndex=heads.indexOf("count");
+        if(nameIndex<0)throw new Error("Could not find a card-name column");
+        var lines=[];
+        for(var r=1;r<rows.length;r++){
+          var cols=parseCSV(rows[r]), name=(cols[nameIndex]||"").trim();
+          if(!name)continue;
+          var qty=qtyIndex>=0?parseInt(cols[qtyIndex],10):1;
+          if(!qty||qty<1)qty=1;
+          lines.push(qty+" "+name);
+        }
+        if(!lines.length)throw new Error("No cards found");
+        deckEntries=[];
+        el("deckCards").value=lines.join("\n");
+        renderDeckValue();
+        setDeckStatus(lines.length+" card rows imported from CSV. Exact printing prices can be added by scanning/searching.");
+      }else{
+        deckEntries=[];
+        el("deckCards").value=text.trim();
+        renderDeckValue();
+        setDeckStatus("Deck list imported. Exact printing prices can be added by scanning/searching.");
+      }
+    }catch(err){setDeckStatus(err.message||"Could not import that file.",true)}
+    el("deckImportInput").value="";
+  };
+  reader.onerror=function(){setDeckStatus("Could not read that file.",true)};
+  reader.readAsText(file);
+};
+function loadTesseract(){
+  if(window.Tesseract)return Promise.resolve(window.Tesseract);
+  if(window.__wolfTesseractPromise)return window.__wolfTesseractPromise;
+  window.__wolfTesseractPromise=new Promise(function(resolve,reject){
+    var s=document.createElement("script");
+    s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+    s.async=true;
+    s.onload=function(){window.Tesseract?resolve(window.Tesseract):reject(new Error("Scanner failed to load"))};
+    s.onerror=function(){reject(new Error("Scanner failed to load"))};
+    document.head.appendChild(s);
+  });
+  return window.__wolfTesseractPromise;
+}
+var wolfOCRWorker=null, wolfOCRWorkerPromise=null, wolfOCRStatusTarget=null;
+function warmOCRWorker(){
+  if(wolfOCRWorker)return Promise.resolve(wolfOCRWorker);
+  if(wolfOCRWorkerPromise)return wolfOCRWorkerPromise;
+  wolfOCRWorkerPromise=loadTesseract().then(function(T){
+    return T.createWorker("eng",1,{
+      logger:function(m){
+        var target=wolfOCRStatusTarget;
+        if(target&&m&&m.status==="recognizing text"){
+          target.textContent="Reading card… "+Math.round((m.progress||0)*100)+"%";
+        }
+      }
+    });
+  }).then(function(worker){
+    wolfOCRWorker=worker;
+    return worker;
+  }).catch(function(err){
+    wolfOCRWorkerPromise=null;
+    throw err;
+  });
+  return wolfOCRWorkerPromise;
+}
+var cardCameraStream=null, cardDetectTimer=null, lastDetectedCard=null, stableCardFrames=0, autoCaptureBusy=false;
+
+function loadOpenCV(){
+  if(window.cv&&window.cv.Mat)return Promise.resolve(window.cv);
+  if(window.__wolfOpenCVPromise)return window.__wolfOpenCVPromise;
+  window.__wolfOpenCVPromise=new Promise(function(resolve,reject){
+    var finished=false, tries=0;
+    function done(value){if(finished)return;finished=true;resolve(value)}
+    function fail(err){if(finished)return;finished=true;window.__wolfOpenCVPromise=null;reject(err)}
+    function probe(){
+      tries++;
+      if(window.cv&&window.cv.Mat){done(window.cv);return}
+      if(window.cv&&typeof window.cv.then==="function"){
+        window.cv.then(function(realCv){
+          window.cv=realCv;
+          if(realCv&&realCv.Mat)done(realCv);else if(tries<80)setTimeout(probe,120);
+        }).catch(function(){if(tries<80)setTimeout(probe,120);else fail(new Error("OpenCV unavailable"))});
+        return;
+      }
+      if(tries<80)setTimeout(probe,120);else fail(new Error("OpenCV unavailable"));
+    }
+    var s=document.createElement("script");
+    s.src="https://docs.opencv.org/4.10.0/opencv.js";
+    s.async=true;
+    s.onload=probe;
+    s.onerror=function(){fail(new Error("OpenCV failed to load"))};
+    document.head.appendChild(s);
+    probe();
+  });
+  return window.__wolfOpenCVPromise;
+}
+function stopCardCamera(){
+  if(cardDetectTimer){clearInterval(cardDetectTimer);cardDetectTimer=null}
+  if(cardCameraStream){
+    cardCameraStream.getTracks().forEach(function(t){try{t.stop()}catch(e){}});
+    cardCameraStream=null;
+  }
+  var video=el("scanVideo");
+  if(video)video.srcObject=null;
+  lastDetectedCard=null;stableCardFrames=0;autoCaptureBusy=false;
+  stopFallbackDetector();
+  activeCV=null;
+  var live=el("liveScanner");if(live)live.className="hidden liveScanner";
+}
+function orderCardPoints(points){
+  var pts=points.slice();
+  var sums=pts.map(function(p){return p.x+p.y});
+  var diffs=pts.map(function(p){return p.y-p.x});
+  function atMin(arr){var ix=0;for(var i=1;i<arr.length;i++)if(arr[i]<arr[ix])ix=i;return pts[ix]}
+  function atMax(arr){var ix=0;for(var i=1;i<arr.length;i++)if(arr[i]>arr[ix])ix=i;return pts[ix]}
+  return [atMin(sums),atMin(diffs),atMax(sums),atMax(diffs)]; // TL, TR, BR, BL
+}
+function defaultCardRect(w,h){
+  var targetRatio=2.5/3.5, ch=h*.78, cw=ch*targetRatio;
+  if(cw>w*.82){cw=w*.82;ch=cw/targetRatio}
+  var x=(w-cw)/2,y=(h-ch)/2;
+  return [{x:x,y:y},{x:x+cw,y:y},{x:x+cw,y:y+ch},{x:x,y:y+ch}];
+}
+function drawCardOverlay(points,found,progress){
+  var video=el("scanVideo"), overlay=el("scanOverlay"), state=el("cameraState");
+  if(!video||!overlay||!video.videoWidth)return;
+  var dw=overlay.width,dh=overlay.height,ctx=overlay.getContext("2d");
+  ctx.clearRect(0,0,dw,dh);
+  var pts=points&&points.length===4?points:defaultCardRect(dw,dh);
+  ctx.save();
+  ctx.lineWidth=Math.max(3,dw*.008);
+  ctx.strokeStyle=found?"rgba(126,235,126,.98)":"rgba(221,188,126,.88)";
+  ctx.fillStyle=found?"rgba(62,183,78,.08)":"rgba(220,180,110,.035)";
+  ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+  for(var i=1;i<4;i++)ctx.lineTo(pts[i].x,pts[i].y);
+  ctx.closePath();ctx.fill();ctx.stroke();
+  var len=Math.max(18,dw*.055);
+  ctx.lineWidth=Math.max(5,dw*.012);
+  for(var j=0;j<4;j++){
+    var p=pts[j], a=pts[(j+1)%4], prev=pts[(j+3)%4];
+    function toward(from,to,d){var dx=to.x-from.x,dy=to.y-from.y,l=Math.sqrt(dx*dx+dy*dy)||1;return{x:from.x+dx/l*d,y:from.y+dy/l*d}}
+    var p1=toward(p,a,len),p2=toward(p,prev,len);
+    ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p.x,p.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
+  }
+  ctx.restore();
+  if(state){
+    if(found&&progress>=4)state.textContent="CAPTURING";
+    else if(found)state.textContent="HOLD STEADY "+Math.min(100,Math.round(progress/4*100))+"%";
+    else state.textContent="CENTER CARD";
+  }
+}
+function detectCardFrame(cv){
+  if(autoCaptureBusy)return;
+  var video=el("scanVideo"), overlay=el("scanOverlay");
+  if(!video||video.readyState<2||!video.videoWidth)return;
+  var dw=360, dh=Math.max(1,Math.round(video.videoHeight*(dw/video.videoWidth)));
+  overlay.width=dw;overlay.height=dh;
+  var work=document.createElement("canvas");work.width=dw;work.height=dh;
+  var wctx=work.getContext("2d");wctx.drawImage(video,0,0,dw,dh);
+  var src=null,gray=null,blur=null,edges=null,contours=null,hierarchy=null;
+  try{
+    src=cv.imread(work);gray=new cv.Mat();blur=new cv.Mat();edges=new cv.Mat();
+    cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
+    cv.GaussianBlur(gray,blur,new cv.Size(5,5),0,0,cv.BORDER_DEFAULT);
+    cv.Canny(blur,edges,55,150,3,false);
+    contours=new cv.MatVector();hierarchy=new cv.Mat();
+    cv.findContours(edges,contours,hierarchy,cv.RETR_LIST,cv.CHAIN_APPROX_SIMPLE);
+    var best=null,bestScore=0,frameArea=dw*dh,centerX=dw/2,centerY=dh/2;
+    for(var i=0;i<contours.size();i++){
+      var cnt=contours.get(i), peri=cv.arcLength(cnt,true), approx=new cv.Mat();
+      cv.approxPolyDP(cnt,approx,0.022*peri,true);
+      if(approx.rows===4&&cv.isContourConvex(approx)){
+        var area=Math.abs(cv.contourArea(approx)), ratioArea=area/frameArea;
+        if(ratioArea>.18&&ratioArea<.92){
+          var raw=approx.data32S,pts=[];
+          for(var p=0;p<4;p++)pts.push({x:raw[p*2],y:raw[p*2+1]});
+          pts=orderCardPoints(pts);
+          function dist(a,b){var x=a.x-b.x,y=a.y-b.y;return Math.sqrt(x*x+y*y)}
+          var width=(dist(pts[0],pts[1])+dist(pts[3],pts[2]))/2;
+          var height=(dist(pts[0],pts[3])+dist(pts[1],pts[2]))/2;
+          var ar=width/Math.max(1,height), ratioScore=Math.max(0,1-Math.abs(ar-(2.5/3.5))/.32);
+          var cx=(pts[0].x+pts[1].x+pts[2].x+pts[3].x)/4,cy=(pts[0].y+pts[1].y+pts[2].y+pts[3].y)/4;
+          var centerDist=Math.sqrt(Math.pow((cx-centerX)/dw,2)+Math.pow((cy-centerY)/dh,2));
+          var centerScore=Math.max(0,1-centerDist*2.2);
+          var score=ratioArea*2.6+ratioScore*1.8+centerScore;
+          if(ratioScore>.35&&score>bestScore){bestScore=score;best={points:pts,cx:cx,cy:cy,width:width,height:height}}
+        }
+      }
+      approx.delete();cnt.delete();
+    }
+    if(best&&bestScore>1.6){
+      var now={cx:best.cx/dw,cy:best.cy/dh,w:best.width/dw,h:best.height/dh};
+      if(lastDetectedCard){
+        var delta=Math.abs(now.cx-lastDetectedCard.norm.cx)+Math.abs(now.cy-lastDetectedCard.norm.cy)+Math.abs(now.w-lastDetectedCard.norm.w)+Math.abs(now.h-lastDetectedCard.norm.h);
+        stableCardFrames=delta<.055?stableCardFrames+1:0;
+      }else stableCardFrames=0;
+      lastDetectedCard={points:best.points,norm:now,detectW:dw,detectH:dh};
+      drawCardOverlay(best.points,true,stableCardFrames);
+      if(stableCardFrames>=4){autoCaptureBusy=true;captureDetectedCard(cv,lastDetectedCard)}
+    }else{
+      stableCardFrames=0;lastDetectedCard=null;drawCardOverlay(null,false,0);
+    }
+  }catch(e){
+    drawCardOverlay(null,false,0);
+  }finally{
+    [src,gray,blur,edges,hierarchy].forEach(function(m){if(m)try{m.delete()}catch(e){}});
+    if(contours)try{contours.delete()}catch(e){}
+  }
+}
+function cropCardFromVideo(cv,detected){
+  var video=el("scanVideo");
+  if(!video||!video.videoWidth)return Promise.reject(new Error("Camera not ready"));
+  var points=detected&&detected.points?detected.points:null;
+  var dw=detected&&detected.detectW?detected.detectW:360;
+  var dh=detected&&detected.detectH?detected.detectH:Math.round(video.videoHeight*(360/video.videoWidth));
+  if(!points)points=defaultCardRect(dw,dh);
+  var maxW=1500,scale=Math.min(1,maxW/video.videoWidth);
+  var sw=Math.round(video.videoWidth*scale),sh=Math.round(video.videoHeight*scale);
+  var source=document.createElement("canvas");source.width=sw;source.height=sh;source.getContext("2d").drawImage(video,0,0,sw,sh);
+  var ordered=orderCardPoints(points);
+  var sx=sw/dw,sy=sh/dh;
+  var srcPts=[];
+  ordered.forEach(function(p){srcPts.push(p.x*sx,p.y*sy)});
+  var outW=750,outH=1050;
+  var src=cv.imread(source),dst=new cv.Mat(),srcTri=cv.matFromArray(4,1,cv.CV_32FC2,srcPts);
+  var dstTri=cv.matFromArray(4,1,cv.CV_32FC2,[0,0,outW-1,0,outW-1,outH-1,0,outH-1]);
+  var M=cv.getPerspectiveTransform(srcTri,dstTri);
+  cv.warpPerspective(src,dst,M,new cv.Size(outW,outH),cv.INTER_LINEAR,cv.BORDER_REPLICATE,new cv.Scalar());
+  var crop=document.createElement("canvas");crop.width=outW;crop.height=outH;cv.imshow(crop,dst);
+  src.delete();dst.delete();srcTri.delete();dstTri.delete();M.delete();
+  return new Promise(function(resolve,reject){
+    crop.toBlob(function(blob){
+      if(!blob){reject(new Error("Could not crop card"));return}
+      resolve(new File([blob],"wolf-lair-card.jpg",{type:"image/jpeg"}));
+    },"image/jpeg",.92);
+  });
+}
+function captureDetectedCard(cv,detected){
+  var state=el("cameraState");if(state)state.textContent="CAPTURING";
+  cropCardFromVideo(cv,detected).then(function(file){
+    stopCardCamera();
+    var panel=el("scanPanel");panel.className="cardToolPanel scanPanel";
+    el("scanStatus").textContent="Card cropped. Reading the title…";
+    return scanImageFile(file);
+  }).catch(function(){
+    autoCaptureBusy=false;stableCardFrames=0;
+    setDeckStatus("Could not crop that frame. Hold the card steady and try again.",true);
+  });
+}
+var fallbackFrameSample=null, fallbackStableFrames=0, fallbackDetectTimer=null, activeCV=null;
+
+function stopFallbackDetector(){
+  if(fallbackDetectTimer){clearInterval(fallbackDetectTimer);fallbackDetectTimer=null}
+  fallbackFrameSample=null;fallbackStableFrames=0;
+}
+function sampleGuideRegion(){
+  var video=el("scanVideo");
+  if(!video||video.readyState<2||!video.videoWidth)return null;
+  var w=48,h=68,canvas=document.createElement("canvas");canvas.width=w;canvas.height=h;
+  var ctx=canvas.getContext("2d");
+  var rect=defaultCardRect(video.videoWidth,video.videoHeight);
+  var x=rect[0].x,y=rect[0].y,sw=rect[1].x-rect[0].x,sh=rect[3].y-rect[0].y;
+  ctx.drawImage(video,x,y,sw,sh,0,0,w,h);
+  var data=ctx.getImageData(0,0,w,h).data, gray=new Uint8Array(w*h), edges=0, idx=0;
+  for(var yy=0;yy<h;yy++){
+    for(var xx=0;xx<w;xx++){
+      var p=(yy*w+xx)*4,g=(data[p]*.299+data[p+1]*.587+data[p+2]*.114)|0;
+      gray[idx++]=g;
+      if(xx>0&&Math.abs(g-gray[idx-2])>34)edges++;
+      if(yy>0&&Math.abs(g-gray[idx-1-w])>34)edges++;
+    }
+  }
+  return {gray:gray,edgeRatio:edges/(w*h*2)};
+}
+function runFallbackStability(){
+  if(autoCaptureBusy||activeCV)return;
+  var sample=sampleGuideRegion();
+  if(!sample)return;
+  drawCardOverlay(null,sample.edgeRatio>.055,fallbackStableFrames);
+  if(fallbackFrameSample){
+    var a=sample.gray,b=fallbackFrameSample.gray,total=0;
+    for(var i=0;i<a.length;i+=3)total+=Math.abs(a[i]-b[i]);
+    var diff=total/Math.ceil(a.length/3);
+    if(diff<5.4&&sample.edgeRatio>.055)fallbackStableFrames++;
+    else fallbackStableFrames=0;
+  }
+  fallbackFrameSample=sample;
+  if(fallbackStableFrames>=6){
+    autoCaptureBusy=true;
+    captureBasicCard();
+  }
+}
+function cropCardFromVideoBasic(){
+  var video=el("scanVideo");
+  if(!video||!video.videoWidth)return Promise.reject(new Error("Camera not ready"));
+  var rect=defaultCardRect(video.videoWidth,video.videoHeight);
+  var x=rect[0].x,y=rect[0].y,sw=rect[1].x-rect[0].x,sh=rect[3].y-rect[0].y;
+  var out=document.createElement("canvas");out.width=750;out.height=1050;
+  out.getContext("2d").drawImage(video,x,y,sw,sh,0,0,out.width,out.height);
+  return new Promise(function(resolve,reject){
+    out.toBlob(function(blob){
+      if(!blob){reject(new Error("Could not crop card"));return}
+      resolve(new File([blob],"wolf-lair-card.jpg",{type:"image/jpeg"}));
+    },"image/jpeg",.92);
+  });
+}
+function captureBasicCard(){
+  var state=el("cameraState");if(state)state.textContent="CAPTURING";
+  cropCardFromVideoBasic().then(function(file){
+    stopCardCamera();
+    el("scanPanel").className="cardToolPanel scanPanel";
+    el("scanStatus").textContent="Card captured. Reading the title…";
+    return scanImageFile(file);
+  }).catch(function(){
+    autoCaptureBusy=false;fallbackStableFrames=0;
+    setDeckStatus("Could not capture that frame. Try Capture Now.",true);
+  });
+}
+function startCardCamera(){
+  closeDeckTools();
+  el("scanPanel").className="cardToolPanel scanPanel";
+  el("liveScanner").className="liveScanner";
+  el("scanStatus").textContent="Opening camera…";
+  el("cameraState").textContent="CENTER CARD";
+  activeCV=null;
+  stopFallbackDetector();
+
+  // Start OCR and edge detection in the background while the user lines up the card.
+  warmOCRWorker().catch(function(){});
+  loadOpenCV().then(function(cv){
+    activeCV=cv;
+    stopFallbackDetector();
+    if(cardDetectTimer)clearInterval(cardDetectTimer);
+    cardDetectTimer=setInterval(function(){detectCardFrame(cv)},260);
+    el("scanStatus").textContent="Card-edge detection ready. Hold the card steady inside the frame.";
+  }).catch(function(){
+    // Keep the live camera instead of falling back to the old photo picker.
+    activeCV=null;
+    if(!fallbackDetectTimer)fallbackDetectTimer=setInterval(runFallbackStability,260);
+    el("scanStatus").textContent="Live scanner ready. Center the card in the frame and hold steady.";
+  });
+
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    el("liveScanner").className="hidden liveScanner";
+    el("scanStatus").textContent="Live camera isn't available here. Use a photo instead.";
+    el("cardScanInput").click();
+    return;
+  }
+
+  navigator.mediaDevices.getUserMedia({
+    video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}},
+    audio:false
+  }).then(function(stream){
+    cardCameraStream=stream;
+    var video=el("scanVideo");
+    video.srcObject=stream;
+    video.onloadedmetadata=function(){
+      video.play().then(function(){
+        var stage=el("cameraStage");
+        if(stage)stage.style.aspectRatio=video.videoWidth+" / "+video.videoHeight;
+        var overlay=el("scanOverlay");
+        overlay.width=360;overlay.height=Math.max(1,Math.round(video.videoHeight*(360/video.videoWidth)));
+        drawCardOverlay(null,false,0);
+        if(!activeCV&&!fallbackDetectTimer)fallbackDetectTimer=setInterval(runFallbackStability,260);
+        el("scanStatus").textContent=activeCV?
+          "Move the card into view. The green frame will lock on and capture automatically.":
+          "Center the card in the frame and hold steady. Capture is automatic.";
+      }).catch(function(){});
+    };
+  }).catch(function(){
+    stopCardCamera();
+    el("scanPanel").className="cardToolPanel scanPanel";
+    el("scanStatus").textContent="Camera permission wasn't available. Use a photo instead.";
+    el("cardScanInput").click();
+  });
+}
+function scanImageFile(file){
+  var preview=el("scanPreview"), panel=el("scanPanel"), status=el("scanStatus");
+  panel.className="cardToolPanel scanPanel";
+  status.textContent="Reading card…";
+  var url=URL.createObjectURL(file);
+  preview.src=url;preview.className="";
+  return new Promise(function(resolve,reject){
+    var img=new Image();
+    img.onload=function(){
+      try{
+        var maxSide=1300, scale=Math.min(1,maxSide/Math.max(img.naturalWidth,img.naturalHeight));
+        var canvas=document.createElement("canvas");
+        canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));
+        canvas.height=Math.max(1,Math.round(img.naturalHeight*scale));
+        var ctx=canvas.getContext("2d");
+        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+
+        wolfOCRStatusTarget=status;
+        warmOCRWorker().then(function(worker){
+          return worker.recognize(canvas);
+        }).then(function(result){
+          var data=result&&result.data?result.data:{};
+          var candidates=[];
+
+          if(Array.isArray(data.lines)){
+            data.lines
+              .filter(function(line){
+                var txt=String(line.text||"").replace(/[^A-Za-z0-9'’,:\- ]+/g," ").replace(/\s+/g," ").trim();
+                var y=line.bbox&&typeof line.bbox.y0==="number"?line.bbox.y0:99999;
+                return txt.length>=2&&txt.length<=60&&y<canvas.height*.58;
+              })
+              .sort(function(a,b){
+                var ay=a.bbox&&typeof a.bbox.y0==="number"?a.bbox.y0:99999;
+                var by=b.bbox&&typeof b.bbox.y0==="number"?b.bbox.y0:99999;
+                if(Math.abs(ay-by)>20)return ay-by;
+                return (b.confidence||0)-(a.confidence||0);
+              })
+              .forEach(function(line){
+                var txt=String(line.text||"").replace(/[^A-Za-z0-9'’,:\- ]+/g," ").replace(/\s+/g," ").trim();
+                if(txt&&candidates.indexOf(txt)<0)candidates.push(txt);
+              });
+          }
+
+          var raw=String(data.text||"");
+          raw.split(/\r?\n/).map(function(x){
+            return x.replace(/[^A-Za-z0-9'’,:\- ]+/g," ").replace(/\s+/g," ").trim();
+          }).filter(function(x){return x.length>=2&&x.length<=60}).forEach(function(x){
+            if(candidates.indexOf(x)<0)candidates.push(x);
+          });
+
+          // Avoid rules-text fragments and keep a short list of likely title lines.
+          candidates=candidates.filter(function(x){
+            var low=x.toLowerCase();
+            return !/^(target|when |whenever |until |creature |instant |sorcery |enchantment |artifact |land |planeswalker |tap |add |draw |you |your |each |at the |if |as )/.test(low);
+          }).slice(0,10);
+
+          if(!candidates.length)throw new Error("Could not read a likely card title");
+          status.textContent="Card text read. Finding the match…";
+
+          var pos=0;
+          function tryNext(){
+            if(pos>=candidates.length)throw new Error("No card match");
+            var candidate=candidates[pos++];
+            return fetch("https://api.scryfall.com/cards/named?fuzzy="+encodeURIComponent(candidate))
+              .then(function(r){if(!r.ok)throw new Error("No match");return r.json()})
+              .catch(function(){return tryNext()});
+          }
+          return tryNext();
+        }).then(function(card){
+          showCardResult(card,"SCANNED CARD");
+          status.textContent="Possible match — confirm the card below.";
+          setDeckStatus("Check the card image and name before adding it.");
+          resolve(card);
+        }).catch(function(err){
+          status.textContent="I couldn't confidently identify that card.";
+          el("cardSearchPanel").className="cardToolPanel";
+          setDeckStatus("Try another photo with the card filling most of the frame, or type the card name.",true);
+          reject(err);
+        }).finally(function(){setTimeout(function(){URL.revokeObjectURL(url)},3000)});
+      }catch(err){reject(err)}
+    };
+    img.onerror=function(){reject(new Error("Could not open image"))};
+    img.src=url;
+  });
+}
+el("scanCardBtn").onclick=startCardCamera;
+el("manualCapture").onclick=function(){
+  if(autoCaptureBusy)return;
+  autoCaptureBusy=true;
+  if(activeCV){
+    captureDetectedCard(activeCV,lastDetectedCard);
+  }else{
+    captureBasicCard();
+  }
+};
+el("photoFallback").onclick=function(){stopCardCamera();el("cardScanInput").click()};
+el("cancelScanner").onclick=function(){stopCardCamera();closeDeckTools()};
+el("cardScanInput").onchange=function(){
+  var file=this.files&&this.files[0]; if(!file)return;
+  stopCardCamera();
+  el("scanPanel").className="cardToolPanel scanPanel";
+  scanImageFile(file).catch(function(){});
+  this.value="";
+};
+document.addEventListener("visibilitychange",function(){if(document.hidden)stopCardCamera()});
+loadDecks();
+loadGame();
+load();render();
+renderDecks();
+renderGame();
+})();
+</script>
+<script>
+(function(){
+  function showTracker(){
+    document.getElementById('gameView').className='hidden';
+    document.getElementById('trackerView').className='';
+    window.scrollTo(0,0);
+  }
+  function showGame(){
+    document.getElementById('trackerView').className='hidden';
+    document.getElementById('decksView').className='hidden';
+    document.getElementById('gameView').className='';
+    if(typeof renderGame==='function') renderGame();
+    window.scrollTo(0,0);
+  }
+  function showDecks(){
+    document.getElementById('trackerView').className='hidden';
+    document.getElementById('gameView').className='hidden';
+    document.getElementById('decksView').className='';
+    if(typeof renderDecks==='function') renderDecks();
+    window.scrollTo(0,0);
+  }
+  var back=document.getElementById('backHome');
+  var backGame=document.getElementById('backGameHome');
+  var backDecks=document.getElementById('backDecksHome');
+  var toGame=document.getElementById('quickGameMode');
+  if(back)back.onclick=function(){location.href='./preview-home.html?preview=6';};
+  if(backGame)backGame.onclick=function(){location.href='./preview-home.html?preview=6';};
+  if(backDecks)backDecks.onclick=function(){location.href='./preview-home.html?preview=6';};
+  if(toGame)toGame.onclick=showGame;
+  var params=new URLSearchParams(location.search);
+  if(params.get('mode')==='game') showGame();
+  else if(params.get('mode')==='decks') showDecks();
+  else showTracker();
+})();
+</script>
+</body>
+</html>
++valueData.total.toFixed(2)+' • '+valueData.priced+' priced</div></div><span class="deckCount">'+count+'</span></div>'+
     '<div class="deckPreview">'+escapeHTML((d.cards||"").split(/\n/).slice(0,5).join("\n"))+'</div>'+
     '<div class="deckActions"><button class="editDeck">Open Deck</button><button class="deleteDeck">Delete</button></div>';
    card.querySelector(".editDeck").onclick=function(){
