@@ -1090,6 +1090,51 @@ body.trackerPreview #decksView .searchEmpty{
   }
 }
 
+
+/* Card pricing */
+body.trackerPreview #decksView .cardPrices{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin:8px 0 2px;
+}
+body.trackerPreview #decksView .cardPrices>div{
+  min-width:72px;
+  padding:6px 8px;
+  border-radius:9px;
+  background:rgba(4,8,5,.72);
+  border:1px solid rgba(133,107,69,.38);
+}
+body.trackerPreview #decksView .cardPrices span{
+  display:block;
+  color:#9d978b;
+  font-size:8px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:1px;
+}
+body.trackerPreview #decksView .cardPrices strong{
+  display:block;
+  margin-top:2px;
+  color:#e9d6ad;
+  font-family:system-ui,-apple-system,sans-serif;
+  font-size:14px;
+}
+body.trackerPreview #decksView .priceNote{
+  margin:0 0 8px;
+  color:#858c82;
+  font-size:8px;
+  letter-spacing:.5px;
+}
+body.trackerPreview #decksView .searchPrice{
+  display:block;
+  margin-top:4px;
+  color:#d9c08e;
+  font-size:11px;
+  font-style:normal;
+  font-weight:800;
+}
+
 </style>
 </head>
 <body class="trackerPreview">
@@ -1768,13 +1813,26 @@ function removeCardLine(name){
   setDeckStatus(qty?name+" quantity is now "+qty+".":name+" removed from deck.");
   return qty;
 }
+function moneyOrDash(v){
+  var n=parseFloat(v);
+  return isFinite(n)?"$"+n.toFixed(2):"—";
+}
+function cardPriceSummary(card){
+  var p=(card&&card.prices)||{};
+  var rows=[];
+  if(p.usd)rows.push('<div><span>Regular</span><strong>'+moneyOrDash(p.usd)+'</strong></div>');
+  if(p.usd_foil)rows.push('<div><span>Foil</span><strong>'+moneyOrDash(p.usd_foil)+'</strong></div>');
+  if(p.usd_etched)rows.push('<div><span>Etched</span><strong>'+moneyOrDash(p.usd_etched)+'</strong></div>');
+  if(!rows.length)rows.push('<div><span>Price</span><strong>—</strong></div>');
+  return '<div class="cardPrices">'+rows.join("")+'</div><div class="priceNote">Daily price estimate for this printing</div>';
+}
 function showCardResult(card,sourceLabel){
   lastCardResult=card;
   var box=el("cardLookupResult");
   var image="";
   if(card&&card.image_uris&&card.image_uris.small)image='<img src="'+escapeHTML(card.image_uris.small)+'" alt="'+escapeHTML(card.name)+'">';
   else if(card&&card.card_faces&&card.card_faces[0]&&card.card_faces[0].image_uris)image='<img src="'+escapeHTML(card.card_faces[0].image_uris.small)+'" alt="'+escapeHTML(card.name)+'">';
-  box.innerHTML='<div class="cardLookupMedia">'+image+'</div><div class="cardLookupInfo"><span class="lookupSource">'+escapeHTML(sourceLabel||"CARD FOUND")+'</span><strong>'+escapeHTML(card.name)+'</strong><small>'+escapeHTML(card.set_name||"")+(card.collector_number?' • #'+escapeHTML(card.collector_number):'')+'</small><button id="addFoundCard" type="button">＋ Add to Deck</button><div id="afterAddActions" class="hidden afterAddActions"><button id="addAnotherCopy" type="button">＋ Another Copy</button><button id="removeOneCopy" type="button">− Remove One</button><button id="undoThisAdd" type="button">↶ Undo</button></div><div class="scanRecovery"><button id="wrongCard" type="button">Not This Card</button><button id="rescanCard" type="button">Rescan</button></div></div>';
+  box.innerHTML='<div class="cardLookupMedia">'+image+'</div><div class="cardLookupInfo"><span class="lookupSource">'+escapeHTML(sourceLabel||"CARD FOUND")+'</span><strong>'+escapeHTML(card.name)+'</strong><small>'+escapeHTML(card.set_name||"")+(card.collector_number?' • #'+escapeHTML(card.collector_number):'')+'</small>'+cardPriceSummary(card)+'<button id="addFoundCard" type="button">＋ Add to Deck</button><div id="afterAddActions" class="hidden afterAddActions"><button id="addAnotherCopy" type="button">＋ Another Copy</button><button id="removeOneCopy" type="button">− Remove One</button><button id="undoThisAdd" type="button">↶ Undo</button></div><div class="scanRecovery"><button id="wrongCard" type="button">Not This Card</button><button id="rescanCard" type="button">Rescan</button></div></div>';
   box.className="cardLookupResult";
 
   var addBtn=el("addFoundCard"), after=el("afterAddActions");
@@ -1842,7 +1900,7 @@ function renderCardSearchResults(cards,query){
       if(card.image_uris&&card.image_uris.small)img=card.image_uris.small;
       else if(card.card_faces&&card.card_faces[0]&&card.card_faces[0].image_uris)img=card.card_faces[0].image_uris.small;
       item.innerHTML=(img?'<img src="'+escapeHTML(img)+'" alt="">':'<span class="searchCardPlaceholder">MTG</span>')+
-        '<span class="cardSearchChoiceText"><strong>'+escapeHTML(card.name)+'</strong><small>'+escapeHTML(card.set_name||"")+(card.collector_number?' • #'+escapeHTML(card.collector_number):'')+'</small></span><span class="chooseCard">Choose ›</span>';
+        '<span class="cardSearchChoiceText"><strong>'+escapeHTML(card.name)+'</strong><small>'+escapeHTML(card.set_name||"")+(card.collector_number?' • #'+escapeHTML(card.collector_number):'')+'</small><em class="searchPrice">'+(card.prices&&card.prices.usd?moneyOrDash(card.prices.usd):'No regular price')+'</em></span><span class="chooseCard">Choose ›</span>';
       item.onclick=function(){
         showCardResult(card,"SELECTED CARD");
         box.className="hidden cardSearchResults";
