@@ -616,6 +616,60 @@ body.trackerPreview #gameView .playerNameActions button{
   body.trackerPreview #gameView .playerNameInput{flex-basis:100%}
 }
 
+
+/* Direct life-total editing */
+body.trackerPreview #gameView .lifePanel{
+  text-align:center;
+  margin:2px 0 8px;
+}
+body.trackerPreview #gameView .lifeTotal.editLife{
+  width:100%;
+  min-height:74px;
+  padding:6px 8px 2px;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+  font-size:56px;
+  font-weight:900;
+  line-height:1;
+  color:#f4eadb;
+  text-align:center;
+}
+body.trackerPreview #gameView .lifeTotal.editLife:active{
+  transform:none;
+}
+body.trackerPreview #gameView .lifeHint{
+  display:block;
+  margin-top:-2px;
+  color:#8f9d8f;
+  font-size:9px;
+  text-transform:uppercase;
+  letter-spacing:1.4px;
+  font-weight:800;
+}
+body.trackerPreview #gameView .lifeEditRow{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto auto;
+  gap:6px;
+  align-items:center;
+  padding:8px 0 4px;
+}
+body.trackerPreview #gameView .lifeEditInput{
+  width:100%;
+  min-width:0;
+  height:54px;
+  padding:7px 10px;
+  text-align:center;
+  font-size:28px;
+  font-weight:900;
+  border-color:rgba(104,184,103,.72);
+}
+body.trackerPreview #gameView .lifeEditRow button{
+  min-height:48px;
+  padding:8px 10px;
+  font-size:11px;
+}
+
 </style>
 </head>
 <body class="trackerPreview">
@@ -994,7 +1048,7 @@ function renderGame(){
       var creatureCount=(playerCreatures[index]||[]).length;
       card.innerHTML='\
         <div class="playerHeader"><div class="playerIdentity"><span class="playerName">'+escapeHTML(player.name)+'</span><button class="editPlayerName" type="button" aria-label="Edit player name">EDIT</button></div><button class="resetPlayer" type="button">Reset</button></div>\
-        <div class="lifeTotal">'+player.life+'</div>\
+        <div class="lifePanel"><button class="lifeTotal editLife" type="button" aria-label="Edit life total">'+player.life+'</button><span class="lifeHint">Tap life to edit</span></div>\
         <button class="playerCreatures" type="button">BATTLEFIELD <span>'+creatureCount+' CREATURE'+(creatureCount===1?'':'S')+'</span></button>\
         <div class="lifeControls">\
           <button class="lifeDown" type="button">−1 Life</button>\
@@ -1011,6 +1065,27 @@ function renderGame(){
         </div>';
       card.querySelector('.lifeDown').onclick=function(){player.life--;saveGame();renderGame();};
       card.querySelector('.lifeUp').onclick=function(){player.life++;saveGame();renderGame();};
+      card.querySelector('.editLife').onclick=function(){
+        var panel=card.querySelector('.lifePanel');
+        if(!panel)return;
+        panel.innerHTML='<div class="lifeEditRow"><input class="lifeEditInput" type="number" inputmode="numeric" min="-999" max="999" value="'+player.life+'" aria-label="Life total"><button class="saveLife" type="button">Save</button><button class="cancelLife" type="button">Cancel</button></div>';
+        var input=panel.querySelector('.lifeEditInput');
+        function commitLife(){
+          var n=parseInt(input.value,10);
+          if(isNaN(n))return;
+          player.life=Math.max(-999,Math.min(999,n));
+          saveGame();
+          renderGame();
+        }
+        panel.querySelector('.saveLife').onclick=commitLife;
+        panel.querySelector('.cancelLife').onclick=function(){renderGame();};
+        input.onkeydown=function(e){
+          if(e.key==='Enter'){e.preventDefault();commitLife();}
+          if(e.key==='Escape'){e.preventDefault();renderGame();}
+        };
+        input.focus();
+        input.select();
+      };
       card.querySelector('.cmdDown').onclick=function(){player.commander=Math.max(0,player.commander-1);saveGame();renderGame();};
       card.querySelector('.cmdUp').onclick=function(){player.commander++;saveGame();renderGame();};
       card.querySelector('.poisonDown').onclick=function(){player.poison=Math.max(0,player.poison-1);saveGame();renderGame();};
