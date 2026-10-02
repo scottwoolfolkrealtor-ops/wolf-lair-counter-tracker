@@ -652,13 +652,13 @@ el('loadProfile').onclick=function(){loadPro(); gameState=clone(proState.game ||
 el('copyJson').onclick=function(){var text=el('proArea').value; if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).catch(function(){})} else {el('proArea').select();document.execCommand('copy');}};
 el('resetProfile').onclick=function(){try{localStorage.removeItem('wolfLairPro1')}catch(e){}; proState={lastSaved:new Date().toISOString(), tracker:{count:creatures.length}, decks:{count:decks.length}, game:clone(gameState)}; el('proArea').value=JSON.stringify(proState,null,2);};
 
-el('openTracker').onclick=function(){el('home').className='hidden';el('trackerView').className='';window.scrollTo(0,0)};
+el('openTracker').onclick=function(){location.href='./preview-tracker.html?tracker=5'};
 el('backHome').onclick=function(){el('trackerView').className='hidden';el('home').className='';window.scrollTo(0,0)};
 
 el('openDecks').onclick=function(){el('home').className='hidden';el('decksView').className='';renderDecks();window.scrollTo(0,0)};
 el('backDecksHome').onclick=function(){closeDeckForm();el('decksView').className='hidden';el('home').className='';window.scrollTo(0,0)};
 
-el('openGame').onclick=function(){el('home').className='hidden';el('gameView').className='';renderGame();window.scrollTo(0,0)};
+el('openGame').onclick=function(){location.href='./preview-tracker.html?tracker=5&mode=game'};
 el('backGameHome').onclick=function(){el('gameView').className='hidden';el('home').className='';window.scrollTo(0,0)};
 
 el('openPro').onclick=function(){el('home').className='hidden';el('proView').className='';loadPro();window.scrollTo(0,0)};
