@@ -366,6 +366,42 @@ body.trackerPreview #trackerView nav #bill{
 }
 /* no animation, backdrop-filter, or continuous GPU effects in tracker preview */
 
+
+/* Battlefield Command title treatment */
+body.trackerPreview #trackerView header.trackerTitle{
+  display:block;
+  text-align:left;
+  padding:15px 16px 14px;
+}
+body.trackerPreview #trackerView .trackerBrand{
+  color:#b69a6b;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:4px;
+  margin-bottom:5px;
+}
+body.trackerPreview #trackerView header.trackerTitle h1{
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:25px;
+  letter-spacing:1px;
+  color:#f3e8d5;
+  margin:0;
+}
+body.trackerPreview #trackerView header.trackerTitle small{
+  display:block;
+  margin-top:5px;
+  color:#91b68b;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:2.4px;
+}
+@media(max-width:420px){
+  body.trackerPreview #trackerView header.trackerTitle{padding:13px 14px 12px}
+  body.trackerPreview #trackerView .trackerBrand{font-size:9px;letter-spacing:3.2px}
+  body.trackerPreview #trackerView header.trackerTitle h1{font-size:22px}
+  body.trackerPreview #trackerView header.trackerTitle small{font-size:9px;letter-spacing:1.9px}
+}
+
 </style>
 </head>
 <body class="trackerPreview">
@@ -524,7 +560,7 @@ body.trackerPreview #trackerView nav #bill{
 <section id="trackerView" class="hidden">
 <main>
 <button id="backHome" class="backHome" type="button">‹ Wolf Lair Home</button>
-<header><div class="wolf">⚔️</div><h1>The Wolf Lair</h1><small>COUNTER TRACKER</small></header>
+<header class="trackerTitle"><div class="trackerBrand">THE WOLF LAIR</div><h1>BATTLEFIELD COMMAND</h1><small>CREATURE &amp; COUNTER CONTROL</small></header>
 <div id="form" class="hidden">
 <input id="nm" placeholder="Creature name">
 <div class="pt"><input id="pw" inputmode="numeric" placeholder="Power"><input id="th" inputmode="numeric" placeholder="Toughness"></div>
