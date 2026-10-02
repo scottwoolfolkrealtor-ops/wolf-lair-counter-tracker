@@ -493,6 +493,74 @@ body.trackerPreview #gameView button{
   body.trackerPreview #gameView header.gameTitle h1{font-size:20px}
 }
 
+
+/* Per-player battlefield access + refined Table Command header */
+body.trackerPreview #gameView header.tableCommandTitle{
+  display:block;
+  text-align:left;
+  padding:15px 16px 14px;
+}
+body.trackerPreview #gameView header.tableCommandTitle .trackerBrand{
+  color:#b69a6b;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:4px;
+  margin-bottom:5px;
+}
+body.trackerPreview #gameView header.tableCommandTitle h1{
+  margin:0;
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:25px;
+  line-height:1.05;
+  letter-spacing:1px;
+  color:#f3e8d5;
+}
+body.trackerPreview #gameView header.tableCommandTitle small{
+  display:block;
+  margin-top:5px;
+  color:#91b68b;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:2.2px;
+}
+body.trackerPreview #gameView .playerCreatures{
+  width:100%;
+  min-height:48px;
+  margin:0 0 10px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  border-color:rgba(82,174,89,.68);
+  background:
+    linear-gradient(180deg,rgba(27,69,34,.96),rgba(11,31,16,.98));
+  color:#eef8e9;
+  letter-spacing:.7px;
+  font-size:12px;
+}
+body.trackerPreview #gameView .playerCreatures span{
+  color:#a8d8a2;
+  font-size:10px;
+  letter-spacing:.5px;
+  font-weight:800;
+}
+body.trackerPreview #gameView .playerCreatures::after{
+  content:'›';
+  color:#d9c18f;
+  font-size:20px;
+  line-height:1;
+  margin-left:auto;
+}
+body.trackerPreview #trackerView #activePlayerLabel{
+  color:#c9a972;
+}
+@media(max-width:420px){
+  body.trackerPreview #gameView header.tableCommandTitle{padding:13px 14px 12px}
+  body.trackerPreview #gameView header.tableCommandTitle .trackerBrand{font-size:9px;letter-spacing:3.2px}
+  body.trackerPreview #gameView header.tableCommandTitle h1{font-size:22px}
+  body.trackerPreview #gameView header.tableCommandTitle small{font-size:9px;letter-spacing:1.7px}
+}
+
 </style>
 </head>
 <body class="trackerPreview">
@@ -652,7 +720,7 @@ body.trackerPreview #gameView button{
 <main>
 <button id="backHome" class="backHome" type="button">‹ Wolf Lair Home</button>
 <header class="trackerTitle">
-  <div class="trackerBrand">THE WOLF LAIR</div>
+  <div id="activePlayerLabel" class="trackerBrand">PLAYER 1 • THE WOLF LAIR</div>
   <h1>BATTLEFIELD COMMAND</h1>
   <small>CREATURE &amp; COUNTER CONTROL</small>
   <button id="quickGameMode" class="quickSwitch" type="button">GAME MODE ›</button>
@@ -671,9 +739,10 @@ body.trackerPreview #gameView button{
 <section id="gameView" class="hidden">
   <main>
     <button id="backGameHome" class="backHome" type="button">‹ Wolf Lair Home</button>
-    <header class="gameTitle">
-  <div class="wolf">🎲</div><h1>Game Mode</h1><small>TABLETOP</small>
-  <button id="quickCreatures" class="quickSwitch" type="button">‹ CREATURES</button>
+    <header class="gameTitle tableCommandTitle">
+  <div class="trackerBrand">THE WOLF LAIR</div>
+  <h1>TABLE COMMAND</h1>
+  <small>LIFE • COMMANDER • POISON</small>
 </header>
     <div class="gameShell">
       <div id="gameBoard" class="gameBoard"></div>
@@ -714,7 +783,8 @@ body.trackerPreview #gameView button{
 <script>
 (function(){
 "use strict";
-var KEY="wolfLairClean1", creatures=[], undoState=null;
+var LEGACY_KEY="wolfLairClean1", PLAYER_KEY="wolfLairPlayerCreatures1";
+var playerCreatures=[[],[]], activePlayerIndex=0, creatures=playerCreatures[0], undoState=null;
 function el(id){return document.getElementById(id)}
 function clone(x){return JSON.parse(JSON.stringify(x))}
 function normalize(c){
@@ -723,15 +793,50 @@ function normalize(c){
   c.p=Number(c.p)||0;c.t=Number(c.t)||0;c.c=Math.max(0,Number(c.c)||0);
   if(!Array.isArray(c.links))c.links=[];
 }
-function save(){try{localStorage.setItem(KEY,JSON.stringify(creatures))}catch(e){}}
+function ensurePlayerCreatureSlots(){
+  var count=(gameState&&gameState.players&&gameState.players.length)||2;
+  while(playerCreatures.length<count)playerCreatures.push([]);
+  if(playerCreatures.length>count)playerCreatures.length=count;
+}
+function setActivePlayer(index){
+  ensurePlayerCreatureSlots();
+  activePlayerIndex=Math.max(0,Math.min(index,playerCreatures.length-1));
+  creatures=playerCreatures[activePlayerIndex];
+  undoState=null;
+  updateBattlefieldPlayerLabel();
+  render();
+}
+function updateBattlefieldPlayerLabel(){
+  var label=el("activePlayerLabel");
+  if(!label)return;
+  var p=(gameState&&gameState.players&&gameState.players[activePlayerIndex])||{name:"Player "+(activePlayerIndex+1)};
+  label.textContent=String(p.name||("Player "+(activePlayerIndex+1))).toUpperCase()+" • THE WOLF LAIR";
+}
+function save(){
+  try{
+    playerCreatures[activePlayerIndex]=creatures;
+    localStorage.setItem(PLAYER_KEY,JSON.stringify(playerCreatures));
+  }catch(e){}
+}
 function load(){
   try{
-   var raw=localStorage.getItem(KEY), data=raw?JSON.parse(raw):[];
-   if(Array.isArray(data)){creatures=data;for(var i=0;i<creatures.length;i++)normalize(creatures[i])}
-  }catch(e){creatures=[]}
+    var raw=localStorage.getItem(PLAYER_KEY), data=raw?JSON.parse(raw):null;
+    if(Array.isArray(data)){
+      playerCreatures=data.map(function(list){return Array.isArray(list)?list:[];});
+    }else{
+      var legacyRaw=localStorage.getItem(LEGACY_KEY), legacy=legacyRaw?JSON.parse(legacyRaw):[];
+      playerCreatures=[Array.isArray(legacy)?legacy:[],[]];
+      try{localStorage.setItem(PLAYER_KEY,JSON.stringify(playerCreatures))}catch(e2){}
+    }
+    ensurePlayerCreatureSlots();
+    for(var p=0;p<playerCreatures.length;p++){
+      for(var i=0;i<playerCreatures[p].length;i++)normalize(playerCreatures[p][i]);
+    }
+    creatures=playerCreatures[activePlayerIndex];
+  }catch(e){playerCreatures=[[],[]];creatures=playerCreatures[0]}
 }
 function snapshot(){undoState=clone(creatures);el("undo").disabled=false}
-function finish(){save();render()}
+function finish(){save();render();renderGame()}
 function escapeHTML(v){var d=document.createElement("div");d.textContent=String(v);return d.innerHTML}
 function find(id){for(var i=0;i<creatures.length;i++)if(creatures[i].id===id)return creatures[i];return null}
 function adjust(id,n){var c=find(id);if(!c)return;snapshot();c.c=Math.max(0,c.c+n);finish()}
@@ -819,6 +924,7 @@ function loadGame(){
     gameState={players:[{name:'Player 1', life:20, commander:0, poison:0},{name:'Player 2', life:20, commander:0, poison:0}], phases:['Beginning','Precombat','Combat','Postcombat','Ending'], phaseIndex:0};
   }
   if(!gameState.phases||!gameState.phases.length){gameState.phases=['Beginning','Precombat','Combat','Postcombat','Ending'];}
+  if(typeof playerCreatures!=='undefined')ensurePlayerCreatureSlots();
 }
 function saveGame(){
   try{localStorage.setItem('wolfLairGame1',JSON.stringify(gameState))}catch(e){}
@@ -830,9 +936,11 @@ function renderGame(){
     (function(player,index){
       var card=document.createElement('div');
       card.className='playerCard';
+      var creatureCount=(playerCreatures[index]||[]).length;
       card.innerHTML='\
         <div class="playerHeader"><span class="playerName">'+escapeHTML(player.name)+'</span><button class="resetPlayer" type="button">Reset</button></div>\
         <div class="lifeTotal">'+player.life+'</div>\
+        <button class="playerCreatures" type="button">BATTLEFIELD <span>'+creatureCount+' CREATURE'+(creatureCount===1?'':'S')+'</span></button>\
         <div class="lifeControls">\
           <button class="lifeDown" type="button">−1 Life</button>\
           <button class="lifeUp" type="button">+1 Life</button>\
@@ -853,6 +961,12 @@ function renderGame(){
       card.querySelector('.poisonDown').onclick=function(){player.poison=Math.max(0,player.poison-1);saveGame();renderGame();};
       card.querySelector('.poisonUp').onclick=function(){player.poison++;saveGame();renderGame();};
       card.querySelector('.resetPlayer').onclick=function(){player.life=20;player.commander=0;player.poison=0;saveGame();renderGame();};
+      card.querySelector('.playerCreatures').onclick=function(){
+        setActivePlayer(index);
+        el('gameView').className='hidden';
+        el('trackerView').className='';
+        window.scrollTo(0,0);
+      };
       board.appendChild(card);
     })(gameState.players[i],i);
   }
@@ -968,11 +1082,9 @@ renderGame();
   var back=document.getElementById('backHome');
   var backGame=document.getElementById('backGameHome');
   var toGame=document.getElementById('quickGameMode');
-  var toTracker=document.getElementById('quickCreatures');
-  if(back)back.onclick=function(){location.href='./preview-home.html?preview=4';};
-  if(backGame)backGame.onclick=function(){location.href='./preview-home.html?preview=4';};
+  if(back)back.onclick=function(){location.href='./preview-home.html?preview=5';};
+  if(backGame)backGame.onclick=function(){location.href='./preview-home.html?preview=5';};
   if(toGame)toGame.onclick=showGame;
-  if(toTracker)toTracker.onclick=showTracker;
   var params=new URLSearchParams(location.search);
   if(params.get('mode')==='game') showGame(); else showTracker();
 })();
