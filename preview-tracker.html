@@ -865,6 +865,86 @@ body.trackerPreview #decksView #wrongCard{
   color:#e1b7aa;
 }
 
+
+/* Live auto-crop card scanner */
+body.trackerPreview #decksView .liveScanner{
+  margin-bottom:10px;
+}
+body.trackerPreview #decksView .cameraStage{
+  position:relative;
+  width:100%;
+  overflow:hidden;
+  border-radius:14px;
+  background:#020302;
+  border:1px solid rgba(192,139,75,.55);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.025);
+}
+body.trackerPreview #decksView #scanVideo{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+body.trackerPreview #decksView #scanOverlay{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+}
+body.trackerPreview #decksView .cameraHint{
+  position:absolute;
+  left:50%;
+  bottom:10px;
+  transform:translateX(-50%);
+  width:max-content;
+  max-width:92%;
+  padding:7px 10px;
+  border-radius:999px;
+  text-align:center;
+  background:rgba(2,5,3,.78);
+  border:1px solid rgba(202,158,91,.38);
+  color:#e7d6b8;
+  backdrop-filter:blur(4px);
+}
+body.trackerPreview #decksView .cameraHint span{
+  display:block;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:1.5px;
+}
+body.trackerPreview #decksView .cameraHint small{
+  display:block;
+  margin-top:2px;
+  color:#b8b5aa;
+  font-size:9px;
+}
+body.trackerPreview #decksView .scanCameraActions{
+  display:grid;
+  grid-template-columns:1.2fr 1fr .8fr;
+  gap:6px;
+  margin-top:7px;
+}
+body.trackerPreview #decksView .scanCameraActions button{
+  min-height:44px;
+  font-size:11px;
+}
+body.trackerPreview #decksView #manualCapture{
+  border-color:rgba(82,174,89,.68);
+  background:linear-gradient(180deg,rgba(29,72,35,.96),rgba(12,33,17,.98));
+}
+body.trackerPreview #decksView #cancelScanner{
+  border-color:rgba(151,87,67,.5);
+}
+@media(max-width:380px){
+  body.trackerPreview #decksView .scanCameraActions{
+    grid-template-columns:1fr 1fr;
+  }
+  body.trackerPreview #decksView #cancelScanner{
+    grid-column:1 / -1;
+  }
+}
+
 </style>
 </head>
 <body class="trackerPreview">
@@ -1041,9 +1121,21 @@ body.trackerPreview #decksView #wrongCard{
    </div>
 
    <div id="scanPanel" class="hidden cardToolPanel scanPanel">
+    <div id="liveScanner" class="hidden liveScanner">
+     <div id="cameraStage" class="cameraStage">
+      <video id="scanVideo" autoplay playsinline muted></video>
+      <canvas id="scanOverlay" aria-hidden="true"></canvas>
+      <div class="cameraHint"><span id="cameraState">CENTER CARD</span><small>Hold steady — capture is automatic</small></div>
+     </div>
+     <div class="scanCameraActions">
+      <button id="manualCapture" type="button">Capture Now</button>
+      <button id="photoFallback" type="button">Use Photo</button>
+      <button id="cancelScanner" type="button">Cancel</button>
+     </div>
+    </div>
     <div class="scanPreviewWrap">
-     <img id="scanPreview" class="hidden" alt="Card scan preview">
-     <div id="scanStatus">Fill most of the photo with the card and keep it upright. Wolf Lair will read the card name.</div>
+     <img id="scanPreview" class="hidden" alt="Cropped card scan preview">
+     <div id="scanStatus">Wolf Lair will find the card edges, center the frame, capture automatically, and crop away the table.</div>
     </div>
    </div>
 
@@ -1455,6 +1547,7 @@ function setDeckStatus(msg,isError){
   box.className=isError?"deckToolStatus error":"deckToolStatus";
 }
 function closeDeckTools(){
+  if(typeof stopCardCamera==="function")stopCardCamera();
   el("cardSearchPanel").className="hidden cardToolPanel";
   el("scanPanel").className="hidden cardToolPanel scanPanel";
   el("cardLookupResult").className="hidden cardLookupResult";
@@ -1628,6 +1721,222 @@ function loadTesseract(){
   });
   return window.__wolfTesseractPromise;
 }
+var cardCameraStream=null, cardDetectTimer=null, lastDetectedCard=null, stableCardFrames=0, autoCaptureBusy=false;
+
+function loadOpenCV(){
+  if(window.cv&&window.cv.Mat)return Promise.resolve(window.cv);
+  if(window.__wolfOpenCVPromise)return window.__wolfOpenCVPromise;
+  window.__wolfOpenCVPromise=new Promise(function(resolve,reject){
+    function ready(){
+      if(window.cv&&window.cv.Mat){resolve(window.cv);return true}
+      return false;
+    }
+    if(ready())return;
+    var s=document.createElement("script");
+    s.src="https://docs.opencv.org/4.10.0/opencv.js";
+    s.async=true;
+    s.onload=function(){
+      if(ready())return;
+      if(window.cv){
+        var old=window.cv.onRuntimeInitialized;
+        window.cv.onRuntimeInitialized=function(){
+          if(typeof old==="function")old();
+          ready()||reject(new Error("OpenCV failed to initialize"));
+        };
+        setTimeout(function(){if(!ready()&&!(window.cv&&window.cv.onRuntimeInitialized))reject(new Error("OpenCV unavailable"))},10000);
+      }else reject(new Error("OpenCV unavailable"));
+    };
+    s.onerror=function(){reject(new Error("OpenCV failed to load"))};
+    document.head.appendChild(s);
+  });
+  return window.__wolfOpenCVPromise;
+}
+function stopCardCamera(){
+  if(cardDetectTimer){clearInterval(cardDetectTimer);cardDetectTimer=null}
+  if(cardCameraStream){
+    cardCameraStream.getTracks().forEach(function(t){try{t.stop()}catch(e){}});
+    cardCameraStream=null;
+  }
+  var video=el("scanVideo");
+  if(video)video.srcObject=null;
+  lastDetectedCard=null;stableCardFrames=0;autoCaptureBusy=false;
+  var live=el("liveScanner");if(live)live.className="hidden liveScanner";
+}
+function orderCardPoints(points){
+  var pts=points.slice();
+  var sums=pts.map(function(p){return p.x+p.y});
+  var diffs=pts.map(function(p){return p.y-p.x});
+  function atMin(arr){var ix=0;for(var i=1;i<arr.length;i++)if(arr[i]<arr[ix])ix=i;return pts[ix]}
+  function atMax(arr){var ix=0;for(var i=1;i<arr.length;i++)if(arr[i]>arr[ix])ix=i;return pts[ix]}
+  return [atMin(sums),atMin(diffs),atMax(sums),atMax(diffs)]; // TL, TR, BR, BL
+}
+function defaultCardRect(w,h){
+  var targetRatio=2.5/3.5, ch=h*.78, cw=ch*targetRatio;
+  if(cw>w*.82){cw=w*.82;ch=cw/targetRatio}
+  var x=(w-cw)/2,y=(h-ch)/2;
+  return [{x:x,y:y},{x:x+cw,y:y},{x:x+cw,y:y+ch},{x:x,y:y+ch}];
+}
+function drawCardOverlay(points,found,progress){
+  var video=el("scanVideo"), overlay=el("scanOverlay"), state=el("cameraState");
+  if(!video||!overlay||!video.videoWidth)return;
+  var dw=overlay.width,dh=overlay.height,ctx=overlay.getContext("2d");
+  ctx.clearRect(0,0,dw,dh);
+  var pts=points&&points.length===4?points:defaultCardRect(dw,dh);
+  ctx.save();
+  ctx.lineWidth=Math.max(3,dw*.008);
+  ctx.strokeStyle=found?"rgba(126,235,126,.98)":"rgba(221,188,126,.88)";
+  ctx.fillStyle=found?"rgba(62,183,78,.08)":"rgba(220,180,110,.035)";
+  ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+  for(var i=1;i<4;i++)ctx.lineTo(pts[i].x,pts[i].y);
+  ctx.closePath();ctx.fill();ctx.stroke();
+  var len=Math.max(18,dw*.055);
+  ctx.lineWidth=Math.max(5,dw*.012);
+  for(var j=0;j<4;j++){
+    var p=pts[j], a=pts[(j+1)%4], prev=pts[(j+3)%4];
+    function toward(from,to,d){var dx=to.x-from.x,dy=to.y-from.y,l=Math.sqrt(dx*dx+dy*dy)||1;return{x:from.x+dx/l*d,y:from.y+dy/l*d}}
+    var p1=toward(p,a,len),p2=toward(p,prev,len);
+    ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p.x,p.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
+  }
+  ctx.restore();
+  if(state){
+    if(found&&progress>=4)state.textContent="CAPTURING";
+    else if(found)state.textContent="HOLD STEADY "+Math.min(100,Math.round(progress/4*100))+"%";
+    else state.textContent="CENTER CARD";
+  }
+}
+function detectCardFrame(cv){
+  if(autoCaptureBusy)return;
+  var video=el("scanVideo"), overlay=el("scanOverlay");
+  if(!video||video.readyState<2||!video.videoWidth)return;
+  var dw=360, dh=Math.max(1,Math.round(video.videoHeight*(dw/video.videoWidth)));
+  overlay.width=dw;overlay.height=dh;
+  var work=document.createElement("canvas");work.width=dw;work.height=dh;
+  var wctx=work.getContext("2d");wctx.drawImage(video,0,0,dw,dh);
+  var src=null,gray=null,blur=null,edges=null,contours=null,hierarchy=null;
+  try{
+    src=cv.imread(work);gray=new cv.Mat();blur=new cv.Mat();edges=new cv.Mat();
+    cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
+    cv.GaussianBlur(gray,blur,new cv.Size(5,5),0,0,cv.BORDER_DEFAULT);
+    cv.Canny(blur,edges,55,150,3,false);
+    contours=new cv.MatVector();hierarchy=new cv.Mat();
+    cv.findContours(edges,contours,hierarchy,cv.RETR_LIST,cv.CHAIN_APPROX_SIMPLE);
+    var best=null,bestScore=0,frameArea=dw*dh,centerX=dw/2,centerY=dh/2;
+    for(var i=0;i<contours.size();i++){
+      var cnt=contours.get(i), peri=cv.arcLength(cnt,true), approx=new cv.Mat();
+      cv.approxPolyDP(cnt,approx,0.022*peri,true);
+      if(approx.rows===4&&cv.isContourConvex(approx)){
+        var area=Math.abs(cv.contourArea(approx)), ratioArea=area/frameArea;
+        if(ratioArea>.18&&ratioArea<.92){
+          var raw=approx.data32S,pts=[];
+          for(var p=0;p<4;p++)pts.push({x:raw[p*2],y:raw[p*2+1]});
+          pts=orderCardPoints(pts);
+          function dist(a,b){var x=a.x-b.x,y=a.y-b.y;return Math.sqrt(x*x+y*y)}
+          var width=(dist(pts[0],pts[1])+dist(pts[3],pts[2]))/2;
+          var height=(dist(pts[0],pts[3])+dist(pts[1],pts[2]))/2;
+          var ar=width/Math.max(1,height), ratioScore=Math.max(0,1-Math.abs(ar-(2.5/3.5))/.32);
+          var cx=(pts[0].x+pts[1].x+pts[2].x+pts[3].x)/4,cy=(pts[0].y+pts[1].y+pts[2].y+pts[3].y)/4;
+          var centerDist=Math.sqrt(Math.pow((cx-centerX)/dw,2)+Math.pow((cy-centerY)/dh,2));
+          var centerScore=Math.max(0,1-centerDist*2.2);
+          var score=ratioArea*2.6+ratioScore*1.8+centerScore;
+          if(ratioScore>.35&&score>bestScore){bestScore=score;best={points:pts,cx:cx,cy:cy,width:width,height:height}}
+        }
+      }
+      approx.delete();cnt.delete();
+    }
+    if(best&&bestScore>1.6){
+      var now={cx:best.cx/dw,cy:best.cy/dh,w:best.width/dw,h:best.height/dh};
+      if(lastDetectedCard){
+        var delta=Math.abs(now.cx-lastDetectedCard.norm.cx)+Math.abs(now.cy-lastDetectedCard.norm.cy)+Math.abs(now.w-lastDetectedCard.norm.w)+Math.abs(now.h-lastDetectedCard.norm.h);
+        stableCardFrames=delta<.055?stableCardFrames+1:0;
+      }else stableCardFrames=0;
+      lastDetectedCard={points:best.points,norm:now,detectW:dw,detectH:dh};
+      drawCardOverlay(best.points,true,stableCardFrames);
+      if(stableCardFrames>=4){autoCaptureBusy=true;captureDetectedCard(cv,lastDetectedCard)}
+    }else{
+      stableCardFrames=0;lastDetectedCard=null;drawCardOverlay(null,false,0);
+    }
+  }catch(e){
+    drawCardOverlay(null,false,0);
+  }finally{
+    [src,gray,blur,edges,hierarchy].forEach(function(m){if(m)try{m.delete()}catch(e){}});
+    if(contours)try{contours.delete()}catch(e){}
+  }
+}
+function cropCardFromVideo(cv,detected){
+  var video=el("scanVideo");
+  if(!video||!video.videoWidth)return Promise.reject(new Error("Camera not ready"));
+  var points=detected&&detected.points?detected.points:null;
+  var dw=detected&&detected.detectW?detected.detectW:360;
+  var dh=detected&&detected.detectH?detected.detectH:Math.round(video.videoHeight*(360/video.videoWidth));
+  if(!points)points=defaultCardRect(dw,dh);
+  var maxW=1500,scale=Math.min(1,maxW/video.videoWidth);
+  var sw=Math.round(video.videoWidth*scale),sh=Math.round(video.videoHeight*scale);
+  var source=document.createElement("canvas");source.width=sw;source.height=sh;source.getContext("2d").drawImage(video,0,0,sw,sh);
+  var ordered=orderCardPoints(points);
+  var sx=sw/dw,sy=sh/dh;
+  var srcPts=[];
+  ordered.forEach(function(p){srcPts.push(p.x*sx,p.y*sy)});
+  var outW=750,outH=1050;
+  var src=cv.imread(source),dst=new cv.Mat(),srcTri=cv.matFromArray(4,1,cv.CV_32FC2,srcPts);
+  var dstTri=cv.matFromArray(4,1,cv.CV_32FC2,[0,0,outW-1,0,outW-1,outH-1,0,outH-1]);
+  var M=cv.getPerspectiveTransform(srcTri,dstTri);
+  cv.warpPerspective(src,dst,M,new cv.Size(outW,outH),cv.INTER_LINEAR,cv.BORDER_REPLICATE,new cv.Scalar());
+  var crop=document.createElement("canvas");crop.width=outW;crop.height=outH;cv.imshow(crop,dst);
+  src.delete();dst.delete();srcTri.delete();dstTri.delete();M.delete();
+  return new Promise(function(resolve,reject){
+    crop.toBlob(function(blob){
+      if(!blob){reject(new Error("Could not crop card"));return}
+      resolve(new File([blob],"wolf-lair-card.jpg",{type:"image/jpeg"}));
+    },"image/jpeg",.92);
+  });
+}
+function captureDetectedCard(cv,detected){
+  var state=el("cameraState");if(state)state.textContent="CAPTURING";
+  cropCardFromVideo(cv,detected).then(function(file){
+    stopCardCamera();
+    var panel=el("scanPanel");panel.className="cardToolPanel scanPanel";
+    el("scanStatus").textContent="Card cropped. Reading the title…";
+    return scanImageFile(file);
+  }).catch(function(){
+    autoCaptureBusy=false;stableCardFrames=0;
+    setDeckStatus("Could not crop that frame. Hold the card steady and try again.",true);
+  });
+}
+function startCardCamera(){
+  closeDeckTools();
+  el("scanPanel").className="cardToolPanel scanPanel";
+  el("liveScanner").className="liveScanner";
+  el("scanStatus").textContent="Finding the card edges…";
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    el("liveScanner").className="hidden liveScanner";
+    el("cardScanInput").click();
+    return;
+  }
+  Promise.all([
+    navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}},audio:false}),
+    loadOpenCV()
+  ]).then(function(values){
+    cardCameraStream=values[0];
+    var cv=values[1],video=el("scanVideo");
+    video.srcObject=cardCameraStream;
+    video.onloadedmetadata=function(){
+      video.play().then(function(){
+        var stage=el("cameraStage");
+        if(stage)stage.style.aspectRatio=video.videoWidth+" / "+video.videoHeight;
+        var overlay=el("scanOverlay");
+        overlay.width=360;overlay.height=Math.round(video.videoHeight*(360/video.videoWidth));
+        drawCardOverlay(null,false,0);
+        cardDetectTimer=setInterval(function(){detectCardFrame(cv)},320);
+        el("scanStatus").textContent="Move the card into view. The green frame will lock on and capture automatically.";
+      }).catch(function(){});
+    };
+  }).catch(function(){
+    stopCardCamera();
+    el("scanPanel").className="cardToolPanel scanPanel";
+    el("scanStatus").textContent="Live scanner was unavailable. You can still take or choose a photo.";
+    el("cardScanInput").click();
+  });
+}
 function scanImageFile(file){
   var preview=el("scanPreview"), panel=el("scanPanel"), status=el("scanStatus");
   panel.className="cardToolPanel scanPanel";
@@ -1714,17 +2023,22 @@ function scanImageFile(file){
     img.src=url;
   });
 }
-el("scanCardBtn").onclick=function(){
-  closeDeckTools();
-  el("scanPanel").className="cardToolPanel scanPanel";
-  el("scanStatus").textContent="Fill most of the photo with the card and keep it upright. Wolf Lair will read the card name.";
-  el("cardScanInput").click();
+el("scanCardBtn").onclick=startCardCamera;
+el("manualCapture").onclick=function(){
+  if(autoCaptureBusy)return;
+  autoCaptureBusy=true;
+  loadOpenCV().then(function(cv){return captureDetectedCard(cv,lastDetectedCard)}).catch(function(){autoCaptureBusy=false});
 };
+el("photoFallback").onclick=function(){stopCardCamera();el("cardScanInput").click()};
+el("cancelScanner").onclick=function(){stopCardCamera();closeDeckTools()};
 el("cardScanInput").onchange=function(){
   var file=this.files&&this.files[0]; if(!file)return;
+  stopCardCamera();
+  el("scanPanel").className="cardToolPanel scanPanel";
   scanImageFile(file).catch(function(){});
   this.value="";
 };
+document.addEventListener("visibilitychange",function(){if(document.hidden)stopCardCamera()});
 loadDecks();
 loadGame();
 load();render();
