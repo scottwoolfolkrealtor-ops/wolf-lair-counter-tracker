@@ -2117,7 +2117,9 @@ function renderDecks(){
    (function(d){
    var card=document.createElement("div");card.className="deckCard";
    var count=deckCardCount(d.cards), valueData=deckValueData(d.entries||[]);
-   card.innerHTML='<div class="deckCardTop"><div><h3>'+escapeHTML(d.name)+'</h3><div class="deckMeta">Commander: '+escapeHTML(d.commander||"Not set")+' • '+count+' cards listed</div><div class="deckSavedValue">Estimated value: 
+   card.innerHTML='<div class="deckCardTop"><div><h3>'+escapeHTML(d.name)+'</h3><div class="deckMeta">Commander: '+escapeHTML(d.commander||"Not set")+' • '+count+' cards listed</div><div class="deckSavedValue">Estimated value: $'+valueData.total.toFixed(2)+' • '+valueData.priced+' priced</div></div><span class="deckCount">'+count+'</span></div>'+
+    '<div class="deckPreview">'+escapeHTML((d.cards||"").split(/\n/).slice(0,5).join("\n"))+'</div>'+
+    '<div class="deckActions"><button class="editDeck">Open Deck</button><button class="deleteDeck">Delete</button></div>';
    card.querySelector(".editDeck").onclick=function(){
      editingDeck=d.id;deckUndoState=null;updateDeckUndoButton();deckEntries=Array.isArray(d.entries)?clone(d.entries):[];el("deckName").value=d.name;el("commanderName").value=d.commander||"";el("deckCards").value=d.cards||"";renderDeckValue();
      el("deckFormTitle").textContent="Edit "+d.name;
