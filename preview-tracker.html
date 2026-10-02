@@ -670,6 +670,46 @@ body.trackerPreview #gameView .lifeEditRow button{
   font-size:11px;
 }
 
+
+/* Table roster controls */
+body.trackerPreview #gameView .playerRosterTools{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:2px;
+}
+body.trackerPreview #gameView .playerRosterTools button{
+  min-height:48px;
+}
+body.trackerPreview #gameView #addPlayer{
+  border-color:rgba(82,174,89,.68);
+  background:linear-gradient(180deg,rgba(29,72,35,.96),rgba(12,33,17,.98));
+  color:#eaf7e7;
+}
+body.trackerPreview #gameView #removePlayer{
+  border-color:rgba(151,87,67,.52);
+  background:linear-gradient(180deg,rgba(56,31,25,.94),rgba(23,16,14,.98));
+  color:#e6c9c0;
+}
+body.trackerPreview #gameView .playerRosterTools button:disabled{
+  opacity:.34;
+}
+body.trackerPreview #gameView .playerLimitMsg{
+  min-height:18px;
+  margin:-3px 0 2px;
+  text-align:center;
+  color:#918c80;
+  font-size:10px;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+@media(max-width:420px){
+  body.trackerPreview #gameView .playerRosterTools{
+    grid-template-columns:1fr;
+    gap:6px;
+  }
+}
+
 </style>
 </head>
 <body class="trackerPreview">
@@ -855,6 +895,11 @@ body.trackerPreview #gameView .lifeEditRow button{
 </header>
     <div class="gameShell">
       <div id="gameBoard" class="gameBoard"></div>
+      <div class="playerRosterTools">
+        <button id="addPlayer" type="button">＋ Add Player</button>
+        <button id="removePlayer" type="button">− Remove Last Player</button>
+      </div>
+      <div id="playerLimitMsg" class="playerLimitMsg" aria-live="polite"></div>
       <div class="gameTools">
         <button id="nextPhase" type="button">Next Phase</button>
         <button id="resetMatch" type="button">Reset Match</button>
@@ -1126,7 +1171,33 @@ function renderGame(){
     })(gameState.players[i],i);
   }
   el('phaseName').textContent=gameState.phases[gameState.phaseIndex] || 'Beginning';
+  var addBtn=el('addPlayer'), removeBtn=el('removePlayer'), limitMsg=el('playerLimitMsg');
+  if(addBtn)addBtn.disabled=gameState.players.length>=6;
+  if(removeBtn)removeBtn.disabled=gameState.players.length<=2;
+  if(limitMsg){
+    limitMsg.textContent=gameState.players.length>=6?'Maximum 6 players':(gameState.players.length+' players at the table');
+  }
 }
+el('addPlayer').onclick=function(){
+  if(gameState.players.length>=6)return;
+  var n=gameState.players.length+1;
+  gameState.players.push({name:'Player '+n, life:20, commander:0, poison:0});
+  ensurePlayerCreatureSlots();
+  saveGame();
+  save();
+  renderGame();
+};
+el('removePlayer').onclick=function(){
+  if(gameState.players.length<=2)return;
+  gameState.players.pop();
+  playerCreatures.pop();
+  if(activePlayerIndex>=gameState.players.length)activePlayerIndex=gameState.players.length-1;
+  creatures=playerCreatures[activePlayerIndex]||[];
+  saveGame();
+  save();
+  updateBattlefieldPlayerLabel();
+  renderGame();
+};
 el('nextPhase').onclick=function(){
   gameState.phaseIndex=(gameState.phaseIndex+1) % gameState.phases.length;
   saveGame();renderGame();
