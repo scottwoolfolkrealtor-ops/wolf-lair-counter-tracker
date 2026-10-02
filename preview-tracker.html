@@ -108,7 +108,6 @@ textarea.proArea{width:100%;min-height:180px;background:#06100b;color:#fff;borde
 /* === COUNTER TRACKER VISUAL PREVIEW — STATIC / BATTERY FRIENDLY === */
 body.trackerPreview{background:#030605}
 body.trackerPreview #home{display:none!important}
-body.trackerPreview #trackerView.hidden{display:block!important}
 body.trackerPreview .lairScene{display:none!important}
 
 body.trackerPreview #trackerView{
@@ -970,10 +969,12 @@ renderGame();
   var backGame=document.getElementById('backGameHome');
   var toGame=document.getElementById('quickGameMode');
   var toTracker=document.getElementById('quickCreatures');
-  if(back)back.onclick=function(){location.href='./preview-home.html?preview=3';};
-  if(backGame)backGame.onclick=function(){location.href='./preview-home.html?preview=3';};
+  if(back)back.onclick=function(){location.href='./preview-home.html?preview=4';};
+  if(backGame)backGame.onclick=function(){location.href='./preview-home.html?preview=4';};
   if(toGame)toGame.onclick=showGame;
   if(toTracker)toTracker.onclick=showTracker;
+  var params=new URLSearchParams(location.search);
+  if(params.get('mode')==='game') showGame(); else showTracker();
 })();
 </script>
 </body>
