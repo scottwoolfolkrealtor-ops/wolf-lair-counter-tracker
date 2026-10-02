@@ -1,0 +1,827 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>The Wolf Lair</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#06100b;color:#f4f6f4;font-family:system-ui,-apple-system,sans-serif}
+main{max-width:900px;margin:auto;padding:14px 14px 92px}header{text-align:center;padding:18px 0}
+header .wolf{font-size:28px}h1{margin:4px 0;font-size:28px}header small{letter-spacing:7px;color:#b7c8bb}
+#form{border:1px solid #45604d;border-radius:16px;padding:10px;margin-bottom:14px;background:#0b1710}
+#form.hidden{display:none}input{width:100%;background:#06100b;color:white;border:1px solid #4c6654;border-radius:10px;padding:12px;font-size:16px}
+.pt,.custom{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.custom{grid-template-columns:1fr 80px}
+button{background:#17291d;color:#fff;border:1px solid #58705f;border-radius:10px;padding:10px;font-weight:700;font-size:15px}
+#add{width:100%;margin-top:8px}.msg{color:#ffc7c7;margin-top:6px}
+#field{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.card{background:#0b1710;border:1px solid #45604d;border-radius:16px;padding:10px;min-width:0}
+.head,.count{display:flex;justify-content:space-between;align-items:flex-start;gap:6px}.name{font-size:18px;font-weight:800;overflow-wrap:anywhere}
+.power{font-size:32px;font-weight:900}.base{color:#aebcaf;font-size:13px}.count{margin:14px 0 8px}.count strong{font-size:27px}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:7px}.controls button{min-height:52px}
+.links{margin-top:8px;border:1px solid #45604d;border-radius:10px;padding:7px;font-size:13px}
+.linkrow{display:flex;align-items:center;gap:6px;margin:6px 0}.linkrow input{width:22px;height:22px}
+.wide{width:100%;margin-top:6px}.remove{width:100%;margin-top:8px}
+.empty{text-align:center;color:#93a598;padding:40px 5px}.hidden{display:none!important}
+nav{position:fixed;z-index:50;left:0;right:0;bottom:0;background:#0b1710;border-top:1px solid #45604d;padding:8px max(10px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+nav button{min-height:52px}button:disabled{opacity:.4}
+@media(min-width:700px){#field{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+#home{max-width:1500px;margin:auto;padding:24px 16px 40px;min-height:100vh;position:relative;isolation:isolate}
+.brandHero{text-align:center;padding:8px 8px 24px}
+.brandMark{width:min(100%,900px);height:auto;margin:0 auto 12px;border:none;border-radius:18px;overflow:hidden;background:transparent;box-shadow:none}
+.brandLogo{display:block;width:100%;height:auto;max-width:1500px;margin:0 auto;border-radius:18px;box-shadow:0 10px 26px rgba(0,0,0,.35);filter:drop-shadow(0 8px 16px rgba(0,0,0,.25));object-fit:cover}
+.brandHero h1{font-size:34px;margin:0;background:linear-gradient(135deg,#f4f6f4,#b7c8bb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:900}
+.brandHero p{margin:8px 0 0;color:#aebcaf;font-size:15px}
+.appGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:1100px;margin:0 auto}
+.appTile{min-height:178px;text-align:left;padding:18px;border-radius:20px;background:linear-gradient(155deg,rgba(24,46,32,.90),rgba(6,14,10,.92) 72%);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(139,174,139,.38);cursor:pointer;transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease;position:relative;overflow:hidden;color:#edf3ee;display:flex;flex-direction:column;justify-content:flex-start;align-items:flex-start;box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 10px 24px rgba(0,0,0,.18)}
+.appTile::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 16% 8%,rgba(157,255,115,.12),transparent 36%),linear-gradient(135deg,rgba(175,196,123,.06),transparent 55%);opacity:.9;pointer-events:none}
+.appTile::after{content:'›';position:absolute;right:16px;bottom:14px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(154,192,132,.34);background:rgba(8,20,13,.72);color:#aee882;font-size:22px;line-height:1;transition:transform .22s ease,border-color .22s ease}
+.appTile:hover{border-color:rgba(156,222,126,.72);box-shadow:0 12px 34px rgba(30,94,51,.24),inset 0 1px 0 rgba(255,255,255,.08);transform:translateY(-3px)}
+.appTile:hover::after{transform:translateX(2px);border-color:rgba(179,244,140,.72)}
+.appTile .ico{width:58px;height:58px;display:grid;place-items:center;margin-bottom:14px;border-radius:16px;position:relative;z-index:1;background:linear-gradient(145deg,rgba(22,42,28,.98),rgba(8,15,11,.98));border:1px solid rgba(168,200,126,.48);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 6px 16px rgba(0,0,0,.32)}
+.appTile .ico::after{content:'';position:absolute;inset:5px;border-radius:11px;border:1px solid rgba(105,238,112,.11);pointer-events:none}
+.appTile .ico svg{width:38px;height:38px;display:block;overflow:visible;filter:drop-shadow(0 0 7px rgba(105,245,105,.18))}
+.appTile .ico .line{fill:none;stroke:#c7d8b4;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+.appTile .ico .glow{fill:none;stroke:#7ee56f;stroke-width:2.15;stroke-linecap:round;stroke-linejoin:round}
+.appTile .ico .fill{fill:#9eea78;stroke:#d5e2bd;stroke-width:1.1}
+.appTile strong{display:block;font-size:20px;letter-spacing:.1px;font-weight:850;position:relative;z-index:1}
+.appTile small{display:block;margin-top:6px;max-width:88%;color:#aebcaf;font-weight:500;line-height:1.4;font-size:13px;position:relative;z-index:1}
+.appTile.disabled{opacity:.55;cursor:not-allowed}
+.homeFoot{text-align:center;color:#718278;font-size:12px;margin-top:26px;letter-spacing:2px;font-weight:600}
+#trackerView.hidden,#home.hidden,#decksView.hidden,#gameView.hidden,#proView.hidden{display:none!important}
+.backHome{margin-bottom:8px}
+@media(max-width:390px){.appGrid{gap:10px}.appTile{min-height:162px;padding:14px}.appTile .ico{width:52px;height:52px;margin-bottom:12px}.appTile .ico svg{width:34px;height:34px}.appTile strong{font-size:18px}.appTile small{max-width:92%;font-size:12.5px}}
+
+.deckForm{margin-top:12px;border:1px solid #45604d;border-radius:16px;padding:12px;background:#0b1710}
+.deckForm textarea{width:100%;min-height:230px;margin-top:8px;background:#06100b;color:#fff;border:1px solid #4c6654;border-radius:10px;padding:12px;font:15px system-ui,-apple-system,sans-serif;resize:vertical}
+.deckCard{background:#0b1710;border:1px solid #45604d;border-radius:16px;padding:14px;margin-bottom:10px}
+.deckCard h3{margin:0 0 5px;font-size:20px}.deckMeta{color:#aebcaf;font-size:13px;margin-bottom:10px}
+.deckActions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.deckPreview{font-size:13px;color:#c7d2ca;white-space:pre-line;max-height:100px;overflow:hidden;margin:8px 0}
+
+.gameShell{display:grid;gap:12px}
+.gameBoard{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.playerCard{background:#0b1710;border:1px solid #45604d;border-radius:18px;padding:12px}
+.playerHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.playerName{font-size:18px;font-weight:800}
+.lifeTotal{font-size:52px;font-weight:900;line-height:1;text-align:center;padding:8px 0 12px}
+.statRow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.statBox{background:#07110d;border:1px solid #45604d;border-radius:10px;padding:8px;text-align:center}
+.statLabel{display:block;color:#aebcaf;font-size:11px;text-transform:uppercase;letter-spacing:1px}
+.statValue{display:block;font-size:26px;font-weight:800;margin-top:4px}
+.lifeControls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.gameTools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.phaseBanner{text-align:center;border:1px solid #45604d;border-radius:12px;background:#0b1710;padding:12px}
+.phaseBanner strong{display:block;font-size:14px;color:#aebcaf;text-transform:uppercase;letter-spacing:2px;margin-bottom:6px}
+.phaseBanner span{font-size:22px;font-weight:800}
+.proPanel{display:grid;gap:12px}
+.quickCard{background:#0b1710;border:1px solid #45604d;border-radius:16px;padding:12px}
+.quickCard h3{margin:0 0 8px;font-size:18px}
+.proGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.proGrid button{width:100%}
+textarea.proArea{width:100%;min-height:180px;background:#06100b;color:#fff;border:1px solid #4c6654;border-radius:10px;padding:12px;font:15px system-ui,-apple-system,sans-serif;resize:vertical}
+@media(max-width:640px){.gameBoard,.appGrid,.proGrid{grid-template-columns:1fr}}
+
+/* WOLF LAIR ANIMATED SCENE */
+#home>.brandHero,#home>.appGrid,#home>.homeFoot{position:relative;z-index:6}
+.lairScene{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:#020605;opacity:0;transition:opacity 1.2s ease}
+.lairScene.ready{opacity:1}
+.lairLayer{position:absolute;inset:0;background-repeat:no-repeat;background-position:center center;background-size:cover;will-change:transform,opacity,filter}
+.sceneBase{z-index:0;background-image:var(--lair-scene);filter:saturate(1.04) contrast(1.03)}
+.sceneVortex{z-index:1;background-image:var(--lair-scene);opacity:.42;transform-origin:51% 14%;-webkit-mask-image:radial-gradient(ellipse 31% 25% at 51% 14%,#000 0 47%,rgba(0,0,0,.82) 60%,transparent 80%);mask-image:radial-gradient(ellipse 31% 25% at 51% 14%,#000 0 47%,rgba(0,0,0,.82) 60%,transparent 80%);animation:vortexTwist 42s ease-in-out infinite alternate;filter:saturate(1.08) contrast(1.04)}
+.sceneWater{z-index:2;background-image:var(--lair-scene);opacity:.38;transform-origin:50% 79%;-webkit-mask-image:radial-gradient(ellipse 50% 32% at 51% 77%,#000 0 44%,rgba(0,0,0,.9) 61%,transparent 87%);mask-image:radial-gradient(ellipse 50% 32% at 51% 77%,#000 0 44%,rgba(0,0,0,.9) 61%,transparent 87%);animation:waterRipple 7.5s ease-in-out infinite alternate;filter:brightness(1.06) saturate(1.12)}
+.sceneFog{z-index:3;inset:-8%;background:radial-gradient(ellipse 42% 12% at 27% 58%,rgba(111,194,255,.22),transparent 72%),radial-gradient(ellipse 45% 13% at 69% 61%,rgba(103,191,255,.21),transparent 72%),radial-gradient(ellipse 36% 10% at 49% 68%,rgba(137,207,255,.18),transparent 76%);filter:blur(16px);opacity:.72;animation:fogDriftA 34s ease-in-out infinite alternate}
+.sceneFogB{z-index:3;inset:-10%;background:radial-gradient(ellipse 34% 10% at 19% 66%,rgba(85,166,255,.14),transparent 72%),radial-gradient(ellipse 39% 12% at 82% 57%,rgba(106,187,255,.16),transparent 72%),radial-gradient(ellipse 45% 9% at 52% 58%,rgba(168,220,255,.12),transparent 78%);filter:blur(24px);opacity:.58;animation:fogDriftB 49s ease-in-out infinite alternate}
+.sceneGreen{z-index:4;background:radial-gradient(circle at 7% 43%,rgba(55,255,102,.22),transparent 19%),radial-gradient(circle at 15% 69%,rgba(42,255,111,.19),transparent 18%),radial-gradient(circle at 91% 45%,rgba(48,247,112,.20),transparent 19%),radial-gradient(circle at 86% 72%,rgba(47,255,114,.18),transparent 18%),radial-gradient(ellipse at 50% 84%,rgba(43,221,102,.10),transparent 35%);mix-blend-mode:screen;filter:blur(13px);opacity:.55;animation:forestGlow 6.8s ease-in-out infinite alternate}
+.sceneLightning{z-index:5;background:radial-gradient(ellipse 48% 38% at 52% 6%,rgba(255,247,226,.78) 0%,rgba(255,91,50,.28) 22%,transparent 64%),linear-gradient(180deg,rgba(255,220,202,.22),transparent 45%);mix-blend-mode:screen;opacity:0}
+.sceneLightning.flash{animation:lightningBurst .72s ease-out 1}
+.sceneShade{z-index:5;background:linear-gradient(180deg,rgba(0,0,0,.10) 0%,rgba(0,0,0,.04) 32%,rgba(0,0,0,.20) 70%,rgba(0,0,0,.42) 100%),radial-gradient(ellipse at center,transparent 43%,rgba(0,0,0,.24) 100%)}
+@keyframes vortexTwist{0%{transform:scale(1.012) rotate(-1.1deg)}50%{transform:scale(1.025) rotate(1.4deg)}100%{transform:scale(1.015) rotate(-.4deg)}}
+@keyframes waterRipple{0%{transform:translate3d(-.22%,.05%,0) scaleX(1.004) scaleY(.998)}33%{transform:translate3d(.18%,-.08%,0) scaleX(.998) scaleY(1.002)}66%{transform:translate3d(-.08%,.10%,0) scaleX(1.006) scaleY(.997)}100%{transform:translate3d(.24%,-.05%,0) scaleX(1.001) scaleY(1.002)}}
+@keyframes fogDriftA{0%{transform:translate3d(-3%,0,0) scale(1.03)}100%{transform:translate3d(3%,1%,0) scale(1.08)}}
+@keyframes fogDriftB{0%{transform:translate3d(3%,1%,0) scale(1.05)}100%{transform:translate3d(-4%,-1%,0) scale(1.09)}}
+@keyframes forestGlow{0%{opacity:.32;filter:blur(14px) saturate(1.05)}45%{opacity:.58;filter:blur(12px) saturate(1.25)}100%{opacity:.43;filter:blur(16px) saturate(1.12)}}
+@keyframes lightningBurst{0%{opacity:0}7%{opacity:.70}13%{opacity:.08}21%{opacity:.92}30%{opacity:.18}41%{opacity:.55}58%{opacity:.05}100%{opacity:0}}
+@media(max-width:640px){.sceneVortex{-webkit-mask-image:radial-gradient(ellipse 46% 24% at 52% 13%,#000 0 45%,rgba(0,0,0,.8) 60%,transparent 82%);mask-image:radial-gradient(ellipse 46% 24% at 52% 13%,#000 0 45%,rgba(0,0,0,.8) 60%,transparent 82%)}.sceneGreen{opacity:.45}.sceneFog{opacity:.62}.sceneFogB{opacity:.48}}
+@media(prefers-reduced-motion:reduce){.sceneVortex,.sceneWater,.sceneFog,.sceneFogB,.sceneGreen,.sceneLightning{animation:none!important}.sceneVortex{opacity:.12}.sceneWater{opacity:.16}.sceneFog,.sceneFogB{opacity:.25}.sceneGreen{opacity:.24}}
+
+
+/* === COUNTER TRACKER VISUAL PREVIEW — STATIC / BATTERY FRIENDLY === */
+body.trackerPreview{background:#030605}
+body.trackerPreview #home{display:none!important}
+body.trackerPreview #trackerView.hidden{display:block!important}
+body.trackerPreview .lairScene{display:none!important}
+
+body.trackerPreview #trackerView{
+  position:relative;
+  min-height:100vh;
+  isolation:isolate;
+  overflow-x:hidden;
+  background:#030605;
+}
+body.trackerPreview #trackerView::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg,rgba(3,6,5,.22),rgba(3,6,5,.62) 58%,rgba(2,4,3,.82)),
+    var(--lair-scene),
+    radial-gradient(circle at 20% 20%,#163020,#030605 72%);
+  background-size:cover,cover,cover;
+  background-position:center center,center center,center center;
+  background-repeat:no-repeat;
+  filter:saturate(.82) brightness(.74) contrast(1.08);
+}
+body.trackerPreview #trackerView::after{
+  content:'';
+  position:fixed;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  background:
+    radial-gradient(ellipse at center,transparent 38%,rgba(0,0,0,.36) 100%),
+    linear-gradient(90deg,rgba(0,0,0,.23),transparent 25%,transparent 75%,rgba(0,0,0,.23));
+}
+body.trackerPreview #trackerView main{
+  position:relative;
+  z-index:2;
+  max-width:980px;
+  margin:0 auto;
+  padding:12px 12px 102px;
+}
+body.trackerPreview #trackerView .backHome{
+  margin:2px 0 10px;
+  padding:9px 13px;
+  border-radius:999px;
+  color:#e7d4b7;
+  background:linear-gradient(180deg,rgba(32,24,17,.94),rgba(12,12,10,.96));
+  border:1px solid rgba(192,137,74,.55);
+  box-shadow:0 5px 16px rgba(0,0,0,.28);
+}
+body.trackerPreview #trackerView header{
+  display:grid;
+  grid-template-columns:58px 1fr;
+  grid-template-rows:auto auto;
+  gap:0 12px;
+  align-items:center;
+  text-align:left;
+  padding:13px 14px;
+  margin:0 0 12px;
+  border-radius:16px;
+  background:
+    linear-gradient(135deg,rgba(22,24,21,.96),rgba(8,11,9,.96));
+  border:1px solid rgba(196,142,77,.52);
+  box-shadow:
+    inset 0 1px 0 rgba(255,238,210,.06),
+    0 12px 28px rgba(0,0,0,.34);
+}
+body.trackerPreview #trackerView header .wolf{
+  grid-row:1 / 3;
+  width:52px;height:52px;
+  display:grid;place-items:center;
+  margin:0;
+  border-radius:14px;
+  font-size:26px;
+  color:#e4bb7a;
+  background:radial-gradient(circle at 40% 30%,rgba(77,108,63,.7),rgba(14,18,14,.96) 70%);
+  border:1px solid rgba(183,139,79,.55);
+  box-shadow:inset 0 0 0 1px rgba(84,215,100,.08);
+}
+body.trackerPreview #trackerView header h1{
+  margin:0;
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:22px;
+  line-height:1.05;
+  letter-spacing:.4px;
+  color:#f4eadb;
+}
+body.trackerPreview #trackerView header small{
+  margin-top:5px;
+  letter-spacing:3.2px;
+  color:#b9a57f;
+  font-size:11px;
+  font-weight:800;
+}
+
+body.trackerPreview #trackerView #form{
+  border:1px solid rgba(193,139,75,.5);
+  border-radius:16px;
+  padding:12px;
+  margin-bottom:12px;
+  background:linear-gradient(180deg,rgba(16,18,16,.97),rgba(7,10,8,.97));
+  box-shadow:0 10px 26px rgba(0,0,0,.3);
+}
+body.trackerPreview #trackerView input{
+  background:rgba(2,5,4,.92);
+  color:#f7f2e9;
+  border:1px solid rgba(135,117,87,.58);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+}
+body.trackerPreview #trackerView input:focus{
+  outline:none;
+  border-color:rgba(112,211,103,.8);
+  box-shadow:0 0 0 2px rgba(68,165,72,.14);
+}
+body.trackerPreview #trackerView button{
+  background:linear-gradient(180deg,rgba(40,36,28,.96),rgba(15,16,13,.98));
+  color:#f3e9d9;
+  border:1px solid rgba(161,124,74,.52);
+  box-shadow:inset 0 1px 0 rgba(255,240,210,.045);
+}
+body.trackerPreview #trackerView button:active{transform:translateY(1px)}
+body.trackerPreview #trackerView #add,
+body.trackerPreview #trackerView .plus,
+body.trackerPreview #trackerView .addx{
+  border-color:rgba(81,180,87,.7);
+  background:linear-gradient(180deg,rgba(30,74,37,.96),rgba(13,35,18,.98));
+  color:#eaffdf;
+}
+body.trackerPreview #trackerView .minus,
+body.trackerPreview #trackerView .remove{
+  border-color:rgba(151,87,67,.56);
+  background:linear-gradient(180deg,rgba(65,35,28,.94),rgba(25,17,15,.98));
+}
+
+body.trackerPreview #trackerView #field{
+  grid-template-columns:1fr;
+  gap:12px;
+}
+body.trackerPreview #trackerView .card{
+  position:relative;
+  overflow:hidden;
+  border:1px solid rgba(190,136,73,.48);
+  border-radius:17px;
+  padding:13px;
+  background:
+    radial-gradient(circle at 88% 0%,rgba(49,91,50,.14),transparent 33%),
+    linear-gradient(160deg,rgba(18,21,18,.97),rgba(6,9,7,.98) 74%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,240,215,.045),
+    0 12px 28px rgba(0,0,0,.34);
+}
+body.trackerPreview #trackerView .card::before{
+  content:'';
+  position:absolute;
+  left:12px;right:12px;top:0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(230,177,99,.52),transparent);
+}
+body.trackerPreview #trackerView .name{
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:20px;
+  color:#f3e5d2;
+}
+body.trackerPreview #trackerView .base{
+  color:#9eaa9e;
+  margin-top:2px;
+}
+body.trackerPreview #trackerView .power{
+  min-width:86px;
+  text-align:right;
+  font-size:34px;
+  color:#dff5d9;
+  text-shadow:0 0 14px rgba(75,193,81,.15);
+}
+body.trackerPreview #trackerView .count{
+  align-items:center;
+  margin:14px -3px 9px;
+  padding:9px 10px;
+  border-radius:11px;
+  color:#c9b48f;
+  background:rgba(4,7,5,.68);
+  border:1px solid rgba(111,91,60,.38);
+}
+body.trackerPreview #trackerView .count strong{
+  color:#9ee899;
+  font-size:29px;
+}
+body.trackerPreview #trackerView .controls button{
+  min-height:54px;
+}
+body.trackerPreview #trackerView .links{
+  margin-top:10px;
+  border:1px solid rgba(121,105,78,.45);
+  border-radius:12px;
+  padding:9px;
+  color:#c8c4ba;
+  background:rgba(3,6,4,.62);
+}
+body.trackerPreview #trackerView .links b{
+  color:#d9bd8e;
+}
+body.trackerPreview #trackerView .linkrow{
+  padding:3px 0;
+}
+body.trackerPreview #trackerView .linkrow input{
+  accent-color:#63b968;
+}
+body.trackerPreview #trackerView .empty{
+  margin-top:8px;
+  border:1px dashed rgba(170,128,74,.42);
+  border-radius:16px;
+  color:#b7b0a3;
+  background:rgba(6,10,7,.74);
+  padding:42px 12px;
+}
+body.trackerPreview #trackerView nav{
+  z-index:30;
+  background:linear-gradient(180deg,rgba(14,15,13,.97),rgba(5,7,6,.99));
+  border-top:1px solid rgba(194,141,76,.55);
+  box-shadow:0 -12px 30px rgba(0,0,0,.38);
+}
+body.trackerPreview #trackerView nav button{
+  min-height:56px;
+  border-color:rgba(158,119,69,.52);
+}
+body.trackerPreview #trackerView nav #show{
+  border-color:rgba(80,178,86,.72);
+  background:linear-gradient(180deg,rgba(29,72,35,.98),rgba(12,33,17,.99));
+}
+body.trackerPreview #trackerView nav #undo{
+  color:#d9c6a6;
+}
+body.trackerPreview #trackerView nav #bill{
+  color:#f0d8b0;
+  border-color:rgba(192,133,66,.66);
+}
+
+@media(min-width:700px){
+  body.trackerPreview #trackerView #field{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(min-width:1050px){
+  body.trackerPreview #trackerView #field{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:420px){
+  body.trackerPreview #trackerView main{padding-left:9px;padding-right:9px}
+  body.trackerPreview #trackerView header{grid-template-columns:50px 1fr;padding:11px}
+  body.trackerPreview #trackerView header .wolf{width:46px;height:46px;font-size:23px}
+  body.trackerPreview #trackerView header h1{font-size:20px}
+  body.trackerPreview #trackerView header small{font-size:10px;letter-spacing:2.4px}
+  body.trackerPreview #trackerView .card{padding:11px}
+  body.trackerPreview #trackerView .name{font-size:19px}
+  body.trackerPreview #trackerView .power{font-size:31px}
+  body.trackerPreview #trackerView nav{gap:6px;padding-left:7px;padding-right:7px}
+  body.trackerPreview #trackerView nav button{font-size:13px;padding:8px 5px}
+}
+/* no animation, backdrop-filter, or continuous GPU effects in tracker preview */
+
+</style>
+</head>
+<body class="trackerPreview">
+<section id="home">
+  <div id="lairScene" class="lairScene" aria-hidden="true">
+    <div class="lairLayer sceneBase"></div>
+    <div class="lairLayer sceneVortex"></div>
+    <div class="lairLayer sceneWater"></div>
+    <div class="lairLayer sceneFog"></div>
+    <div class="lairLayer sceneFogB"></div>
+    <div class="lairLayer sceneGreen"></div>
+    <div id="sceneLightning" class="lairLayer sceneLightning"></div>
+    <div class="lairLayer sceneShade"></div>
+  </div>
+  <script>
+  (function(){
+    var scene=document.getElementById('lairScene');
+    var lightning=document.getElementById('sceneLightning');
+    var parts=[
+      './assets/scene/bg-01.b64','./assets/scene/bg-02.b64','./assets/scene/bg-03.b64',
+      './assets/scene/bg-04.b64','./assets/scene/bg-05.b64','./assets/scene/bg-06.b64',
+      './assets/scene/bg-07.b64','./assets/scene/bg-08.b64','./assets/scene/bg-09.b64',
+      './assets/scene/bg-10.b64','./assets/scene/bg-11.b64','./assets/scene/bg-12.b64',
+      './assets/scene/bg-13.b64'
+    ];
+    Promise.all(parts.map(function(url){
+      return fetch(url+'?v=scene1',{cache:'no-store'}).then(function(r){
+        if(!r.ok) throw new Error('Scene part failed: '+r.status);
+        return r.text();
+      });
+    })).then(function(chunks){
+      var data=chunks.map(function(x){return x.trim();}).join('');
+      if(data.length<65000) throw new Error('Scene data incomplete');
+      document.documentElement.style.setProperty('--lair-scene','url("data:image/webp;base64,'+data+'")');
+      scene.classList.add('ready');
+      if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+      function scheduleFlash(){
+        var delay=4500+Math.random()*7500;
+        window.setTimeout(function(){
+          if(!lightning)return;
+          lightning.classList.remove('flash');
+          void lightning.offsetWidth;
+          lightning.classList.add('flash');
+          scheduleFlash();
+        },delay);
+      }
+      scheduleFlash();
+    }).catch(function(err){
+      console.error('Wolf Lair scene failed to load',err);
+    });
+  })();
+  </script>
+  <div class="brandHero">
+    <div class="brandMark">
+      <img id="wolfLairLogo" class="brandLogo" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" width="500" height="281" alt="The Wolf Lair — black wolf in a green fantasy lair with cards, d20, and life counter">
+      <script>
+      (function(){
+        var parts=[
+          './assets/logo/wolf-logo-1.b64',
+          './assets/logo/wolf-logo-2.b64',
+          './assets/logo/wolf-logo-3.b64',
+          './assets/logo/wolf-logo-4.b64',
+          './assets/logo/wolf-logo-5.b64',
+          './assets/logo/wolf-logo-6.b64'
+        ];
+        Promise.all(parts.map(function(url){
+          return fetch(url+'?v=logo2',{cache:'no-store'}).then(function(r){
+            if(!r.ok) throw new Error('Logo part failed: '+r.status);
+            return r.text();
+          });
+        })).then(function(chunks){
+          var data=chunks.map(function(x){return x.trim();}).join('');
+          if(data.length<40000) throw new Error('Logo data incomplete');
+          var img=document.getElementById('wolfLairLogo');
+          if(img) img.src='data:image/webp;base64,'+data;
+        }).catch(function(err){
+          var img=document.getElementById('wolfLairLogo');
+          if(img){img.alt='The Wolf Lair logo could not load';}
+          console.error(err);
+        });
+      })();
+      </script>
+    </div>
+    <h1>The Wolf Lair</h1>
+    <p>Your tabletop command center.</p>
+  </div>
+  <div class="appGrid">
+    <button class="appTile" id="openTracker" type="button">
+      <span class="ico" aria-hidden="true">
+        <svg viewBox="0 0 48 48">
+          <path class="line" d="M13 10l10 10-4 4L9 14l4-4zM35 10L25 20l4 4 10-10-4-4z"/>
+          <path class="glow" d="M20 24l-8 12M28 24l8 12"/>
+          <path class="line" d="M8 36h9M31 36h9"/>
+          <circle class="fill" cx="24" cy="24" r="5.2"/>
+          <path d="M24 20.8v6.4M20.8 24h6.4" stroke="#09110c" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <strong>Counter Tracker</strong>
+      <small>Track creatures, +1/+1 counters, linked effects and battlefield status.</small>
+    </button>
+    <button class="appTile" id="openDecks" type="button">
+      <span class="ico" aria-hidden="true">
+        <svg viewBox="0 0 48 48">
+          <rect class="line" x="10" y="13" width="23" height="28" rx="3" transform="rotate(-8 21.5 27)"/>
+          <rect class="glow" x="16" y="8" width="23" height="28" rx="3" transform="rotate(7 27.5 22)"/>
+          <path class="fill" d="M28 15l3.2 4.4 5.1.5-3.8 3.6 1.1 5-5.6-2.9-5.6 2.9 1.1-5-3.8-3.6 5.1-.5z" transform="scale(.65) translate(15 8)"/>
+        </svg>
+      </span>
+      <strong>My Decks</strong>
+      <small>Create, save and reopen your Commander decks.</small>
+    </button>
+    <button class="appTile" id="openGame" type="button">
+      <span class="ico" aria-hidden="true">
+        <svg viewBox="0 0 48 48">
+          <path class="line" d="M24 6l14 8 4 15-10 12H16L6 29l4-15 14-8z"/>
+          <path class="glow" d="M10 14l14 8 14-8M24 22v19M6 29l18-7 18 7M16 41l8-19 8 19"/>
+          <text x="24" y="20" text-anchor="middle" font-size="7" font-weight="900" fill="#a8f178" font-family="system-ui,sans-serif">20</text>
+        </svg>
+      </span>
+      <strong>Game Mode</strong>
+      <small>Life totals, commander damage, poison and turn flow for the table.</small>
+    </button>
+    <button class="appTile" id="openPro" type="button">
+      <span class="ico" aria-hidden="true">
+        <svg viewBox="0 0 48 48">
+          <path class="glow" d="M10 12l9 5 5-8 5 8 9-5-3 15c-1.7 8-6 13-11 16-5-3-9.3-8-11-16l-3-15z"/>
+          <path class="line" d="M17 24l5-3 2 3 2-3 5 3-2 8-5 4-5-4-2-8z"/>
+          <path class="fill" d="M18.5 25.5l3 1.2-1.2 2.5-2.6-1.2.8-2.5zm11 0l-3 1.2 1.2 2.5 2.6-1.2-.8-2.5z"/>
+          <path class="line" d="M21 34h6"/>
+        </svg>
+      </span>
+      <strong>Wolf Lair Pro</strong>
+      <small>Export, import and save your local session data.</small>
+    </button>
+  </div>
+  <div class="homeFoot">THE WOLF LAIR • BUILT FOR THE TABLE</div>
+</section>
+
+<section id="decksView" class="hidden">
+ <main>
+  <button id="backDecksHome" class="backHome" type="button">‹ Wolf Lair Home</button>
+  <header><div class="wolf">📚</div><h1>My Decks</h1><small>WOLF LAIR</small></header>
+  <div id="deckList"></div>
+  <button id="newDeck" class="wide" type="button">＋ New Deck</button>
+  <div id="deckForm" class="hidden deckForm">
+   <input id="deckName" placeholder="Deck name">
+   <input id="commanderName" placeholder="Commander" style="margin-top:8px">
+   <textarea id="deckCards" placeholder="Paste deck list here&#10;&#10;Example:&#10;1 Sol Ring&#10;1 Command Tower"></textarea>
+   <button id="saveDeck" class="wide" type="button">Save Deck</button>
+   <button id="cancelDeck" class="wide" type="button">Cancel</button>
+   <div id="deckMsg" class="msg"></div>
+  </div>
+ </main>
+</section>
+
+<section id="trackerView" class="hidden">
+<main>
+<button id="backHome" class="backHome" type="button">‹ Wolf Lair Home</button>
+<header><div class="wolf">⚔️</div><h1>The Wolf Lair</h1><small>COUNTER TRACKER</small></header>
+<div id="form" class="hidden">
+<input id="nm" placeholder="Creature name">
+<div class="pt"><input id="pw" inputmode="numeric" placeholder="Power"><input id="th" inputmode="numeric" placeholder="Toughness"></div>
+<button id="add" type="button">+ Add Creature</button><div id="msg" class="msg"></div>
+</div>
+<div id="empty" class="empty">Tap + Add to start tracking creatures.</div>
+<div id="field"></div>
+</main>
+<nav><button id="show" type="button">＋ Add</button><button id="undo" type="button" disabled>↶ Undo</button><button id="bill" type="button">×2 Double All</button></nav>
+</section>
+
+<section id="gameView" class="hidden">
+  <main>
+    <button id="backGameHome" class="backHome" type="button">‹ Wolf Lair Home</button>
+    <header><div class="wolf">🎲</div><h1>Game Mode</h1><small>TABLETOP</small></header>
+    <div class="gameShell">
+      <div id="gameBoard" class="gameBoard"></div>
+      <div class="gameTools">
+        <button id="nextPhase" type="button">Next Phase</button>
+        <button id="resetMatch" type="button">Reset Match</button>
+      </div>
+      <div class="phaseBanner">
+        <strong>Current Phase</strong>
+        <span id="phaseName">Beginning</span>
+      </div>
+    </div>
+  </main>
+</section>
+
+<section id="proView" class="hidden">
+  <main>
+    <button id="backProHome" class="backHome" type="button">‹ Wolf Lair Home</button>
+    <header><div class="wolf">🐺</div><h1>Wolf Lair Pro</h1><small>LOCAL SYNC</small></header>
+    <div class="proPanel">
+      <div class="quickCard">
+        <h3>Session Status</h3>
+        <div class="proGrid">
+          <button id="saveProfile" type="button">Save Profile</button>
+          <button id="loadProfile" type="button">Load Profile</button>
+          <button id="copyJson" type="button">Copy JSON</button>
+          <button id="resetProfile" type="button">Reset</button>
+        </div>
+      </div>
+      <div class="quickCard">
+        <h3>Profile Snapshot</h3>
+        <textarea id="proArea" class="proArea" readonly></textarea>
+      </div>
+    </div>
+  </main>
+</section>
+
+<script>
+(function(){
+"use strict";
+var KEY="wolfLairClean1", creatures=[], undoState=null;
+function el(id){return document.getElementById(id)}
+function clone(x){return JSON.parse(JSON.stringify(x))}
+function normalize(c){
+  c.id=String(c.id||("c"+Date.now()+Math.random()));
+  c.name=String(c.name||"Creature");
+  c.p=Number(c.p)||0;c.t=Number(c.t)||0;c.c=Math.max(0,Number(c.c)||0);
+  if(!Array.isArray(c.links))c.links=[];
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(creatures))}catch(e){}}
+function load(){
+  try{
+   var raw=localStorage.getItem(KEY), data=raw?JSON.parse(raw):[];
+   if(Array.isArray(data)){creatures=data;for(var i=0;i<creatures.length;i++)normalize(creatures[i])}
+  }catch(e){creatures=[]}
+}
+function snapshot(){undoState=clone(creatures);el("undo").disabled=false}
+function finish(){save();render()}
+function escapeHTML(v){var d=document.createElement("div");d.textContent=String(v);return d.innerHTML}
+function find(id){for(var i=0;i<creatures.length;i++)if(creatures[i].id===id)return creatures[i];return null}
+function adjust(id,n){var c=find(id);if(!c)return;snapshot();c.c=Math.max(0,c.c+n);finish()}
+function render(){
+  var f=el("field");f.innerHTML="";el("empty").className=creatures.length?"empty hidden":"empty";
+  for(var i=0;i<creatures.length;i++){
+    (function(c){
+    normalize(c);
+    var targets="";
+    for(var j=0;j<creatures.length;j++){
+      var o=creatures[j];if(o.id===c.id)continue;
+      targets+='<label class="linkrow"><input class="lnk" type="checkbox" data-id="'+escapeHTML(o.id)+'" '+(c.links.indexOf(o.id)>=0?"checked":"")+'> '+escapeHTML(o.name)+'</label>';
+    }
+    if(!targets)targets="<div>Add another creature first.</div>";
+    var card=document.createElement("section");card.className="card";
+    card.innerHTML=
+     '<div class="head"><div><div class="name">'+escapeHTML(c.name)+'</div><div class="base">Base '+c.p+'/'+c.t+'</div></div><div class="power">'+(c.p+c.c)+'/'+(c.t+c.c)+'</div></div>'+ 
+     '<div class="count"><span>+1/+1 Counters</span><strong>'+c.c+'</strong></div>'+ 
+     '<div class="controls"><button class="minus">−1</button><button class="plus">+1</button><button class="current">+ Current Power</button><button class="reset">Reset to Base</button></div>'+
+     '<div class="custom"><input class="amt" inputmode="numeric" placeholder="Custom"><button class="addx">+X</button></div>'+ 
+     '<div class="links"><b>Target / Link to:</b>'+targets+
+     '<button class="wide linked">+ Current Power to Me + Linked</button>'+ 
+     '<button class="wide counters">+ My Counters to Target(s)</button></div>'+ 
+     '<button class="remove">Remove Creature</button>';
+    card.querySelector(".minus").onclick=function(){adjust(c.id,-1)};
+    card.querySelector(".plus").onclick=function(){adjust(c.id,1)};
+    card.querySelector(".current").onclick=function(){adjust(c.id,c.p+c.c)};
+    card.querySelector(".reset").onclick=function(){snapshot();c.c=0;finish()};
+    card.querySelector(".addx").onclick=function(){var n=parseInt(card.querySelector(".amt").value,10);if(!isNaN(n)&&n!==0)adjust(c.id,n)};
+    var boxes=card.querySelectorAll(".lnk");
+    for(var k=0;k<boxes.length;k++)boxes[k].onchange=function(){
+      var id=this.getAttribute("data-id"), ix=c.links.indexOf(id);
+      if(this.checked&&ix<0)c.links.push(id);else if(!this.checked&&ix>=0)c.links.splice(ix,1);
+      save();
+    };
+    card.querySelector(".linked").onclick=function(){
+      if(!c.links.length)return;snapshot();var amount=c.p+c.c;c.c+=amount;
+      for(var q=0;q<c.links.length;q++){var t=find(c.links[q]);if(t)t.c+=amount}finish();
+    };
+    card.querySelector(".counters").onclick=function(){
+      if(!c.links.length||c.c<=0)return;snapshot();var amount=c.c;
+      for(var q=0;q<c.links.length;q++){var t=find(c.links[q]);if(t)t.c+=amount}finish();
+    };
+    card.querySelector(".remove").onclick=function(){
+      snapshot();creatures=creatures.filter(function(x){return x.id!==c.id});
+      for(var q=0;q<creatures.length;q++)creatures[q].links=creatures[q].links.filter(function(x){return x!==c.id});
+      finish();
+    };
+    f.appendChild(card);
+   })(creatures[i]);
+  }
+  el("undo").disabled=(undoState===null);
+}
+el("show").onclick=function(){el("form").className="";el("nm").focus();window.scrollTo(0,0)};
+el("add").onclick=function(){
+  el("msg").textContent="";
+  var name=el("nm").value.trim(), p=parseInt(el("pw").value,10), t=parseInt(el("th").value,10);
+  if(!name||isNaN(p)||isNaN(t)){el("msg").textContent="Enter name, power, and toughness.";return}
+  snapshot();creatures.push({id:"c"+Date.now()+"_"+Math.floor(Math.random()*1000000),name:name,p:p,t:t,c:0,links:[]});
+  el("nm").value="";el("pw").value="";el("th").value="";el("form").className="hidden";finish();
+};
+el("undo").onclick=function(){
+  if(undoState===null)return;
+  creatures=clone(undoState);undoState=null;finish();
+};
+el("bill").onclick=function(){
+  if(!creatures.length)return;snapshot();
+  for(var i=0;i<creatures.length;i++)creatures[i].c*=2;finish();
+};
+
+var gameState={
+  players:[
+    {name:'Player 1', life:20, commander:0, poison:0},
+    {name:'Player 2', life:20, commander:0, poison:0}
+  ],
+  phases:['Beginning','Precombat','Combat','Postcombat','Ending'],
+  phaseIndex:0
+};
+function loadGame(){
+  try{
+    var raw=localStorage.getItem('wolfLairGame1');
+    if(raw){var parsed=JSON.parse(raw); if(parsed&&Array.isArray(parsed.players)){gameState=parsed;}}
+  }catch(e){}
+  if(!gameState.players||gameState.players.length!==2){
+    gameState={players:[{name:'Player 1', life:20, commander:0, poison:0},{name:'Player 2', life:20, commander:0, poison:0}], phases:['Beginning','Precombat','Combat','Postcombat','Ending'], phaseIndex:0};
+  }
+  if(!gameState.phases||!gameState.phases.length){gameState.phases=['Beginning','Precombat','Combat','Postcombat','Ending'];}
+}
+function saveGame(){
+  try{localStorage.setItem('wolfLairGame1',JSON.stringify(gameState))}catch(e){}
+}
+function renderGame(){
+  var board=el('gameBoard');
+  board.innerHTML='';
+  for(var i=0;i<gameState.players.length;i++){
+    (function(player,index){
+      var card=document.createElement('div');
+      card.className='playerCard';
+      card.innerHTML='\
+        <div class="playerHeader"><span class="playerName">'+escapeHTML(player.name)+'</span><button class="resetPlayer" type="button">Reset</button></div>\
+        <div class="lifeTotal">'+player.life+'</div>\
+        <div class="lifeControls">\
+          <button class="lifeDown" type="button">−1 Life</button>\
+          <button class="lifeUp" type="button">+1 Life</button>\
+          <button class="cmdDown" type="button">−1 Cmd</button>\
+          <button class="cmdUp" type="button">+1 Cmd</button>\
+          <button class="poisonDown" type="button">−1 Poison</button>\
+          <button class="poisonUp" type="button">+1 Poison</button>\
+        </div>\
+        <div class="statRow">\
+          <div class="statBox"><span class="statLabel">Life</span><span class="statValue">'+player.life+'</span></div>\
+          <div class="statBox"><span class="statLabel">Cmd</span><span class="statValue">'+player.commander+'</span></div>\
+          <div class="statBox"><span class="statLabel">Poison</span><span class="statValue">'+player.poison+'</span></div>\
+        </div>';
+      card.querySelector('.lifeDown').onclick=function(){player.life--;saveGame();renderGame();};
+      card.querySelector('.lifeUp').onclick=function(){player.life++;saveGame();renderGame();};
+      card.querySelector('.cmdDown').onclick=function(){player.commander=Math.max(0,player.commander-1);saveGame();renderGame();};
+      card.querySelector('.cmdUp').onclick=function(){player.commander++;saveGame();renderGame();};
+      card.querySelector('.poisonDown').onclick=function(){player.poison=Math.max(0,player.poison-1);saveGame();renderGame();};
+      card.querySelector('.poisonUp').onclick=function(){player.poison++;saveGame();renderGame();};
+      card.querySelector('.resetPlayer').onclick=function(){player.life=20;player.commander=0;player.poison=0;saveGame();renderGame();};
+      board.appendChild(card);
+    })(gameState.players[i],i);
+  }
+  el('phaseName').textContent=gameState.phases[gameState.phaseIndex] || 'Beginning';
+}
+el('nextPhase').onclick=function(){
+  gameState.phaseIndex=(gameState.phaseIndex+1) % gameState.phases.length;
+  saveGame();renderGame();
+};
+el('resetMatch').onclick=function(){
+  gameState.players=[{name:'Player 1', life:20, commander:0, poison:0},{name:'Player 2', life:20, commander:0, poison:0}];
+  gameState.phaseIndex=0;saveGame();renderGame();
+};
+
+var proState={
+  lastSaved: new Date().toISOString(),
+  tracker: {count: creatures.length},
+  decks: {count: 0},
+  game: gameState
+};
+function snapshotPro(){
+  proState={lastSaved:new Date().toISOString(), tracker:{count:creatures.length, creatures:creatures.slice(0,10)}, decks:{count:decks.length}, game:clone(gameState)};
+  var json=JSON.stringify(proState,null,2);el('proArea').value=json;
+  try{localStorage.setItem('wolfLairPro1', json)}catch(e){}
+}
+function loadPro(){
+  try{var raw=localStorage.getItem('wolfLairPro1'); if(raw){proState=JSON.parse(raw);}}catch(e){}
+  if(!proState||!proState.game){proState={lastSaved:new Date().toISOString(), tracker:{count:creatures.length}, decks:{count:decks.length}, game:clone(gameState)};}
+  el('proArea').value=JSON.stringify(proState,null,2);
+}
+el('saveProfile').onclick=function(){snapshotPro();};
+el('loadProfile').onclick=function(){loadPro(); gameState=clone(proState.game || gameState); renderGame();};
+el('copyJson').onclick=function(){var text=el('proArea').value; if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).catch(function(){})} else {el('proArea').select();document.execCommand('copy');}};
+el('resetProfile').onclick=function(){try{localStorage.removeItem('wolfLairPro1')}catch(e){}; proState={lastSaved:new Date().toISOString(), tracker:{count:creatures.length}, decks:{count:decks.length}, game:clone(gameState)}; el('proArea').value=JSON.stringify(proState,null,2);};
+
+el('openTracker').onclick=function(){el('home').className='hidden';el('trackerView').className='';window.scrollTo(0,0)};
+el('backHome').onclick=function(){el('trackerView').className='hidden';el('home').className='';window.scrollTo(0,0)};
+
+el('openDecks').onclick=function(){el('home').className='hidden';el('decksView').className='';renderDecks();window.scrollTo(0,0)};
+el('backDecksHome').onclick=function(){closeDeckForm();el('decksView').className='hidden';el('home').className='';window.scrollTo(0,0)};
+
+el('openGame').onclick=function(){el('home').className='hidden';el('gameView').className='';renderGame();window.scrollTo(0,0)};
+el('backGameHome').onclick=function(){el('gameView').className='hidden';el('home').className='';window.scrollTo(0,0)};
+
+el('openPro').onclick=function(){el('home').className='hidden';el('proView').className='';loadPro();window.scrollTo(0,0)};
+el('backProHome').onclick=function(){el('proView').className='hidden';el('home').className='';window.scrollTo(0,0)};
+
+var DECKKEY="wolfLairDecks1", decks=[], editingDeck=null;
+function loadDecks(){try{var x=JSON.parse(localStorage.getItem(DECKKEY)||"[]");if(Array.isArray(x))decks=x}catch(e){decks=[]}}
+function saveDecks(){try{localStorage.setItem(DECKKEY,JSON.stringify(decks))}catch(e){}}
+function deckCardCount(txt){
+  var lines=String(txt||"").split(/\n+/), total=0;
+  for(var i=0;i<lines.length;i++){var m=lines[i].trim().match(/^(\d+)\s+/);if(m)total+=parseInt(m[1],10)}
+  return total;
+}
+function renderDecks(){
+  var box=el("deckList");box.innerHTML="";
+  if(!decks.length){box.innerHTML='<div class="empty">No decks saved yet.<br>Create your first Wolf Lair deck.</div>';return}
+  for(var i=0;i<decks.length;i++){
+   (function(d){
+   var c=document.createElement("div");c.className="deckCard";
+   var count=deckCardCount(d.cards);
+   c.innerHTML='<h3>'+escapeHTML(d.name)+'</h3><div class="deckMeta">Commander: '+escapeHTML(d.commander||"Not set")+' • '+count+' cards listed</div>'+ 
+    '<div class="deckPreview">'+escapeHTML((d.cards||"").split(/\n/).slice(0,5).join("\n"))+'</div>'+ 
+    '<div class="deckActions"><button class="editDeck">Edit</button><button class="deleteDeck">Delete</button></div>';
+   c.querySelector(".editDeck").onclick=function(){
+     editingDeck=d.id;el("deckName").value=d.name;el("commanderName").value=d.commander||"";el("deckCards").value=d.cards||"";
+     el("deckForm").className="deckForm";el("newDeck").className="wide hidden";window.scrollTo(0,0);
+   };
+   c.querySelector(".deleteDeck").onclick=function(){
+     decks=decks.filter(function(x){return x.id!==d.id});saveDecks();renderDecks();
+   };
+   box.appendChild(c);
+   })(decks[i]);
+  }
+}
+function closeDeckForm(){
+  editingDeck=null;el("deckForm").className="hidden deckForm";el("newDeck").className="wide";
+  el("deckName").value="";el("commanderName").value="";el("deckCards").value="";el("deckMsg").textContent="";
+}
+el("newDeck").onclick=function(){editingDeck=null;el("deckForm").className="deckForm";el("newDeck").className="wide hidden";el("deckName").focus()};
+el("cancelDeck").onclick=closeDeckForm;
+el("saveDeck").onclick=function(){
+  var n=el("deckName").value.trim(), cmd=el("commanderName").value.trim(), cards=el("deckCards").value.trim();
+  if(!n){el("deckMsg").textContent="Enter a deck name.";return}
+  if(editingDeck){
+   for(var i=0;i<decks.length;i++)if(decks[i].id===editingDeck){decks[i].name=n;decks[i].commander=cmd;decks[i].cards=cards;break}
+  }else{
+   decks.push({id:"d"+Date.now()+"_"+Math.floor(Math.random()*1000000),name:n,commander:cmd,cards:cards});
+  }
+  saveDecks();closeDeckForm();renderDecks();
+};
+loadDecks();
+loadGame();
+load();render();
+renderDecks();
+renderGame();
+})();
+</script>
+<script>
+(function(){
+  var b=document.getElementById('backHome');
+  if(b)b.onclick=function(){location.href='./preview-home.html?preview=3';};
+})();
+</script>
+</body>
+</html>
