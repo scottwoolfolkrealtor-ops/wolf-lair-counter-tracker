@@ -1356,55 +1356,63 @@ body.trackerPreview #decksView .deckSavedValue{
 }
 
 
-/* Tabletop seating layout — each life counter faces its player */
+/* Tabletop seating layout — 1 full, 2 vertical halves, 3/4 quadrants */
 @media(max-width:640px){
   body.trackerPreview #gameView main{
     min-height:100svh;
     display:flex;
     flex-direction:column;
+    padding:6px 6px 10px;
   }
+  body.trackerPreview #gameView .backHome{
+    margin-bottom:3px;
+    min-height:28px;
+    padding:4px 7px;
+    font-size:8px;
+  }
+  body.trackerPreview #gameView header.tableCommandTitle{
+    margin-bottom:4px;
+    padding:6px 9px;
+    border-radius:10px;
+  }
+  body.trackerPreview #gameView header.tableCommandTitle .trackerBrand{font-size:6px;letter-spacing:2px;margin-bottom:1px}
+  body.trackerPreview #gameView header.tableCommandTitle h1{font-size:15px}
+  body.trackerPreview #gameView header.tableCommandTitle small{margin-top:1px;font-size:6px;letter-spacing:1px}
+
   body.trackerPreview #gameView .gameShell{
     flex:1;
     min-height:0;
     display:flex;
     flex-direction:column;
-    gap:5px;
+    gap:4px;
   }
   body.trackerPreview #gameView .gameBoard{
     flex:1;
     min-height:0;
     display:grid !important;
-    gap:5px;
+    gap:4px;
     align-items:stretch !important;
   }
-  body.trackerPreview #gameView .playerCard,
-  body.trackerPreview #gameView .openTableSeat{
-    min-height:0;
-    overflow:hidden;
-  }
-  body.trackerPreview #gameView .playerFace{
-    height:100%;
-    min-height:0;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    transform-origin:center center;
+
+  /* 1 player: full table */
+  body.trackerPreview #gameView .gameBoard[data-player-count="1"]{
+    grid-template-columns:1fr !important;
+    grid-template-rows:1fr;
   }
 
-  /* Two players sit opposite each other across the phone. */
+  /* 2 players: vertical divider, each player faces their side of the phone */
   body.trackerPreview #gameView .gameBoard[data-player-count="2"]{
-    grid-template-columns:1fr !important;
-    grid-template-rows:repeat(2,minmax(0,1fr));
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    grid-template-rows:1fr;
   }
   body.trackerPreview #gameView .gameBoard[data-player-count="2"] .playerCard:nth-child(1) .playerFace{
-    transform:rotate(180deg);
+    transform:rotate(90deg);
   }
   body.trackerPreview #gameView .gameBoard[data-player-count="2"] .playerCard:nth-child(2) .playerFace{
-    transform:none;
+    transform:rotate(-90deg);
   }
 
-  /* Three or four players get four equal table quadrants.
-     With three players, the fourth quadrant becomes an Add Player seat. */
+  /* 3/4 players: add the horizontal divider to form four equal squares */
   body.trackerPreview #gameView .gameBoard[data-player-count="3"],
   body.trackerPreview #gameView .gameBoard[data-player-count="4"]{
     grid-template-columns:repeat(2,minmax(0,1fr)) !important;
@@ -1423,103 +1431,180 @@ body.trackerPreview #decksView .deckSavedValue{
     transform:none;
   }
 
+  body.trackerPreview #gameView .playerCard,
+  body.trackerPreview #gameView .openTableSeat{
+    min-height:0;
+    overflow:hidden;
+  }
+  body.trackerPreview #gameView .playerCard{
+    padding:5px;
+    border-radius:10px;
+  }
+  body.trackerPreview #gameView .playerFace{
+    height:100%;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    transform-origin:center center;
+  }
+
   body.trackerPreview #gameView .openTableSeat{
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
-    gap:4px;
+    gap:3px;
     width:100%;
-    border-radius:12px;
+    border-radius:10px;
     border:1px dashed rgba(153,126,82,.45);
     background:rgba(9,12,10,.62);
     color:#bfa77d;
   }
-  body.trackerPreview #gameView .openTableSeat strong{
-    font-size:11px;
-    letter-spacing:1.5px;
+  body.trackerPreview #gameView .openTableSeat strong{font-size:9px;letter-spacing:1.2px}
+  body.trackerPreview #gameView .openTableSeat span{font-size:8px;color:#94b990}
+
+  /* Compact player identity */
+  body.trackerPreview #gameView .playerHeader{
+    gap:3px;
+    margin-bottom:1px;
+    align-items:center;
   }
-  body.trackerPreview #gameView .openTableSeat span{
-    font-size:9px;
-    color:#94b990;
+  body.trackerPreview #gameView .playerIdentity{gap:3px;flex-wrap:nowrap}
+  body.trackerPreview #gameView .playerName{font-size:10px}
+  body.trackerPreview #gameView .editPlayerName,
+  body.trackerPreview #gameView .resetPlayer{
+    min-height:21px;
+    padding:2px 4px;
+    font-size:6px;
   }
 
-  /* Five and six remain compact scrolling layouts for now. */
+  /* Life becomes the main control: minus | total | plus */
+  body.trackerPreview #gameView .lifePanel{
+    display:grid;
+    grid-template-columns:34px minmax(0,1fr) 34px;
+    align-items:center;
+    gap:3px;
+    margin:0;
+  }
+  body.trackerPreview #gameView .lifeTotal.editLife{
+    min-height:46px;
+    padding:0;
+    font-size:42px;
+  }
+  body.trackerPreview #gameView .lifeNudge{
+    min-width:0;
+    min-height:36px;
+    padding:0;
+    font-size:20px;
+    line-height:1;
+    border-radius:9px;
+  }
+
+  /* Symbol-based Commander / Poison controls */
+  body.trackerPreview #gameView .counterStrip{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:4px;
+    margin-top:3px;
+  }
+  body.trackerPreview #gameView .counterChip{
+    min-width:0;
+    display:grid;
+    grid-template-columns:17px 24px minmax(20px,1fr) 24px;
+    align-items:center;
+    gap:2px;
+    min-height:30px;
+    padding:2px 3px;
+    border:1px solid rgba(151,120,73,.42);
+    border-radius:8px;
+    background:rgba(5,9,7,.72);
+  }
+  body.trackerPreview #gameView .poisonChip{
+    border-color:rgba(104,160,88,.5);
+  }
+  body.trackerPreview #gameView .counterIcon{
+    width:16px;
+    height:16px;
+    display:grid;
+    place-items:center;
+  }
+  body.trackerPreview #gameView .counterIcon svg{
+    width:16px;
+    height:16px;
+    fill:none;
+    stroke:#d5c39d;
+    stroke-width:1.65;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+  body.trackerPreview #gameView .poisonChip .counterIcon svg{
+    stroke:#9fd28c;
+  }
+  body.trackerPreview #gameView .counterValue{
+    text-align:center;
+    font-size:15px;
+    font-weight:900;
+    color:#efe3d2;
+  }
+  body.trackerPreview #gameView .miniStep{
+    min-width:0;
+    min-height:24px;
+    padding:0;
+    border-radius:6px;
+    font-size:14px;
+    line-height:1;
+  }
+
+  body.trackerPreview #gameView .playerCreatures{
+    min-height:27px;
+    margin:3px 0 0;
+    padding:3px 5px;
+    font-size:7px;
+  }
+  body.trackerPreview #gameView .playerCreatures span{font-size:6px}
+  body.trackerPreview #gameView .playerCreatures .battlefieldLabel{font-size:7px;color:#eef8e9}
+
+  /* 1-player mode can breathe a little more */
+  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .playerName{font-size:16px}
+  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .lifeTotal.editLife{font-size:72px;min-height:80px}
+  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .lifePanel{grid-template-columns:52px minmax(0,1fr) 52px}
+  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .lifeNudge{min-height:48px;font-size:26px}
+  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .counterStrip{max-width:430px;width:100%;margin:8px auto 0}
+  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .counterChip{min-height:42px;grid-template-columns:24px 34px 1fr 34px}
+  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .counterIcon svg{width:21px;height:21px}
+  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .counterValue{font-size:21px}
+  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .miniStep{min-height:32px;font-size:17px}
+  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .playerCreatures{max-width:430px;width:100%;margin:8px auto 0;min-height:38px;font-size:10px}
+
+  /* 5/6 keep the compact multi-row fallback */
   body.trackerPreview #gameView .gameBoard[data-player-count="5"],
   body.trackerPreview #gameView .gameBoard[data-player-count="6"]{
     grid-template-columns:repeat(2,minmax(0,1fr)) !important;
     grid-auto-rows:auto;
-    overflow:visible;
     flex:none;
+    overflow:visible;
   }
 
-  /* Keep the table setup controls tiny so the player quadrants own the screen. */
   body.trackerPreview #gameView .playerRosterTools{
     flex:none;
     grid-template-columns:1fr 1fr !important;
     gap:4px;
   }
   body.trackerPreview #gameView .playerRosterTools button{
-    min-height:28px;
-    padding:4px 5px;
+    min-height:27px;
+    padding:3px 5px;
     font-size:8px;
   }
-  body.trackerPreview #gameView .playerLimitMsg{
-    display:none;
-  }
+  body.trackerPreview #gameView .playerLimitMsg{display:none}
 
-  /* Tighten each quadrant without removing any game controls. */
-  body.trackerPreview #gameView .playerCard{
-    padding:6px;
-  }
-  body.trackerPreview #gameView .playerHeader{
-    margin-bottom:1px;
-  }
-  body.trackerPreview #gameView .playerName{
-    font-size:11px;
-  }
-  body.trackerPreview #gameView .editPlayerName,
-  body.trackerPreview #gameView .resetPlayer{
-    min-height:22px;
-    padding:3px 4px;
-    font-size:6.5px;
-  }
-  body.trackerPreview #gameView .lifePanel{
-    margin:0 0 2px;
-  }
-  body.trackerPreview #gameView .lifeTotal.editLife{
-    min-height:40px;
-    padding:0;
-    font-size:40px;
-  }
-  body.trackerPreview #gameView .playerCreatures{
-    min-height:28px;
-    margin:0 0 3px;
-    padding:3px 5px;
-    font-size:7px;
-  }
-  body.trackerPreview #gameView .playerCreatures span{
-    font-size:6.5px;
-  }
-  body.trackerPreview #gameView .lifeControls{
+  body.trackerPreview #gameView .lifeEditRow{
+    grid-template-columns:1fr;
     gap:3px;
-    margin-top:2px;
+    padding:2px 0;
   }
-  body.trackerPreview #gameView .lifeControls button{
-    min-height:27px;
-    padding:3px 2px;
-    font-size:7px;
-  }
-  body.trackerPreview #gameView .statRow{
-    gap:3px;
-    margin-top:3px;
-  }
-  body.trackerPreview #gameView .statBox{
-    padding:3px 2px;
-  }
-  body.trackerPreview #gameView .statValue{
-    font-size:14px;
-  }
+  body.trackerPreview #gameView .lifeEditInput{height:36px;font-size:20px}
+  body.trackerPreview #gameView .lifeEditRow button{min-height:26px;padding:3px;font-size:8px}
 }
 
 </style>
@@ -1929,27 +2014,32 @@ el("bill").onclick=function(){
   for(var i=0;i<creatures.length;i++)creatures[i].c*=2;finish();
 };
 
+var GAME_KEY='wolfLairGame2';
 var gameState={
   players:[
-    {name:'Player 1', life:20, commander:0, poison:0},
-    {name:'Player 2', life:20, commander:0, poison:0}
+    {name:'Player 1', life:20, commander:0, poison:0}
   ],
   phases:['Beginning','Precombat','Combat','Postcombat','Ending'],
   phaseIndex:0
 };
 function loadGame(){
   try{
-    var raw=localStorage.getItem('wolfLairGame1');
-    if(raw){var parsed=JSON.parse(raw); if(parsed&&Array.isArray(parsed.players)){gameState=parsed;}}
+    var raw=localStorage.getItem(GAME_KEY);
+    if(raw){
+      var parsed=JSON.parse(raw);
+      if(parsed&&Array.isArray(parsed.players)&&parsed.players.length>=1&&parsed.players.length<=6){
+        gameState=parsed;
+      }
+    }
   }catch(e){}
-  if(!gameState.players||gameState.players.length!==2){
-    gameState={players:[{name:'Player 1', life:20, commander:0, poison:0},{name:'Player 2', life:20, commander:0, poison:0}], phases:['Beginning','Precombat','Combat','Postcombat','Ending'], phaseIndex:0};
+  if(!gameState.players||gameState.players.length<1||gameState.players.length>6){
+    gameState={players:[{name:'Player 1', life:20, commander:0, poison:0}], phases:['Beginning','Precombat','Combat','Postcombat','Ending'], phaseIndex:0};
   }
   if(!gameState.phases||!gameState.phases.length){gameState.phases=['Beginning','Precombat','Combat','Postcombat','Ending'];}
   if(typeof playerCreatures!=='undefined')ensurePlayerCreatureSlots();
 }
 function saveGame(){
-  try{localStorage.setItem('wolfLairGame1',JSON.stringify(gameState))}catch(e){}
+  try{localStorage.setItem(GAME_KEY,JSON.stringify(gameState))}catch(e){}
 }
 function renderGame(){
   var board=el('gameBoard');
@@ -1962,22 +2052,27 @@ function renderGame(){
       var creatureCount=(playerCreatures[index]||[]).length;
       card.innerHTML='\
         <div class="playerFace">\
-        <div class="playerHeader"><div class="playerIdentity"><span class="playerName">'+escapeHTML(player.name)+'</span><button class="editPlayerName" type="button" aria-label="Edit player name">EDIT</button></div><button class="resetPlayer" type="button">Reset</button></div>\
-        <div class="lifePanel"><button class="lifeTotal editLife" type="button" aria-label="Edit life total">'+player.life+'</button><span class="lifeHint">Tap life to edit</span></div>\
-        <button class="playerCreatures" type="button">BATTLEFIELD <span>'+creatureCount+' CREATURE'+(creatureCount===1?'':'S')+'</span></button>\
-        <div class="lifeControls">\
-          <button class="lifeDown" type="button">−1 Life</button>\
-          <button class="lifeUp" type="button">+1 Life</button>\
-          <button class="cmdDown" type="button">−1 Cmd</button>\
-          <button class="cmdUp" type="button">+1 Cmd</button>\
-          <button class="poisonDown" type="button">−1 Poison</button>\
-          <button class="poisonUp" type="button">+1 Poison</button>\
+        <div class="playerHeader"><div class="playerIdentity"><span class="playerName">'+escapeHTML(player.name)+'</span><button class="editPlayerName" type="button" aria-label="Edit player name">EDIT</button></div><button class="resetPlayer" type="button">RESET</button></div>\
+        <div class="lifePanel">\
+          <button class="lifeDown lifeNudge" type="button" aria-label="Lose 1 life">−</button>\
+          <button class="lifeTotal editLife" type="button" aria-label="Edit life total">'+player.life+'</button>\
+          <button class="lifeUp lifeNudge" type="button" aria-label="Gain 1 life">＋</button>\
         </div>\
-        <div class="statRow">\
-          <div class="statBox"><span class="statLabel">Life</span><span class="statValue">'+player.life+'</span></div>\
-          <div class="statBox"><span class="statLabel">Cmd</span><span class="statValue">'+player.commander+'</span></div>\
-          <div class="statBox"><span class="statLabel">Poison</span><span class="statValue">'+player.poison+'</span></div>\
+        <div class="counterStrip">\
+          <div class="counterChip commanderChip">\
+            <span class="counterIcon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 18h14M7 16l-2-9 5 4 2-6 2 6 5-4-2 9H7z"/></svg></span>\
+            <button class="cmdDown miniStep" type="button" aria-label="Remove 1 commander damage">−</button>\
+            <span class="counterValue">'+player.commander+'</span>\
+            <button class="cmdUp miniStep" type="button" aria-label="Add 1 commander damage">＋</button>\
+          </div>\
+          <div class="counterChip poisonChip">\
+            <span class="counterIcon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3c-4 0-7 3-7 6.6 0 2.2 1.1 4.1 3 5.3V18h2v3h4v-3h2v-3.1c1.9-1.2 3-3.1 3-5.3C19 6 16 3 12 3z"/><circle cx="9.4" cy="9.7" r="1.4"/><circle cx="14.6" cy="9.7" r="1.4"/><path d="M10 14h4"/></svg></span>\
+            <button class="poisonDown miniStep" type="button" aria-label="Remove 1 poison counter">−</button>\
+            <span class="counterValue">'+player.poison+'</span>\
+            <button class="poisonUp miniStep" type="button" aria-label="Add 1 poison counter">＋</button>\
+          </div>\
         </div>\
+        <button class="playerCreatures" type="button"><span class="battlefieldLabel">BATTLEFIELD</span><span>'+creatureCount+' CREATURE'+(creatureCount===1?'':'S')+'</span></button>\
         </div>';
       card.querySelector('.lifeDown').onclick=function(){player.life--;saveGame();renderGame();};
       card.querySelector('.lifeUp').onclick=function(){player.life++;saveGame();renderGame();};
@@ -2054,7 +2149,7 @@ function renderGame(){
   }
   var addBtn=el('addPlayer'), removeBtn=el('removePlayer'), limitMsg=el('playerLimitMsg');
   if(addBtn)addBtn.disabled=gameState.players.length>=6;
-  if(removeBtn)removeBtn.disabled=gameState.players.length<=2;
+  if(removeBtn)removeBtn.disabled=gameState.players.length<=1;
   if(limitMsg){
     limitMsg.textContent=gameState.players.length>=6?'Maximum 6 players':(gameState.players.length+' players at the table');
   }
@@ -2069,7 +2164,7 @@ el('addPlayer').onclick=function(){
   renderGame();
 };
 el('removePlayer').onclick=function(){
-  if(gameState.players.length<=2)return;
+  if(gameState.players.length<=1)return;
   gameState.players.pop();
   playerCreatures.pop();
   if(activePlayerIndex>=gameState.players.length)activePlayerIndex=gameState.players.length-1;
