@@ -2259,7 +2259,8 @@ function warmOCRWorker(){
   });
   return wolfOCRWorkerPromise;
 }
-var cardCameraStream=null, cardDetectTimer=null, lastDetectedCard=null, stableCardFrames=0, autoCaptureBusy=false;
+var cardCameraStream=null, cardDetectTimer=null, lastDetectedCard=null, stableCardFrames=0, missedCardFrames=0, autoCaptureBusy=false;
+var AUTO_CAPTURE_FRAMES=3;
 
 function loadOpenCV(){
   if(window.cv&&window.cv.Mat)return Promise.resolve(window.cv);
@@ -2298,7 +2299,7 @@ function stopCardCamera(){
   }
   var video=el("scanVideo");
   if(video)video.srcObject=null;
-  lastDetectedCard=null;stableCardFrames=0;autoCaptureBusy=false;
+  lastDetectedCard=null;stableCardFrames=0;missedCardFrames=0;autoCaptureBusy=false;
   stopFallbackDetector();
   activeCV=null;
   var live=el("liveScanner");if(live)live.className="hidden liveScanner";
@@ -2340,8 +2341,8 @@ function drawCardOverlay(points,found,progress){
   }
   ctx.restore();
   if(state){
-    if(found&&progress>=4)state.textContent="CAPTURING";
-    else if(found)state.textContent="HOLD STEADY "+Math.min(100,Math.round(progress/4*100))+"%";
+    if(found&&progress>=AUTO_CAPTURE_FRAMES)state.textContent="CAPTURING";
+    else if(found)state.textContent="HOLD STEADY "+Math.min(100,Math.round(progress/AUTO_CAPTURE_FRAMES*100))+"%";
     else state.textContent="CENTER CARD";
   }
 }
@@ -2385,16 +2386,39 @@ function detectCardFrame(cv){
       approx.delete();cnt.delete();
     }
     if(best&&bestScore>1.6){
+      missedCardFrames=0;
       var now={cx:best.cx/dw,cy:best.cy/dh,w:best.width/dw,h:best.height/dh};
       if(lastDetectedCard){
-        var delta=Math.abs(now.cx-lastDetectedCard.norm.cx)+Math.abs(now.cy-lastDetectedCard.norm.cy)+Math.abs(now.w-lastDetectedCard.norm.w)+Math.abs(now.h-lastDetectedCard.norm.h);
-        stableCardFrames=delta<.055?stableCardFrames+1:0;
-      }else stableCardFrames=0;
+        var prev=lastDetectedCard.norm;
+        var delta=Math.abs(now.cx-prev.cx)+Math.abs(now.cy-prev.cy)+Math.abs(now.w-prev.w)+Math.abs(now.h-prev.h);
+
+        // Normal hand tremor and autofocus can move the detected corners a few percent.
+        // Build confidence instead of resetting to zero on every tiny movement.
+        if(delta<.15)stableCardFrames=Math.min(AUTO_CAPTURE_FRAMES,stableCardFrames+1);
+        else if(delta<.28)stableCardFrames=Math.max(0,stableCardFrames-.35);
+        else stableCardFrames=Math.max(0,stableCardFrames-1);
+
+        // Smooth the comparison target so contour jitter does not look like phone movement.
+        now={
+          cx:prev.cx*.55+now.cx*.45,
+          cy:prev.cy*.55+now.cy*.45,
+          w:prev.w*.55+now.w*.45,
+          h:prev.h*.55+now.h*.45
+        };
+      }else stableCardFrames=.5;
+
       lastDetectedCard={points:best.points,norm:now,detectW:dw,detectH:dh};
       drawCardOverlay(best.points,true,stableCardFrames);
-      if(stableCardFrames>=4){autoCaptureBusy=true;captureDetectedCard(cv,lastDetectedCard)}
+      if(stableCardFrames>=AUTO_CAPTURE_FRAMES){autoCaptureBusy=true;captureDetectedCard(cv,lastDetectedCard)}
     }else{
-      stableCardFrames=0;lastDetectedCard=null;drawCardOverlay(null,false,0);
+      missedCardFrames++;
+      // Do not throw the lock away because one camera frame lost a card edge.
+      if(lastDetectedCard&&missedCardFrames<=2){
+        stableCardFrames=Math.max(.5,stableCardFrames-.4);
+        drawCardOverlay(lastDetectedCard.points,true,stableCardFrames);
+      }else{
+        stableCardFrames=0;missedCardFrames=0;lastDetectedCard=null;drawCardOverlay(null,false,0);
+      }
     }
   }catch(e){
     drawCardOverlay(null,false,0);
@@ -2477,11 +2501,11 @@ function runFallbackStability(){
     var a=sample.gray,b=fallbackFrameSample.gray,total=0;
     for(var i=0;i<a.length;i+=3)total+=Math.abs(a[i]-b[i]);
     var diff=total/Math.ceil(a.length/3);
-    if(diff<5.4&&sample.edgeRatio>.055)fallbackStableFrames++;
-    else fallbackStableFrames=0;
+    if(diff<9&&sample.edgeRatio>.045)fallbackStableFrames++;
+    else fallbackStableFrames=Math.max(0,fallbackStableFrames-1);
   }
   fallbackFrameSample=sample;
-  if(fallbackStableFrames>=6){
+  if(fallbackStableFrames>=4){
     autoCaptureBusy=true;
     captureBasicCard();
   }
@@ -2528,7 +2552,7 @@ function startCardCamera(){
     stopFallbackDetector();
     if(cardDetectTimer)clearInterval(cardDetectTimer);
     cardDetectTimer=setInterval(function(){detectCardFrame(cv)},260);
-    el("scanStatus").textContent="Card-edge detection ready. Hold the card steady inside the frame.";
+    el("scanStatus").textContent="Card-edge detection ready. Center the card inside the frame — normal hand movement is okay.";
   }).catch(function(){
     // Keep the live camera instead of falling back to the old photo picker.
     activeCV=null;
@@ -2559,7 +2583,7 @@ function startCardCamera(){
         drawCardOverlay(null,false,0);
         if(!activeCV&&!fallbackDetectTimer)fallbackDetectTimer=setInterval(runFallbackStability,260);
         el("scanStatus").textContent=activeCV?
-          "Move the card into view. The green frame will lock on and capture automatically.":
+          "Center the card in view. A little hand movement is okay — it will lock and capture automatically.":
           "Center the card in the frame and hold steady. Capture is automatic.";
       }).catch(function(){});
     };
