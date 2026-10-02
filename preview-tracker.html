@@ -402,6 +402,98 @@ body.trackerPreview #trackerView header.trackerTitle small{
   body.trackerPreview #trackerView header.trackerTitle small{font-size:9px;letter-spacing:1.9px}
 }
 
+
+/* Quick Play switch: Game Mode <-> Battlefield Command */
+body.trackerPreview #trackerView header.trackerTitle,
+body.trackerPreview #gameView header.gameTitle{
+  position:relative;
+  padding-right:132px;
+}
+body.trackerPreview .quickSwitch{
+  position:absolute;
+  right:12px;
+  top:50%;
+  transform:translateY(-50%);
+  min-height:40px;
+  padding:8px 11px;
+  border-radius:999px;
+  font-size:11px;
+  letter-spacing:.7px;
+  white-space:nowrap;
+  color:#efe2cb;
+  border:1px solid rgba(191,137,73,.65);
+  background:linear-gradient(180deg,rgba(49,39,27,.97),rgba(18,17,13,.99));
+  box-shadow:0 6px 16px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,241,214,.05);
+}
+body.trackerPreview .quickSwitch:active{transform:translateY(calc(-50% + 1px))}
+body.trackerPreview #gameView{
+  min-height:100vh;
+  background:
+    linear-gradient(180deg,rgba(3,6,5,.5),rgba(3,6,5,.86)),
+    var(--lair-scene),
+    #030605;
+  background-size:cover;
+  background-position:center;
+  background-attachment:fixed;
+}
+body.trackerPreview #gameView main{max-width:980px}
+body.trackerPreview #gameView header.gameTitle{
+  display:grid;
+  grid-template-columns:52px 1fr;
+  grid-template-rows:auto auto;
+  align-items:center;
+  gap:0 11px;
+  text-align:left;
+  padding:13px 132px 13px 14px;
+  border:1px solid rgba(196,142,77,.48);
+  border-radius:16px;
+  background:linear-gradient(135deg,rgba(22,24,21,.96),rgba(8,11,9,.96));
+  box-shadow:0 12px 28px rgba(0,0,0,.34);
+}
+body.trackerPreview #gameView header.gameTitle .wolf{
+  grid-row:1/3;
+  width:46px;height:46px;
+  display:grid;place-items:center;
+  border-radius:13px;
+  background:rgba(8,12,9,.9);
+  border:1px solid rgba(183,139,79,.5);
+}
+body.trackerPreview #gameView header.gameTitle h1{
+  margin:0;
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:22px;
+  color:#f3e8d5;
+}
+body.trackerPreview #gameView header.gameTitle small{
+  margin-top:4px;
+  color:#a99778;
+  letter-spacing:2.4px;
+  font-size:10px;
+}
+body.trackerPreview #gameView .playerCard,
+body.trackerPreview #gameView .phaseBanner{
+  background:linear-gradient(160deg,rgba(18,21,18,.97),rgba(6,9,7,.98));
+  border-color:rgba(190,136,73,.45);
+  box-shadow:0 10px 24px rgba(0,0,0,.3);
+}
+body.trackerPreview #gameView button{
+  background:linear-gradient(180deg,rgba(40,36,28,.96),rgba(15,16,13,.98));
+  border-color:rgba(161,124,74,.52);
+}
+@media(max-width:520px){
+  body.trackerPreview #trackerView header.trackerTitle,
+  body.trackerPreview #gameView header.gameTitle{
+    padding-right:112px;
+  }
+  body.trackerPreview .quickSwitch{
+    right:9px;
+    padding:8px 9px;
+    font-size:10px;
+  }
+  body.trackerPreview #trackerView header.trackerTitle h1{font-size:19px}
+  body.trackerPreview #gameView header.gameTitle h1{font-size:20px}
+}
+
 </style>
 </head>
 <body class="trackerPreview">
@@ -560,7 +652,12 @@ body.trackerPreview #trackerView header.trackerTitle small{
 <section id="trackerView" class="hidden">
 <main>
 <button id="backHome" class="backHome" type="button">‹ Wolf Lair Home</button>
-<header class="trackerTitle"><div class="trackerBrand">THE WOLF LAIR</div><h1>BATTLEFIELD COMMAND</h1><small>CREATURE &amp; COUNTER CONTROL</small></header>
+<header class="trackerTitle">
+  <div class="trackerBrand">THE WOLF LAIR</div>
+  <h1>BATTLEFIELD COMMAND</h1>
+  <small>CREATURE &amp; COUNTER CONTROL</small>
+  <button id="quickGameMode" class="quickSwitch" type="button">GAME MODE ›</button>
+</header>
 <div id="form" class="hidden">
 <input id="nm" placeholder="Creature name">
 <div class="pt"><input id="pw" inputmode="numeric" placeholder="Power"><input id="th" inputmode="numeric" placeholder="Toughness"></div>
@@ -575,7 +672,10 @@ body.trackerPreview #trackerView header.trackerTitle small{
 <section id="gameView" class="hidden">
   <main>
     <button id="backGameHome" class="backHome" type="button">‹ Wolf Lair Home</button>
-    <header><div class="wolf">🎲</div><h1>Game Mode</h1><small>TABLETOP</small></header>
+    <header class="gameTitle">
+  <div class="wolf">🎲</div><h1>Game Mode</h1><small>TABLETOP</small>
+  <button id="quickCreatures" class="quickSwitch" type="button">‹ CREATURES</button>
+</header>
     <div class="gameShell">
       <div id="gameBoard" class="gameBoard"></div>
       <div class="gameTools">
@@ -855,8 +955,25 @@ renderGame();
 </script>
 <script>
 (function(){
-  var b=document.getElementById('backHome');
-  if(b)b.onclick=function(){location.href='./preview-home.html?preview=3';};
+  function showTracker(){
+    document.getElementById('gameView').className='hidden';
+    document.getElementById('trackerView').className='';
+    window.scrollTo(0,0);
+  }
+  function showGame(){
+    document.getElementById('trackerView').className='hidden';
+    document.getElementById('gameView').className='';
+    if(typeof renderGame==='function') renderGame();
+    window.scrollTo(0,0);
+  }
+  var back=document.getElementById('backHome');
+  var backGame=document.getElementById('backGameHome');
+  var toGame=document.getElementById('quickGameMode');
+  var toTracker=document.getElementById('quickCreatures');
+  if(back)back.onclick=function(){location.href='./preview-home.html?preview=3';};
+  if(backGame)backGame.onclick=function(){location.href='./preview-home.html?preview=3';};
+  if(toGame)toGame.onclick=showGame;
+  if(toTracker)toTracker.onclick=showTracker;
 })();
 </script>
 </body>
