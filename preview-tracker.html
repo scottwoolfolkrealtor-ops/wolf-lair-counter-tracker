@@ -2616,83 +2616,138 @@ function startCardCamera(){
     el("cardScanInput").click();
   });
 }
+function normalizeCardText(s){
+  return String(s||"").toLowerCase().replace(/[^a-z0-9]+/g," ").replace(/\s+/g," ").trim();
+}
+function editDistance(a,b){
+  a=normalizeCardText(a);b=normalizeCardText(b);
+  var m=a.length,n=b.length,prev=new Array(n+1),cur=new Array(n+1);
+  for(var j=0;j<=n;j++)prev[j]=j;
+  for(var i=1;i<=m;i++){
+    cur[0]=i;
+    for(var k=1;k<=n;k++){
+      var cost=a[i-1]===b[k-1]?0:1;
+      cur[k]=Math.min(cur[k-1]+1,prev[k]+1,prev[k-1]+cost);
+    }
+    var tmp=prev;prev=cur;cur=tmp;
+  }
+  return prev[n];
+}
+function nameSimilarity(a,b){
+  a=normalizeCardText(a);b=normalizeCardText(b);
+  if(!a||!b)return 0;
+  if(a===b)return 1;
+  var maxLen=Math.max(a.length,b.length);
+  return Math.max(0,1-editDistance(a,b)/maxLen);
+}
+function showScanChoices(cards,status,resolve){
+  var unique=[],seen={};
+  for(var i=0;i<cards.length;i++){
+    var card=cards[i];
+    if(!card||!card.id||seen[card.id])continue;
+    seen[card.id]=true;unique.push(card);
+  }
+  if(!unique.length)throw new Error("No reliable card match");
+
+  el("cardSearchPanel").className="cardToolPanel";
+  renderCardSearchResults(unique.slice(0,12),"scan");
+  var results=el("cardSearchResults");
+  status.textContent="I found a few possible matches. Tap the correct card.";
+  setDeckStatus("Scanner wasn't certain enough to choose for you.");
+  if(resolve)resolve(unique);
+}
 function scanImageFile(file){
   var preview=el("scanPreview"), panel=el("scanPanel"), status=el("scanStatus");
   panel.className="cardToolPanel scanPanel";
-  status.textContent="Reading card…";
+  status.textContent="Reading card title…";
   var url=URL.createObjectURL(file);
   preview.src=url;preview.className="";
+
   return new Promise(function(resolve,reject){
     var img=new Image();
     img.onload=function(){
       try{
-        var maxSide=1300, scale=Math.min(1,maxSide/Math.max(img.naturalWidth,img.naturalHeight));
-        var canvas=document.createElement("canvas");
-        canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));
-        canvas.height=Math.max(1,Math.round(img.naturalHeight*scale));
-        var ctx=canvas.getContext("2d");
-        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        // Build a smaller title-focused crop first. This is faster and avoids
+        // rules text/background words becoming the card-name guess.
+        var maxSide=1200, scale=Math.min(1,maxSide/Math.max(img.naturalWidth,img.naturalHeight));
+        var full=document.createElement("canvas");
+        full.width=Math.max(1,Math.round(img.naturalWidth*scale));
+        full.height=Math.max(1,Math.round(img.naturalHeight*scale));
+        var fctx=full.getContext("2d");
+        fctx.drawImage(img,0,0,full.width,full.height);
+
+        var guide=defaultCardRect(full.width,full.height);
+        var gx=guide[0].x,gy=guide[0].y,gw=guide[1].x-guide[0].x,gh=guide[3].y-guide[0].y;
+
+        // Use the upper ~24% of the centered card area, where the MTG name lives.
+        var titleCanvas=document.createElement("canvas");
+        titleCanvas.width=Math.max(1,Math.round(gw));
+        titleCanvas.height=Math.max(1,Math.round(gh*.24));
+        titleCanvas.getContext("2d").drawImage(full,gx,gy,gw,gh*.24,0,0,titleCanvas.width,titleCanvas.height);
 
         wolfOCRStatusTarget=status;
         warmOCRWorker().then(function(worker){
-          return worker.recognize(canvas);
+          return worker.recognize(titleCanvas);
         }).then(function(result){
-          var data=result&&result.data?result.data:{};
-          var candidates=[];
+          var data=result&&result.data?result.data:{}, candidates=[];
+
+          function addCandidate(txt,confidence){
+            txt=String(txt||"").replace(/[^A-Za-z0-9'’,:\- ]+/g," ").replace(/\s+/g," ").trim();
+            if(txt.length<3||txt.length>55)return;
+            var low=txt.toLowerCase();
+            if(/^(target|when|whenever|until|creature|instant|sorcery|enchantment|artifact|land|planeswalker|tap|add|draw|you|your|each|the|a|an)\b/.test(low))return;
+            if(!candidates.some(function(x){return x.text.toLowerCase()===low}))candidates.push({text:txt,confidence:confidence||0});
+          }
 
           if(Array.isArray(data.lines)){
-            data.lines
-              .filter(function(line){
-                var txt=String(line.text||"").replace(/[^A-Za-z0-9'’,:\- ]+/g," ").replace(/\s+/g," ").trim();
-                var y=line.bbox&&typeof line.bbox.y0==="number"?line.bbox.y0:99999;
-                return txt.length>=2&&txt.length<=60&&y<canvas.height*.58;
-              })
-              .sort(function(a,b){
-                var ay=a.bbox&&typeof a.bbox.y0==="number"?a.bbox.y0:99999;
-                var by=b.bbox&&typeof b.bbox.y0==="number"?b.bbox.y0:99999;
-                if(Math.abs(ay-by)>20)return ay-by;
-                return (b.confidence||0)-(a.confidence||0);
-              })
-              .forEach(function(line){
-                var txt=String(line.text||"").replace(/[^A-Za-z0-9'’,:\- ]+/g," ").replace(/\s+/g," ").trim();
-                if(txt&&candidates.indexOf(txt)<0)candidates.push(txt);
-              });
+            data.lines.sort(function(a,b){return (b.confidence||0)-(a.confidence||0)}).forEach(function(line){
+              addCandidate(line.text,line.confidence);
+            });
           }
+          String(data.text||"").split(/\r?\n/).forEach(function(line){addCandidate(line,0)});
 
-          var raw=String(data.text||"");
-          raw.split(/\r?\n/).map(function(x){
-            return x.replace(/[^A-Za-z0-9'’,:\- ]+/g," ").replace(/\s+/g," ").trim();
-          }).filter(function(x){return x.length>=2&&x.length<=60}).forEach(function(x){
-            if(candidates.indexOf(x)<0)candidates.push(x);
+          candidates=candidates.slice(0,6);
+          if(!candidates.length)throw new Error("Could not read the title");
+
+          status.textContent="Checking the card name…";
+          var jobs=candidates.map(function(candidate){
+            return fetch("https://api.scryfall.com/cards/named?fuzzy="+encodeURIComponent(candidate.text))
+              .then(function(r){if(!r.ok)throw new Error("No match");return r.json()})
+              .then(function(card){
+                return {card:card,ocr:candidate.text,similarity:nameSimilarity(candidate.text,card.name),confidence:candidate.confidence||0};
+              })
+              .catch(function(){return null});
           });
 
-          // Avoid rules-text fragments and keep a short list of likely title lines.
-          candidates=candidates.filter(function(x){
-            var low=x.toLowerCase();
-            return !/^(target|when |whenever |until |creature |instant |sorcery |enchantment |artifact |land |planeswalker |tap |add |draw |you |your |each |at the |if |as )/.test(low);
-          }).slice(0,10);
+          return Promise.all(jobs);
+        }).then(function(matches){
+          matches=(matches||[]).filter(Boolean);
+          if(!matches.length)throw new Error("No card match");
 
-          if(!candidates.length)throw new Error("Could not read a likely card title");
-          status.textContent="Card text read. Finding the match…";
+          matches.sort(function(a,b){
+            var as=a.similarity+(a.confidence/100)*.12;
+            var bs=b.similarity+(b.confidence/100)*.12;
+            return bs-as;
+          });
 
-          var pos=0;
-          function tryNext(){
-            if(pos>=candidates.length)throw new Error("No card match");
-            var candidate=candidates[pos++];
-            return fetch("https://api.scryfall.com/cards/named?fuzzy="+encodeURIComponent(candidate))
-              .then(function(r){if(!r.ok)throw new Error("No match");return r.json()})
-              .catch(function(){return tryNext()});
+          var best=matches[0];
+
+          // Only auto-select when the OCR title is very close to the real card name.
+          // Otherwise show choices instead of confidently returning the wrong card.
+          if(best.similarity>=.84){
+            showCardResult(best.card,"SCANNED CARD");
+            status.textContent="Card identified — confirm the card below.";
+            setDeckStatus("Check the card image and printing before adding it.");
+            resolve(best.card);
+            return;
           }
-          return tryNext();
-        }).then(function(card){
-          showCardResult(card,"SCANNED CARD");
-          status.textContent="Possible match — confirm the card below.";
-          setDeckStatus("Check the card image and name before adding it.");
-          resolve(card);
+
+          showScanChoices(matches.map(function(x){return x.card}),status,resolve);
         }).catch(function(err){
-          status.textContent="I couldn't confidently identify that card.";
+          status.textContent="I couldn't read the card name reliably.";
           el("cardSearchPanel").className="cardToolPanel";
-          setDeckStatus("Try another photo with the card filling most of the frame, or type the card name.",true);
+          el("cardSearchInput").value="";
+          setDeckStatus("Type part of the card name and choose the correct match.",true);
           reject(err);
         }).finally(function(){setTimeout(function(){URL.revokeObjectURL(url)},3000)});
       }catch(err){reject(err)}
