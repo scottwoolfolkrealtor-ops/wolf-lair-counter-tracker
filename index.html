@@ -22,14 +22,14 @@ button{background:#17291d;color:#fff;border:1px solid #58705f;border-radius:10px
 .linkrow{display:flex;align-items:center;gap:6px;margin:6px 0}.linkrow input{width:22px;height:22px}
 .wide{width:100%;margin-top:6px}.remove{width:100%;margin-top:8px}
 .empty{text-align:center;color:#93a598;padding:40px 5px}.hidden{display:none!important}
-nav{position:fixed;z-index:50;left:0;right:0;bottom:0;background:#0b1710;border-top:1px solid #45604d;padding:8px max(10px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(1[...]
+nav{position:fixed;z-index:50;left:0;right:0;bottom:0;background:#0b1710;border-top:1px solid #45604d;padding:8px max(10px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));}
 nav button{min-height:52px}button:disabled{opacity:.4}
 @media(min-width:700px){#field{grid-template-columns:repeat(3,minmax(0,1fr))}}
 
 #home{max-width:900px;margin:auto;padding:22px 16px 40px}
-.brandHero{text-align:center;padding:34px 8px 24px}
-.brandMark{width:min(100%,360px);height:190px;margin:0 auto 14px;border:none;border-radius:18px;overflow:hidden;background:linear-gradient(135deg,#1a3a2e 0%,#0f2818 100%);box-shadow:0 8px 32px rgba(0,0,0,.35),inset 0 0 0 1px rgba(180,220,180,.18)}
-.brandLogo{display:block;width:min(100%,560px);height:auto;margin:0 auto;border-radius:18px;box-shadow:0 10px 26px rgba(0,0,0,.35);filter:drop-shadow(0 8px 16px rgba(0,0,0,.25))}
+.brandHero{text-align:center;padding:8px 8px 24px}
+.brandMark{width:min(100%,700px);height:auto;margin:0 auto 14px;border:none;border-radius:18px;overflow:hidden;background:transparent;box-shadow:none}
+.brandLogo{display:block;width:100%;height:auto;max-width:720px;margin:0 auto;border-radius:18px;box-shadow:0 10px 26px rgba(0,0,0,.35);filter:drop-shadow(0 8px 16px rgba(0,0,0,.25));object-fit:contain}
 .brandHero h1{font-size:34px;margin:0;background:linear-gradient(135deg,#f4f6f4,#b7c8bb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:900}
 .brandHero p{margin:8px 0 0;color:#aebcaf;font-size:15px}
 .appGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
