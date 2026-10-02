@@ -1355,6 +1355,173 @@ body.trackerPreview #decksView .deckSavedValue{
   body.trackerPreview #gameView .lifeControls button{font-size:7px}
 }
 
+
+/* Tabletop seating layout — each life counter faces its player */
+@media(max-width:640px){
+  body.trackerPreview #gameView main{
+    min-height:100svh;
+    display:flex;
+    flex-direction:column;
+  }
+  body.trackerPreview #gameView .gameShell{
+    flex:1;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+  }
+  body.trackerPreview #gameView .gameBoard{
+    flex:1;
+    min-height:0;
+    display:grid !important;
+    gap:5px;
+    align-items:stretch !important;
+  }
+  body.trackerPreview #gameView .playerCard,
+  body.trackerPreview #gameView .openTableSeat{
+    min-height:0;
+    overflow:hidden;
+  }
+  body.trackerPreview #gameView .playerFace{
+    height:100%;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    transform-origin:center center;
+  }
+
+  /* Two players sit opposite each other across the phone. */
+  body.trackerPreview #gameView .gameBoard[data-player-count="2"]{
+    grid-template-columns:1fr !important;
+    grid-template-rows:repeat(2,minmax(0,1fr));
+  }
+  body.trackerPreview #gameView .gameBoard[data-player-count="2"] .playerCard:nth-child(1) .playerFace{
+    transform:rotate(180deg);
+  }
+  body.trackerPreview #gameView .gameBoard[data-player-count="2"] .playerCard:nth-child(2) .playerFace{
+    transform:none;
+  }
+
+  /* Three or four players get four equal table quadrants.
+     With three players, the fourth quadrant becomes an Add Player seat. */
+  body.trackerPreview #gameView .gameBoard[data-player-count="3"],
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"]{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    grid-template-rows:repeat(2,minmax(0,1fr));
+  }
+  body.trackerPreview #gameView .gameBoard[data-player-count="3"] .playerCard,
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .playerCard{
+    grid-column:auto !important;
+  }
+  body.trackerPreview #gameView .gameBoard[data-player-count="3"] .playerCard:nth-child(-n+2) .playerFace,
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .playerCard:nth-child(-n+2) .playerFace{
+    transform:rotate(180deg);
+  }
+  body.trackerPreview #gameView .gameBoard[data-player-count="3"] .playerCard:nth-child(n+3) .playerFace,
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .playerCard:nth-child(n+3) .playerFace{
+    transform:none;
+  }
+
+  body.trackerPreview #gameView .openTableSeat{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
+    width:100%;
+    border-radius:12px;
+    border:1px dashed rgba(153,126,82,.45);
+    background:rgba(9,12,10,.62);
+    color:#bfa77d;
+  }
+  body.trackerPreview #gameView .openTableSeat strong{
+    font-size:11px;
+    letter-spacing:1.5px;
+  }
+  body.trackerPreview #gameView .openTableSeat span{
+    font-size:9px;
+    color:#94b990;
+  }
+
+  /* Five and six remain compact scrolling layouts for now. */
+  body.trackerPreview #gameView .gameBoard[data-player-count="5"],
+  body.trackerPreview #gameView .gameBoard[data-player-count="6"]{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    grid-auto-rows:auto;
+    overflow:visible;
+    flex:none;
+  }
+
+  /* Keep the table setup controls tiny so the player quadrants own the screen. */
+  body.trackerPreview #gameView .playerRosterTools{
+    flex:none;
+    grid-template-columns:1fr 1fr !important;
+    gap:4px;
+  }
+  body.trackerPreview #gameView .playerRosterTools button{
+    min-height:28px;
+    padding:4px 5px;
+    font-size:8px;
+  }
+  body.trackerPreview #gameView .playerLimitMsg{
+    display:none;
+  }
+
+  /* Tighten each quadrant without removing any game controls. */
+  body.trackerPreview #gameView .playerCard{
+    padding:6px;
+  }
+  body.trackerPreview #gameView .playerHeader{
+    margin-bottom:1px;
+  }
+  body.trackerPreview #gameView .playerName{
+    font-size:11px;
+  }
+  body.trackerPreview #gameView .editPlayerName,
+  body.trackerPreview #gameView .resetPlayer{
+    min-height:22px;
+    padding:3px 4px;
+    font-size:6.5px;
+  }
+  body.trackerPreview #gameView .lifePanel{
+    margin:0 0 2px;
+  }
+  body.trackerPreview #gameView .lifeTotal.editLife{
+    min-height:40px;
+    padding:0;
+    font-size:40px;
+  }
+  body.trackerPreview #gameView .playerCreatures{
+    min-height:28px;
+    margin:0 0 3px;
+    padding:3px 5px;
+    font-size:7px;
+  }
+  body.trackerPreview #gameView .playerCreatures span{
+    font-size:6.5px;
+  }
+  body.trackerPreview #gameView .lifeControls{
+    gap:3px;
+    margin-top:2px;
+  }
+  body.trackerPreview #gameView .lifeControls button{
+    min-height:27px;
+    padding:3px 2px;
+    font-size:7px;
+  }
+  body.trackerPreview #gameView .statRow{
+    gap:3px;
+    margin-top:3px;
+  }
+  body.trackerPreview #gameView .statBox{
+    padding:3px 2px;
+  }
+  body.trackerPreview #gameView .statValue{
+    font-size:14px;
+  }
+}
+
 </style>
 </head>
 <body class="trackerPreview">
@@ -1794,6 +1961,7 @@ function renderGame(){
       card.className='playerCard';
       var creatureCount=(playerCreatures[index]||[]).length;
       card.innerHTML='\
+        <div class="playerFace">\
         <div class="playerHeader"><div class="playerIdentity"><span class="playerName">'+escapeHTML(player.name)+'</span><button class="editPlayerName" type="button" aria-label="Edit player name">EDIT</button></div><button class="resetPlayer" type="button">Reset</button></div>\
         <div class="lifePanel"><button class="lifeTotal editLife" type="button" aria-label="Edit life total">'+player.life+'</button><span class="lifeHint">Tap life to edit</span></div>\
         <button class="playerCreatures" type="button">BATTLEFIELD <span>'+creatureCount+' CREATURE'+(creatureCount===1?'':'S')+'</span></button>\
@@ -1809,6 +1977,7 @@ function renderGame(){
           <div class="statBox"><span class="statLabel">Life</span><span class="statValue">'+player.life+'</span></div>\
           <div class="statBox"><span class="statLabel">Cmd</span><span class="statValue">'+player.commander+'</span></div>\
           <div class="statBox"><span class="statLabel">Poison</span><span class="statValue">'+player.poison+'</span></div>\
+        </div>\
         </div>';
       card.querySelector('.lifeDown').onclick=function(){player.life--;saveGame();renderGame();};
       card.querySelector('.lifeUp').onclick=function(){player.life++;saveGame();renderGame();};
@@ -1871,6 +2040,17 @@ function renderGame(){
       };
       board.appendChild(card);
     })(gameState.players[i],i);
+  }
+  if(gameState.players.length===3){
+    var openSeat=document.createElement('button');
+    openSeat.type='button';
+    openSeat.className='openTableSeat';
+    openSeat.innerHTML='<strong>OPEN SEAT</strong><span>＋ Add Player</span>';
+    openSeat.onclick=function(){
+      var add=el('addPlayer');
+      if(add&&!add.disabled)add.click();
+    };
+    board.appendChild(openSeat);
   }
   var addBtn=el('addPlayer'), removeBtn=el('removePlayer'), limitMsg=el('playerLimitMsg');
   if(addBtn)addBtn.disabled=gameState.players.length>=6;
