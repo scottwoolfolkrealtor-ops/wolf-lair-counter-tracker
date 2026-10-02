@@ -1376,7 +1376,7 @@ body.trackerPreview #decksView .deckSavedValue{
      <div id="cameraStage" class="cameraStage">
       <video id="scanVideo" autoplay playsinline muted></video>
       <canvas id="scanOverlay" aria-hidden="true"></canvas>
-      <div class="cameraHint"><span id="cameraState">CENTER CARD</span><small>Keep the card inside the frame — no need to hold still</small></div>
+      <div class="cameraHint"><span id="cameraState">CENTER CARD</span><small>Wait for the green card frame — or tap Capture Now</small></div>
      </div>
      <div class="scanCameraActions">
       <button id="manualCapture" type="button">Capture Now</button>
@@ -2342,7 +2342,7 @@ function drawCardOverlay(points,found,progress){
   ctx.restore();
   if(state){
     if(found&&progress>=AUTO_CAPTURE_FRAMES)state.textContent="CAPTURING";
-    else if(found)state.textContent="CARD FOUND "+Math.min(100,Math.round(progress/AUTO_CAPTURE_FRAMES*100))+"%";
+    else if(found)state.textContent="CARD LOCK "+Math.min(100,Math.round(progress/AUTO_CAPTURE_FRAMES*100))+"%";
     else state.textContent="CENTER CARD";
   }
 }
@@ -2380,18 +2380,14 @@ function detectCardFrame(cv){
           var centerDist=Math.sqrt(Math.pow((cx-centerX)/dw,2)+Math.pow((cy-centerY)/dh,2));
           var centerScore=Math.max(0,1-centerDist*2.2);
           var score=ratioArea*2.6+ratioScore*1.8+centerScore;
-          if(ratioScore>.22&&centerDist<.32&&score>bestScore){bestScore=score;best={points:pts,cx:cx,cy:cy,width:width,height:height}}
+          if(ratioScore>.48&&centerDist<.23&&ratioArea>.14&&ratioArea<.72&&score>bestScore){bestScore=score;best={points:pts,cx:cx,cy:cy,width:width,height:height,ratioScore:ratioScore,ratioArea:ratioArea}}
         }
       }
       approx.delete();cnt.delete();
     }
-    if(best&&bestScore>1.35){
+    if(best&&bestScore>1.55){
       missedCardFrames=0;
       var now={cx:best.cx/dw,cy:best.cy/dh,w:best.width/dw,h:best.height/dh};
-
-      // The scanner now cares that a card remains detected in the guide,
-      // not that the user's hands are perfectly motionless.
-      stableCardFrames=Math.min(AUTO_CAPTURE_FRAMES,stableCardFrames+1);
 
       if(lastDetectedCard){
         var prev=lastDetectedCard.norm;
@@ -2404,27 +2400,28 @@ function detectCardFrame(cv){
       }
 
       lastDetectedCard={points:best.points,norm:now,detectW:dw,detectH:dh};
+      stableCardFrames=Math.min(AUTO_CAPTURE_FRAMES,stableCardFrames+1);
+      guideCaptureFrames=Math.min(GUIDE_CAPTURE_FRAMES,guideCaptureFrames+1);
+
       drawCardOverlay(best.points,true,guideCaptureFrames/GUIDE_CAPTURE_FRAMES*AUTO_CAPTURE_FRAMES);
-      // Auto-capture is controlled by the center-guide presence timer below.
-      // OpenCV only improves the crop when it has a good polygon.
+
+      if(guideCaptureFrames>=GUIDE_CAPTURE_FRAMES){
+        autoCaptureBusy=true;
+        captureDetectedCard(cv,lastDetectedCard);
+      }
     }else{
       missedCardFrames++;
 
-      // Brief edge-detection misses are normal while the camera autofocuses.
-      // Keep most of the lock instead of making the user restart at 0%.
-      if(lastDetectedCard&&missedCardFrames<=4){
-        stableCardFrames=Math.max(1,stableCardFrames-.25);
+      // A brief autofocus miss should not wipe the lock, but random scenery
+      // cannot build toward capture because only valid card rectangles add progress.
+      guideCaptureFrames=Math.max(0,guideCaptureFrames-.75);
+      stableCardFrames=Math.max(0,stableCardFrames-.5);
+
+      if(lastDetectedCard&&missedCardFrames<=2&&guideCaptureFrames>0){
         drawCardOverlay(lastDetectedCard.points,true,guideCaptureFrames/GUIDE_CAPTURE_FRAMES*AUTO_CAPTURE_FRAMES);
       }else{
-        stableCardFrames=Math.max(0,stableCardFrames-1);
-        if(stableCardFrames<=0){
-          stableCardFrames=0;
-          missedCardFrames=0;
-          lastDetectedCard=null;
-          drawCardOverlay(null,false,0);
-        }else if(lastDetectedCard){
-          drawCardOverlay(lastDetectedCard.points,true,stableCardFrames);
-        }
+        if(missedCardFrames>2)lastDetectedCard=null;
+        drawCardOverlay(null,false,guideCaptureFrames/GUIDE_CAPTURE_FRAMES*AUTO_CAPTURE_FRAMES);
       }
     }
   }catch(e){
@@ -2475,7 +2472,7 @@ function captureDetectedCard(cv,detected){
   });
 }
 var fallbackFrameSample=null, fallbackStableFrames=0, fallbackDetectTimer=null, activeCV=null, guideCaptureFrames=0;
-var GUIDE_CAPTURE_FRAMES=5;
+var GUIDE_CAPTURE_FRAMES=4;
 
 function stopFallbackDetector(){
   if(fallbackDetectTimer){clearInterval(fallbackDetectTimer);fallbackDetectTimer=null}
@@ -2504,33 +2501,9 @@ function sampleGuideRegion(){
   return {gray:gray,edgeRatio:edges/(w*h*2),contrast:Math.sqrt(variance)};
 }
 function runFallbackStability(){
-  if(autoCaptureBusy)return;
-  var sample=sampleGuideRegion();
-  if(!sample)return;
-
-  // This is intentionally NOT a motion test. If the center guide contains
-  // enough card-like detail/contrast, the countdown keeps moving even if
-  // the user's hand shifts between frames.
-  var looksLikeCard=sample.edgeRatio>.024&&sample.contrast>14;
-  if(looksLikeCard)guideCaptureFrames=Math.min(GUIDE_CAPTURE_FRAMES,guideCaptureFrames+1);
-  else guideCaptureFrames=Math.max(0,guideCaptureFrames-.5);
-
-  fallbackFrameSample=sample;
-  fallbackStableFrames=guideCaptureFrames;
-  var progress=guideCaptureFrames/GUIDE_CAPTURE_FRAMES*AUTO_CAPTURE_FRAMES;
-
-  // Let OpenCV draw its detected polygon when it has one. Otherwise use the fixed guide.
-  if(!activeCV||!lastDetectedCard)drawCardOverlay(null,looksLikeCard,progress);
-  else{
-    var state=el("cameraState");
-    if(state)state.textContent=guideCaptureFrames>=GUIDE_CAPTURE_FRAMES?"CAPTURING":"CARD FOUND "+Math.min(100,Math.round(guideCaptureFrames/GUIDE_CAPTURE_FRAMES*100))+"%";
-  }
-
-  if(guideCaptureFrames>=GUIDE_CAPTURE_FRAMES){
-    autoCaptureBusy=true;
-    if(activeCV&&lastDetectedCard)captureDetectedCard(activeCV,lastDetectedCard);
-    else captureBasicCard();
-  }
+  if(autoCaptureBusy||activeCV)return;
+  var state=el("cameraState");
+  if(state)state.textContent="AUTO DETECTION LOADING";
 }
 function cropCardFromVideoBasic(){
   var video=el("scanVideo");
@@ -2573,13 +2546,13 @@ function startCardCamera(){
     activeCV=cv;
     if(cardDetectTimer)clearInterval(cardDetectTimer);
     cardDetectTimer=setInterval(function(){detectCardFrame(cv)},260);
-    if(!fallbackDetectTimer)fallbackDetectTimer=setInterval(runFallbackStability,220);
-    el("scanStatus").textContent="Card detection ready. Keep the card inside the frame — movement will not reset the capture.";
+    if(fallbackDetectTimer){clearInterval(fallbackDetectTimer);fallbackDetectTimer=null}
+    el("scanStatus").textContent="Card detection ready. Wait for the green card frame, then it will capture automatically.";
   }).catch(function(){
     // Keep the live camera instead of falling back to the old photo picker.
     activeCV=null;
-    if(!fallbackDetectTimer)fallbackDetectTimer=setInterval(runFallbackStability,220);
-    el("scanStatus").textContent="Live scanner ready. Center the card inside the frame.";
+    if(!fallbackDetectTimer)fallbackDetectTimer=setInterval(runFallbackStability,500);
+    el("scanStatus").textContent="Auto-detection did not load. Center the card and tap Capture Now.";
   });
 
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
@@ -2603,10 +2576,10 @@ function startCardCamera(){
         var overlay=el("scanOverlay");
         overlay.width=360;overlay.height=Math.max(1,Math.round(video.videoHeight*(360/video.videoWidth)));
         drawCardOverlay(null,false,0);
-        if(!fallbackDetectTimer)fallbackDetectTimer=setInterval(runFallbackStability,220);
+        if(!activeCV&&!fallbackDetectTimer)fallbackDetectTimer=setInterval(runFallbackStability,500);
         el("scanStatus").textContent=activeCV?
-          "Keep the card inside the guide. Capture starts automatically when the card is in position.":
-          "Keep the card inside the frame. Movement will not reset the capture.";
+          "Wait for the green card frame. Once the card is recognized, capture is automatic.":
+          "Loading auto-detection… You can tap Capture Now at any time.";
       }).catch(function(){});
     };
   }).catch(function(){
@@ -3037,7 +3010,7 @@ function drawCardOverlay(points,found,progress){
   ctx.restore();
   if(state){
     if(found&&progress>=4)state.textContent="CAPTURING";
-    else if(found)state.textContent="CARD FOUND "+Math.min(100,Math.round(progress/4*100))+"%";
+    else if(found)state.textContent="CARD LOCK "+Math.min(100,Math.round(progress/4*100))+"%";
     else state.textContent="CENTER CARD";
   }
 }
@@ -3639,7 +3612,7 @@ function drawCardOverlay(points,found,progress){
   ctx.restore();
   if(state){
     if(found&&progress>=4)state.textContent="CAPTURING";
-    else if(found)state.textContent="CARD FOUND "+Math.min(100,Math.round(progress/4*100))+"%";
+    else if(found)state.textContent="CARD LOCK "+Math.min(100,Math.round(progress/4*100))+"%";
     else state.textContent="CENTER CARD";
   }
 }
@@ -4234,7 +4207,7 @@ function drawCardOverlay(points,found,progress){
   ctx.restore();
   if(state){
     if(found&&progress>=4)state.textContent="CAPTURING";
-    else if(found)state.textContent="CARD FOUND "+Math.min(100,Math.round(progress/4*100))+"%";
+    else if(found)state.textContent="CARD LOCK "+Math.min(100,Math.round(progress/4*100))+"%";
     else state.textContent="CENTER CARD";
   }
 }
