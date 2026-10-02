@@ -240,6 +240,29 @@ body{background:#020605}
   #home>.appGrid .appTile{min-height:130px!important;padding:13px!important}
 }
 
+
+/* APPROVED TRANSPARENT WOLF LAIR LOGO — exact approved artwork */
+#home>.brandHero{width:min(32vw,480px)!important}
+#home>.brandHero .brandMark{
+  background:transparent!important;
+  border:0!important;
+  border-radius:0!important;
+  overflow:visible!important;
+  box-shadow:none!important;
+}
+#home>.brandHero .brandLogo{
+  width:100%!important;
+  height:auto!important;
+  max-height:none!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  filter:drop-shadow(0 12px 18px rgba(0,0,0,.68)) drop-shadow(0 0 12px rgba(76,238,103,.18));
+}
+@media(max-width:800px){
+  #home>.brandHero{width:min(80vw,430px)!important}
+  #home>.brandHero .brandLogo{max-height:none!important}
+}
+
 </style>
 </head>
 <body>
@@ -298,21 +321,23 @@ body{background:#020605}
       <script>
       (function(){
         var parts=[
-          './assets/logo/wolf-logo-1.b64',
-          './assets/logo/wolf-logo-2.b64',
-          './assets/logo/wolf-logo-3.b64',
-          './assets/logo/wolf-logo-4.b64',
-          './assets/logo/wolf-logo-5.b64',
-          './assets/logo/wolf-logo-6.b64'
+          './assets/logo/approved-01.b64',
+          './assets/logo/approved-02.b64',
+          './assets/logo/approved-03.b64',
+          './assets/logo/approved-04.b64',
+          './assets/logo/approved-05.b64',
+          './assets/logo/approved-06.b64',
+          './assets/logo/approved-07.b64',
+          './assets/logo/approved-08.b64'
         ];
         Promise.all(parts.map(function(url){
-          return fetch(url+'?v=logo2',{cache:'no-store'}).then(function(r){
+          return fetch(url+'?v=approved1',{cache:'no-store'}).then(function(r){
             if(!r.ok) throw new Error('Logo part failed: '+r.status);
             return r.text();
           });
         })).then(function(chunks){
           var data=chunks.map(function(x){return x.trim();}).join('');
-          if(data.length<40000) throw new Error('Logo data incomplete');
+          if(data.length<35000) throw new Error('Logo data incomplete');
           var img=document.getElementById('wolfLairLogo');
           if(img) img.src='data:image/webp;base64,'+data;
         }).catch(function(err){
