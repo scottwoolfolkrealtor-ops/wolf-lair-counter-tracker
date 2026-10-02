@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>The Wolf Lair</title>
+<link rel="preconnect" href="https://api.scryfall.com" crossorigin>
+<link rel="preconnect" href="https://cards.scryfall.io" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="dns-prefetch" href="//api.scryfall.com">
+<link rel="dns-prefetch" href="//cards.scryfall.io">
 <style>
 *{box-sizing:border-box}body{margin:0;background:#06100b;color:#f4f6f4;font-family:system-ui,-apple-system,sans-serif}
 main{max-width:900px;margin:auto;padding:14px 14px 92px}header{text-align:center;padding:18px 0}
@@ -1991,33 +1996,56 @@ function loadTesseract(){
   });
   return window.__wolfTesseractPromise;
 }
+var wolfOCRWorker=null, wolfOCRWorkerPromise=null, wolfOCRStatusTarget=null;
+function warmOCRWorker(){
+  if(wolfOCRWorker)return Promise.resolve(wolfOCRWorker);
+  if(wolfOCRWorkerPromise)return wolfOCRWorkerPromise;
+  wolfOCRWorkerPromise=loadTesseract().then(function(T){
+    return T.createWorker("eng",1,{
+      logger:function(m){
+        var target=wolfOCRStatusTarget;
+        if(target&&m&&m.status==="recognizing text"){
+          target.textContent="Reading card… "+Math.round((m.progress||0)*100)+"%";
+        }
+      }
+    });
+  }).then(function(worker){
+    wolfOCRWorker=worker;
+    return worker;
+  }).catch(function(err){
+    wolfOCRWorkerPromise=null;
+    throw err;
+  });
+  return wolfOCRWorkerPromise;
+}
 var cardCameraStream=null, cardDetectTimer=null, lastDetectedCard=null, stableCardFrames=0, autoCaptureBusy=false;
 
 function loadOpenCV(){
   if(window.cv&&window.cv.Mat)return Promise.resolve(window.cv);
   if(window.__wolfOpenCVPromise)return window.__wolfOpenCVPromise;
   window.__wolfOpenCVPromise=new Promise(function(resolve,reject){
-    function ready(){
-      if(window.cv&&window.cv.Mat){resolve(window.cv);return true}
-      return false;
+    var finished=false, tries=0;
+    function done(value){if(finished)return;finished=true;resolve(value)}
+    function fail(err){if(finished)return;finished=true;window.__wolfOpenCVPromise=null;reject(err)}
+    function probe(){
+      tries++;
+      if(window.cv&&window.cv.Mat){done(window.cv);return}
+      if(window.cv&&typeof window.cv.then==="function"){
+        window.cv.then(function(realCv){
+          window.cv=realCv;
+          if(realCv&&realCv.Mat)done(realCv);else if(tries<80)setTimeout(probe,120);
+        }).catch(function(){if(tries<80)setTimeout(probe,120);else fail(new Error("OpenCV unavailable"))});
+        return;
+      }
+      if(tries<80)setTimeout(probe,120);else fail(new Error("OpenCV unavailable"));
     }
-    if(ready())return;
     var s=document.createElement("script");
     s.src="https://docs.opencv.org/4.10.0/opencv.js";
     s.async=true;
-    s.onload=function(){
-      if(ready())return;
-      if(window.cv){
-        var old=window.cv.onRuntimeInitialized;
-        window.cv.onRuntimeInitialized=function(){
-          if(typeof old==="function")old();
-          ready()||reject(new Error("OpenCV failed to initialize"));
-        };
-        setTimeout(function(){if(!ready()&&!(window.cv&&window.cv.onRuntimeInitialized))reject(new Error("OpenCV unavailable"))},10000);
-      }else reject(new Error("OpenCV unavailable"));
-    };
-    s.onerror=function(){reject(new Error("OpenCV failed to load"))};
+    s.onload=probe;
+    s.onerror=function(){fail(new Error("OpenCV failed to load"))};
     document.head.appendChild(s);
+    probe();
   });
   return window.__wolfOpenCVPromise;
 }
@@ -2030,6 +2058,8 @@ function stopCardCamera(){
   var video=el("scanVideo");
   if(video)video.srcObject=null;
   lastDetectedCard=null;stableCardFrames=0;autoCaptureBusy=false;
+  stopFallbackDetector();
+  activeCV=null;
   var live=el("liveScanner");if(live)live.className="hidden liveScanner";
 }
 function orderCardPoints(points){
@@ -2172,38 +2202,130 @@ function captureDetectedCard(cv,detected){
     setDeckStatus("Could not crop that frame. Hold the card steady and try again.",true);
   });
 }
+var fallbackFrameSample=null, fallbackStableFrames=0, fallbackDetectTimer=null, activeCV=null;
+
+function stopFallbackDetector(){
+  if(fallbackDetectTimer){clearInterval(fallbackDetectTimer);fallbackDetectTimer=null}
+  fallbackFrameSample=null;fallbackStableFrames=0;
+}
+function sampleGuideRegion(){
+  var video=el("scanVideo");
+  if(!video||video.readyState<2||!video.videoWidth)return null;
+  var w=48,h=68,canvas=document.createElement("canvas");canvas.width=w;canvas.height=h;
+  var ctx=canvas.getContext("2d");
+  var rect=defaultCardRect(video.videoWidth,video.videoHeight);
+  var x=rect[0].x,y=rect[0].y,sw=rect[1].x-rect[0].x,sh=rect[3].y-rect[0].y;
+  ctx.drawImage(video,x,y,sw,sh,0,0,w,h);
+  var data=ctx.getImageData(0,0,w,h).data, gray=new Uint8Array(w*h), edges=0, idx=0;
+  for(var yy=0;yy<h;yy++){
+    for(var xx=0;xx<w;xx++){
+      var p=(yy*w+xx)*4,g=(data[p]*.299+data[p+1]*.587+data[p+2]*.114)|0;
+      gray[idx++]=g;
+      if(xx>0&&Math.abs(g-gray[idx-2])>34)edges++;
+      if(yy>0&&Math.abs(g-gray[idx-1-w])>34)edges++;
+    }
+  }
+  return {gray:gray,edgeRatio:edges/(w*h*2)};
+}
+function runFallbackStability(){
+  if(autoCaptureBusy||activeCV)return;
+  var sample=sampleGuideRegion();
+  if(!sample)return;
+  drawCardOverlay(null,sample.edgeRatio>.055,fallbackStableFrames);
+  if(fallbackFrameSample){
+    var a=sample.gray,b=fallbackFrameSample.gray,total=0;
+    for(var i=0;i<a.length;i+=3)total+=Math.abs(a[i]-b[i]);
+    var diff=total/Math.ceil(a.length/3);
+    if(diff<5.4&&sample.edgeRatio>.055)fallbackStableFrames++;
+    else fallbackStableFrames=0;
+  }
+  fallbackFrameSample=sample;
+  if(fallbackStableFrames>=6){
+    autoCaptureBusy=true;
+    captureBasicCard();
+  }
+}
+function cropCardFromVideoBasic(){
+  var video=el("scanVideo");
+  if(!video||!video.videoWidth)return Promise.reject(new Error("Camera not ready"));
+  var rect=defaultCardRect(video.videoWidth,video.videoHeight);
+  var x=rect[0].x,y=rect[0].y,sw=rect[1].x-rect[0].x,sh=rect[3].y-rect[0].y;
+  var out=document.createElement("canvas");out.width=750;out.height=1050;
+  out.getContext("2d").drawImage(video,x,y,sw,sh,0,0,out.width,out.height);
+  return new Promise(function(resolve,reject){
+    out.toBlob(function(blob){
+      if(!blob){reject(new Error("Could not crop card"));return}
+      resolve(new File([blob],"wolf-lair-card.jpg",{type:"image/jpeg"}));
+    },"image/jpeg",.92);
+  });
+}
+function captureBasicCard(){
+  var state=el("cameraState");if(state)state.textContent="CAPTURING";
+  cropCardFromVideoBasic().then(function(file){
+    stopCardCamera();
+    el("scanPanel").className="cardToolPanel scanPanel";
+    el("scanStatus").textContent="Card captured. Reading the title…";
+    return scanImageFile(file);
+  }).catch(function(){
+    autoCaptureBusy=false;fallbackStableFrames=0;
+    setDeckStatus("Could not capture that frame. Try Capture Now.",true);
+  });
+}
 function startCardCamera(){
   closeDeckTools();
   el("scanPanel").className="cardToolPanel scanPanel";
   el("liveScanner").className="liveScanner";
-  el("scanStatus").textContent="Finding the card edges…";
+  el("scanStatus").textContent="Opening camera…";
+  el("cameraState").textContent="CENTER CARD";
+  activeCV=null;
+  stopFallbackDetector();
+
+  // Start OCR and edge detection in the background while the user lines up the card.
+  warmOCRWorker().catch(function(){});
+  loadOpenCV().then(function(cv){
+    activeCV=cv;
+    stopFallbackDetector();
+    if(cardDetectTimer)clearInterval(cardDetectTimer);
+    cardDetectTimer=setInterval(function(){detectCardFrame(cv)},260);
+    el("scanStatus").textContent="Card-edge detection ready. Hold the card steady inside the frame.";
+  }).catch(function(){
+    // Keep the live camera instead of falling back to the old photo picker.
+    activeCV=null;
+    if(!fallbackDetectTimer)fallbackDetectTimer=setInterval(runFallbackStability,260);
+    el("scanStatus").textContent="Live scanner ready. Center the card in the frame and hold steady.";
+  });
+
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
     el("liveScanner").className="hidden liveScanner";
+    el("scanStatus").textContent="Live camera isn't available here. Use a photo instead.";
     el("cardScanInput").click();
     return;
   }
-  Promise.all([
-    navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}},audio:false}),
-    loadOpenCV()
-  ]).then(function(values){
-    cardCameraStream=values[0];
-    var cv=values[1],video=el("scanVideo");
-    video.srcObject=cardCameraStream;
+
+  navigator.mediaDevices.getUserMedia({
+    video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}},
+    audio:false
+  }).then(function(stream){
+    cardCameraStream=stream;
+    var video=el("scanVideo");
+    video.srcObject=stream;
     video.onloadedmetadata=function(){
       video.play().then(function(){
         var stage=el("cameraStage");
         if(stage)stage.style.aspectRatio=video.videoWidth+" / "+video.videoHeight;
         var overlay=el("scanOverlay");
-        overlay.width=360;overlay.height=Math.round(video.videoHeight*(360/video.videoWidth));
+        overlay.width=360;overlay.height=Math.max(1,Math.round(video.videoHeight*(360/video.videoWidth)));
         drawCardOverlay(null,false,0);
-        cardDetectTimer=setInterval(function(){detectCardFrame(cv)},320);
-        el("scanStatus").textContent="Move the card into view. The green frame will lock on and capture automatically.";
+        if(!activeCV&&!fallbackDetectTimer)fallbackDetectTimer=setInterval(runFallbackStability,260);
+        el("scanStatus").textContent=activeCV?
+          "Move the card into view. The green frame will lock on and capture automatically.":
+          "Center the card in the frame and hold steady. Capture is automatic.";
       }).catch(function(){});
     };
   }).catch(function(){
     stopCardCamera();
     el("scanPanel").className="cardToolPanel scanPanel";
-    el("scanStatus").textContent="Live scanner was unavailable. You can still take or choose a photo.";
+    el("scanStatus").textContent="Camera permission wasn't available. Use a photo instead.";
     el("cardScanInput").click();
   });
 }
@@ -2224,10 +2346,9 @@ function scanImageFile(file){
         var ctx=canvas.getContext("2d");
         ctx.drawImage(img,0,0,canvas.width,canvas.height);
 
-        loadTesseract().then(function(T){
-          return T.recognize(canvas,"eng",{logger:function(m){
-            if(m&&m.status==="recognizing text")status.textContent="Reading card… "+Math.round((m.progress||0)*100)+"%";
-          }});
+        wolfOCRStatusTarget=status;
+        warmOCRWorker().then(function(worker){
+          return worker.recognize(canvas);
         }).then(function(result){
           var data=result&&result.data?result.data:{};
           var candidates=[];
@@ -2265,7 +2386,7 @@ function scanImageFile(file){
           }).slice(0,10);
 
           if(!candidates.length)throw new Error("Could not read a likely card title");
-          status.textContent="Matching card…";
+          status.textContent="Card text read. Finding the match…";
 
           var pos=0;
           function tryNext(){
@@ -2297,7 +2418,11 @@ el("scanCardBtn").onclick=startCardCamera;
 el("manualCapture").onclick=function(){
   if(autoCaptureBusy)return;
   autoCaptureBusy=true;
-  loadOpenCV().then(function(cv){return captureDetectedCard(cv,lastDetectedCard)}).catch(function(){autoCaptureBusy=false});
+  if(activeCV){
+    captureDetectedCard(activeCV,lastDetectedCard);
+  }else{
+    captureBasicCard();
+  }
 };
 el("photoFallback").onclick=function(){stopCardCamera();el("cardScanInput").click()};
 el("cancelScanner").onclick=function(){stopCardCamera();closeDeckTools()};
