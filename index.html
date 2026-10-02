@@ -22,14 +22,14 @@ button{background:#17291d;color:#fff;border:1px solid #58705f;border-radius:10px
 .linkrow{display:flex;align-items:center;gap:6px;margin:6px 0}.linkrow input{width:22px;height:22px}
 .wide{width:100%;margin-top:6px}.remove{width:100%;margin-top:8px}
 .empty{text-align:center;color:#93a598;padding:40px 5px}.hidden{display:none!important}
-nav{position:fixed;z-index:50;left:0;right:0;bottom:0;background:#0b1710;border-top:1px solid #45604d;padding:8px max(10px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(1px)}
+nav{position:fixed;z-index:50;left:0;right:0;bottom:0;background:#0b1710;border-top:1px solid #45604d;padding:8px max(10px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(1[...]
 nav button{min-height:52px}button:disabled{opacity:.4}
 @media(min-width:700px){#field{grid-template-columns:repeat(3,minmax(0,1fr))}}
 
 #home{max-width:900px;margin:auto;padding:22px 16px 40px}
 .brandHero{text-align:center;padding:34px 8px 24px}
-.brandMark{width:min(100%,360px);height:190px;margin:0 auto 14px;border:none;border-radius:18px;overflow:hidden;background:linear-gradient(135deg,#1a3a2e 0%,#0f2818 100%);box-shadow:0 8px 32px rgba(69,96,77,.35),inset 0 1px 0 rgba(255,255,255,.1)}
-.brandMark svg{display:block;width:100%;height:100%;filter:drop-shadow(0 2px 8px rgba(0,0,0,.3))}
+.brandMark{width:min(100%,360px);height:190px;margin:0 auto 14px;border:none;border-radius:18px;overflow:hidden;background:linear-gradient(135deg,#1a3a2e 0%,#0f2818 100%);box-shadow:0 8px 32px rgba(0,0,0,.35),inset 0 0 0 1px rgba(180,220,180,.18)}
+.brandLogo{display:block;width:min(100%,560px);height:auto;margin:0 auto;border-radius:18px;box-shadow:0 10px 26px rgba(0,0,0,.35);filter:drop-shadow(0 8px 16px rgba(0,0,0,.25))}
 .brandHero h1{font-size:34px;margin:0;background:linear-gradient(135deg,#f4f6f4,#b7c8bb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:900}
 .brandHero p{margin:8px 0 0;color:#aebcaf;font-size:15px}
 .appGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -79,63 +79,13 @@ textarea.proArea{width:100%;min-height:180px;background:#06100b;color:#fff;borde
 <section id="home">
   <div class="brandHero">
     <div class="brandMark">
-      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-        <!-- Gradient defs -->
-        <defs>
-          <linearGradient id="wolfGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#69967d;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#3d6a52;stop-opacity:1" />
-          </linearGradient>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-            <feMerge>
-              <feMergeNode in="coloredBlur"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-        </defs>
-        
-        <!-- Shield background -->
-        <path d="M 100 20 L 160 50 L 160 110 Q 100 170 100 170 Q 100 170 40 110 L 40 50 Z" fill="url(#wolfGrad)" stroke="#b7c8bb" stroke-width="2" filter="url(#glow)"/>
-        
-        <!-- Wolf head -->
-        <g transform="translate(100, 85)">
-          <!-- Head -->
-          <circle cx="0" cy="-5" r="25" fill="#f4f6f4" opacity="0.95"/>
-          
-          <!-- Ears -->
-          <path d="M -18 -25 L -22 -45 L -12 -20 Z" fill="#f4f6f4"/>
-          <path d="M 18 -25 L 22 -45 L 12 -20 Z" fill="#f4f6f4"/>
-          <path d="M -15 -22 L -18 -35 L -10 -18 Z" fill="#3d6a52" opacity="0.6"/>
-          <path d="M 15 -22 L 18 -35 L 10 -18 Z" fill="#3d6a52" opacity="0.6"/>
-          
-          <!-- Eyes -->
-          <circle cx="-8" cy="-8" r="3.5" fill="#06100b"/>
-          <circle cx="8" cy="-8" r="3.5" fill="#06100b"/>
-          <circle cx="-7" cy="-9" r="1.2" fill="#f4f6f4"/>
-          <circle cx="9" cy="-9" r="1.2" fill="#f4f6f4"/>
-          
-          <!-- Snout -->
-          <ellipse cx="0" cy="8" rx="14" ry="12" fill="#f4f6f4" opacity="0.9"/>
-          
-          <!-- Nose -->
-          <ellipse cx="0" cy="5" rx="4" ry="3" fill="#06100b"/>
-          
-          <!-- Mouth -->
-          <path d="M 0 5 L 0 12" stroke="#06100b" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-          <path d="M -4 10 Q -2 12 0 11" stroke="#06100b" stroke-width="1.2" fill="none" stroke-linecap="round"/>
-          <path d="M 4 10 Q 2 12 0 11" stroke="#06100b" stroke-width="1.2" fill="none" stroke-linecap="round"/>
-        </g>
-        
-        <!-- Crown accent (power indicator) -->
-        <path d="M 85 35 L 90 25 L 95 30 L 100 22 L 105 30 L 110 25 L 115 35" fill="none" stroke="#ffd700" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+      <img class="brandLogo" src="wolf-lair-logo.jpeg" alt="The Wolf Lair logo">
     </div>
     <h1>The Wolf Lair</h1>
     <p>Your tabletop command center.</p>
   </div>
   <div class="appGrid">
-    <button class="appTile" id="openTracker" type="button"><span class="ico">⚔️</span><strong>Counter Tracker</strong><small>Track creatures, +1/+1 counters, linked effects and battlefield state.</small></button>
+    <button class="appTile" id="openTracker" type="button"><span class="ico">⚔️</span><strong>Counter Tracker</strong><small>Track creatures, +1/+1 counters, linked effects and battlefield status.</small></button>
     <button class="appTile" id="openDecks" type="button"><span class="ico">📚</span><strong>My Decks</strong><small>Create, save and reopen your Commander decks.</small></button>
     <button class="appTile" id="openGame" type="button"><span class="ico">🎲</span><strong>Game Mode</strong><small>Life totals, commander damage, poison and turn flow for the table.</small></button>
     <button class="appTile" id="openPro" type="button"><span class="ico">🐺</span><strong>Wolf Lair Pro</strong><small>Export, import and save your local session data.</small></button>
@@ -242,12 +192,12 @@ function adjust(id,n){var c=find(id);if(!c)return;snapshot();c.c=Math.max(0,c.c+
 function render(){
   var f=el("field");f.innerHTML="";el("empty").className=creatures.length?"empty hidden":"empty";
   for(var i=0;i<creatures.length;i++){
-   (function(c){
+    (function(c){
     normalize(c);
     var targets="";
     for(var j=0;j<creatures.length;j++){
-     var o=creatures[j];if(o.id===c.id)continue;
-     targets+='<label class="linkrow"><input class="lnk" type="checkbox" data-id="'+escapeHTML(o.id)+'" '+(c.links.indexOf(o.id)>=0?"checked":"")+'> '+escapeHTML(o.name)+'</label>';
+      var o=creatures[j];if(o.id===c.id)continue;
+      targets+='<label class="linkrow"><input class="lnk" type="checkbox" data-id="'+escapeHTML(o.id)+'" '+(c.links.indexOf(o.id)>=0?"checked":"")+'> '+escapeHTML(o.name)+'</label>';
     }
     if(!targets)targets="<div>Add another creature first.</div>";
     var card=document.createElement("section");card.className="card";
@@ -267,22 +217,22 @@ function render(){
     card.querySelector(".addx").onclick=function(){var n=parseInt(card.querySelector(".amt").value,10);if(!isNaN(n)&&n!==0)adjust(c.id,n)};
     var boxes=card.querySelectorAll(".lnk");
     for(var k=0;k<boxes.length;k++)boxes[k].onchange=function(){
-     var id=this.getAttribute("data-id"), ix=c.links.indexOf(id);
-     if(this.checked&&ix<0)c.links.push(id);else if(!this.checked&&ix>=0)c.links.splice(ix,1);
-     save();
+      var id=this.getAttribute("data-id"), ix=c.links.indexOf(id);
+      if(this.checked&&ix<0)c.links.push(id);else if(!this.checked&&ix>=0)c.links.splice(ix,1);
+      save();
     };
     card.querySelector(".linked").onclick=function(){
-     if(!c.links.length)return;snapshot();var amount=c.p+c.c;c.c+=amount;
-     for(var q=0;q<c.links.length;q++){var t=find(c.links[q]);if(t)t.c+=amount}finish();
+      if(!c.links.length)return;snapshot();var amount=c.p+c.c;c.c+=amount;
+      for(var q=0;q<c.links.length;q++){var t=find(c.links[q]);if(t)t.c+=amount}finish();
     };
     card.querySelector(".counters").onclick=function(){
-     if(!c.links.length||c.c<=0)return;snapshot();var amount=c.c;
-     for(var q=0;q<c.links.length;q++){var t=find(c.links[q]);if(t)t.c+=amount}finish();
+      if(!c.links.length||c.c<=0)return;snapshot();var amount=c.c;
+      for(var q=0;q<c.links.length;q++){var t=find(c.links[q]);if(t)t.c+=amount}finish();
     };
     card.querySelector(".remove").onclick=function(){
-     snapshot();creatures=creatures.filter(function(x){return x.id!==c.id});
-     for(var q=0;q<creatures.length;q++)creatures[q].links=creatures[q].links.filter(function(x){return x!==c.id});
-     finish();
+      snapshot();creatures=creatures.filter(function(x){return x.id!==c.id});
+      for(var q=0;q<creatures.length;q++)creatures[q].links=creatures[q].links.filter(function(x){return x!==c.id});
+      finish();
     };
     f.appendChild(card);
    })(creatures[i]);
@@ -389,7 +339,7 @@ function loadPro(){
 }
 el('saveProfile').onclick=function(){snapshotPro();};
 el('loadProfile').onclick=function(){loadPro(); gameState=clone(proState.game || gameState); renderGame();};
-el('copyJson').onclick=function(){var text=el('proArea').value; if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).catch(function(){})} else {el('proArea').select();document.execCommand('copy')}};
+el('copyJson').onclick=function(){var text=el('proArea').value; if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).catch(function(){})} else {el('proArea').select();document.execCommand('copy');}};
 el('resetProfile').onclick=function(){try{localStorage.removeItem('wolfLairPro1')}catch(e){}; proState={lastSaved:new Date().toISOString(), tracker:{count:creatures.length}, decks:{count:decks.length}, game:clone(gameState)}; el('proArea').value=JSON.stringify(proState,null,2);};
 
 el('openTracker').onclick=function(){el('home').className='hidden';el('trackerView').className='';window.scrollTo(0,0)};
@@ -423,11 +373,11 @@ function renderDecks(){
      '<div class="deckPreview">'+escapeHTML((d.cards||"").split(/\n/).slice(0,5).join("\n"))+'</div>'+ 
      '<div class="deckActions"><button class="editDeck">Edit</button><button class="deleteDeck">Delete</button></div>';
     c.querySelector(".editDeck").onclick=function(){
-     editingDeck=d.id;el("deckName").value=d.name;el("commanderName").value=d.commander||"";el("deckCards").value=d.cards||"";
-     el("deckForm").className="deckForm";el("newDeck").className="wide hidden";window.scrollTo(0,0);
+      editingDeck=d.id;el("deckName").value=d.name;el("commanderName").value=d.commander||"";el("deckCards").value=d.cards||"";
+      el("deckForm").className="deckForm";el("newDeck").className="wide hidden";window.scrollTo(0,0);
     };
     c.querySelector(".deleteDeck").onclick=function(){
-     decks=decks.filter(function(x){return x.id!==d.id});saveDecks();renderDecks();
+      decks=decks.filter(function(x){return x.id!==d.id});saveDecks();renderDecks();
     };
     box.appendChild(c);
    })(decks[i]);
