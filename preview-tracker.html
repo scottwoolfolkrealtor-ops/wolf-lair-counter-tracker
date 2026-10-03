@@ -3062,30 +3062,47 @@ var AUTO_CAPTURE_FRAMES=6, cameraSession=0;
 function loadOpenCV(){
   if(window.cv&&window.cv.Mat)return Promise.resolve(window.cv);
   if(window.__wolfOpenCVPromise)return window.__wolfOpenCVPromise;
-  window.__wolfOpenCVPromise=new Promise(function(resolve,reject){
-    var finished=false, tries=0;
-    function done(value){if(finished)return;finished=true;resolve(value)}
-    function fail(err){if(finished)return;finished=true;window.__wolfOpenCVPromise=null;reject(err)}
-    function probe(){
-      tries++;
-      if(window.cv&&window.cv.Mat){done(window.cv);return}
-      if(window.cv&&typeof window.cv.then==="function"){
-        window.cv.then(function(realCv){
-          window.cv=realCv;
-          if(realCv&&realCv.Mat)done(realCv);else if(tries<80)setTimeout(probe,120);
-        }).catch(function(){if(tries<80)setTimeout(probe,120);else fail(new Error("OpenCV unavailable"))});
-        return;
-      }
-      if(tries<80)setTimeout(probe,120);else fail(new Error("OpenCV unavailable"));
+  var pending=new Promise(function(resolve,reject){
+    var urls=["https://docs.opencv.org/4.13.0/opencv.js","https://docs.opencv.org/4.10.0/opencv.js"];
+    var index=0,finished=false,poll=null,deadline=null,script=null,awaiting=null;
+    function clearTimers(){clearTimeout(poll);clearTimeout(deadline);poll=null;deadline=null;}
+    function done(cv){
+      if(finished||!cv||!cv.Mat)return;
+      finished=true;clearTimers();window.cv=cv;resolve(cv);
     }
-    var s=document.createElement("script");
-    s.src="https://docs.opencv.org/4.10.0/opencv.js";
-    s.async=true;
-    s.onload=probe;
-    s.onerror=function(){fail(new Error("OpenCV failed to load"))};
-    document.head.appendChild(s);
-    probe();
+    function next(reason){
+      if(finished)return;
+      clearTimers();
+      if(script){script.onload=null;script.onerror=null;script.remove();}
+      if(index>=urls.length){finished=true;reject(new Error(reason||"Card detection failed to load"));return;}
+      script=document.createElement("script");script.async=true;script.src=urls[index++];
+      script.onload=function(){
+        // Download time and WebAssembly initialization get separate deadlines.
+        clearTimeout(deadline);
+        deadline=setTimeout(function(){next("Card detection initialization timed out");},45000);
+        probe();
+      };
+      script.onerror=function(){next("Card detection download failed");};
+      deadline=setTimeout(function(){next("Card detection download timed out");},45000);
+      document.head.appendChild(script);
+      probe();
+    }
+    function probe(){
+      if(finished)return;
+      clearTimeout(poll);
+      var cv=window.cv;
+      if(cv&&cv.Mat){done(cv);return;}
+      if(cv&&typeof cv.then==="function"&&awaiting!==cv){
+        awaiting=cv;
+        // A runtime may expose a thenable rather than a native Promise.
+        try{cv.then(function(real){if(real&&real.Mat)done(real);},function(){next("Card detection initialization failed");});}
+        catch(e){next("Card detection initialization failed");return;}
+      }
+      poll=setTimeout(probe,200);
+    }
+    next();
   });
+  window.__wolfOpenCVPromise=pending.catch(function(err){window.__wolfOpenCVPromise=null;throw err;});
   return window.__wolfOpenCVPromise;
 }
 function stopCardCamera(){
@@ -3471,14 +3488,16 @@ function startCardCamera(){
         el("cameraState").textContent="READY";
         el("scanStatus").textContent="Fill the guide with the card and hold still for auto-scan. You can also tap Scan This Card.";
         el("cameraState").textContent="LOADING CARD DETECTION";
+        el("scanStatus").textContent="Loading auto-scan. The first load may take a little longer; keep this screen open.";
         loadOpenCV().then(function(cv){
           if(session!==cameraSession||!cardCameraStream)return;
           activeCV=cv;
+          el("scanStatus").textContent="Show all four card corners and hold still. Capture begins when the outline is steady and focused.";
           cardDetectTimer=setInterval(function(){detectCardFrame(cv);},250);
-        }).catch(function(){
+        }).catch(function(err){
           if(session!==cameraSession)return;
-          el("cameraState").textContent="AUTO SCAN UNAVAILABLE";
-          el("scanStatus").textContent="Card detection could not load. Use Scan This Card or Phone Camera.";
+          el("cameraState").textContent="AUTO SCAN LOAD FAILED";
+          el("scanStatus").textContent=(err&&err.message?err.message:"Card detection could not load")+". Tap Auto Scan to retry, or use Phone Camera.";
         });
       }).catch(function(){
         el("scanStatus").textContent="Camera opened but could not start video. Try Use Photo.";
