@@ -1,0 +1,13 @@
+.askWolf{background:linear-gradient(#694025,#352316);color:#fff1ce;border:1px solid #d6ad66;padding:8px 12px;white-space:nowrap}
+#wolfDialog{box-sizing:border-box;width:min(94vw,580px);max-height:88dvh;overflow:auto;padding:18px;border:1px solid #a88450;border-radius:20px;background:#111b15;color:#f4ead6;font:16px/1.4 system-ui}
+#wolfDialog::backdrop{background:#000b}
+#wolfDialog .wolfHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0}
+#wolfDialog strong{font-size:25px}#wolfDialog small{display:block;color:#b7c9ad}#wolfDialog label{display:block;margin:12px 0}
+#wolfDialog textarea,#wolfDialog select{display:block;box-sizing:border-box;width:100%;font:16px/1.4 system-ui;background:#07120b;color:#fff3d5;border:1px solid #668060;padding:10px;border-radius:10px;margin-top:5px}
+#wolfDialog button{width:auto;min-height:42px;font:600 14px system-ui;border-radius:10px;padding:8px 12px}
+#wolfDialog .wolfActions{display:flex;gap:8px}#wolfDialog .wolfMessage{padding:10px;background:#213326;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere}
+#wolfDialog .wolfMessage.user{background:#332b1f}#wolfDialog .wolfHint,#wolfStatus,#wolfContext{color:#c3cbb9;font-size:14px}
+#wolfDialog button:disabled{opacity:.5}#wolfDialog details{margin:10px 0}#wolfDialog summary{cursor:pointer}
+
+#wolfDialog input{display:block;box-sizing:border-box;width:100%;font:16px system-ui;background:#07120b;color:#fff3d5;border:1px solid #668060;padding:10px;border-radius:10px;margin-top:5px}
+#wolfDialog a{color:#bce4ad}
