@@ -3062,7 +3062,7 @@ function warmOCRWorker(){
   return wolfOCRWorkerPromise;
 }
 var cardCameraStream=null, cardDetectTimer=null, lastDetectedCard=null, stableCardFrames=0, missedCardFrames=0, autoCaptureBusy=false;
-var AUTO_CAPTURE_FRAMES=6, cameraSession=0;
+var AUTO_CAPTURE_FRAMES=5, cameraSession=0;
 
 function loadOpenCV(){
   if(window.cv&&window.cv.Mat)return Promise.resolve({runtime:window.cv});
@@ -3201,7 +3201,7 @@ function cardOutlineSteady(previous,points,size){
   });
   // Border estimates may wobble independently while the card stays centered.
   // Compare with the lock's original outline so slow drift cannot accumulate.
-  return Math.hypot(dx/4,dy/4)/size<.035&&Math.sqrt(sum/4)<.055&&max<.09;
+  return Math.hypot(dx/4,dy/4)/size<.05&&Math.sqrt(sum/4)<.07&&max<.11;
 }
 function cardFocusScore(data,width,height){
   var gray=new Float32Array(width*height),sum=0,sumSq=0,n=0;
@@ -3594,6 +3594,7 @@ function showScanChoices(cards,status,resolve){
   setDeckStatus("Scanner wasn't certain enough to choose for you.");
   if(resolve)resolve(unique);
 }
+var scanExactCache=new Map();
 function scanImageFile(file,options){
   options=options||{};
   var preview=el("scanPreview"), panel=el("scanPanel"), status=el("scanStatus");
@@ -3678,11 +3679,20 @@ function scanImageFile(file,options){
           function next(){
             if(exactMatch||index>=promising.length)return Promise.resolve();
             var c=promising[index++];exactTried[c.text]=true;
+            var cacheKey=normalizeCardText(c.text), cached=scanExactCache.get(cacheKey);
+            if(cached&&Date.now()-cached.time<300000){
+              exactMatch={card:cached.card,ocr:c.text,similarity:1,confidence:c.confidence};
+              return Promise.resolve();
+            }
             return fetch("https://api.scryfall.com/cards/named?exact="+encodeURIComponent(c.text))
               .then(function(r){if(r.status===404){lookupSucceeded=true;return null;}if(!r.ok)throw new Error("Card search unavailable");lookupSucceeded=true;return r.json();})
-              .then(function(card){if(card&&nameSimilarity(c.text,card.name)===1)exactMatch={card:card,ocr:c.text,similarity:1,confidence:c.confidence};})
+              .then(function(card){if(card&&nameSimilarity(c.text,card.name)===1){
+                exactMatch={card:card,ocr:c.text,similarity:1,confidence:c.confidence};
+                if(scanExactCache.size>=100)scanExactCache.delete(scanExactCache.keys().next().value);
+                scanExactCache.set(cacheKey,{card:card,time:Date.now()});
+              }})
               .catch(function(){lookupFailed=true;})
-              .then(function(){return new Promise(function(done){setTimeout(done,120);});}).then(next);
+              .then(function(){if(exactMatch)return;return new Promise(function(done){setTimeout(done,120);});}).then(next);
           }
           return next();
         }
@@ -3760,6 +3770,7 @@ function scanImageFile(file,options){
   });
 }
 function startReliableCardScan(){
+  warmOCRWorker().catch(function(){});
   stopCardCamera();
   closeDeckTools();
   el("scanPanel").className="cardToolPanel scanPanel";
