@@ -1975,14 +1975,10 @@ body.trackerPreview #gameView .playerFace{
 }
 
 
-/* Life number orientation is independent from viewport and panel transforms */
+/* Life number follows the correctly oriented player panel */
 body.trackerPreview #gameView .lifeValueFace{
   display:inline-block;
-  transform:rotate(0deg);
-  transform-origin:center center;
-}
-body.trackerPreview #gameView .lifeValueFace.invertLife{
-  transform:rotate(180deg) !important;
+  transform:none;
 }
 
 </style>
@@ -2415,9 +2411,9 @@ function loadGame(){
   }
   if(!gameState.phases||!gameState.phases.length){gameState.phases=['Beginning','Precombat','Combat','Postcombat','Ending'];}
   /* One-time migration: clear rotation overrides from the previous seat layout. */
-  if(gameState.seatLayoutVersion!==3){
+  if(gameState.seatLayoutVersion!==4){
     for(var r=0;r<gameState.players.length;r++)gameState.players[r].rotation=0;
-    gameState.seatLayoutVersion=3;
+    gameState.seatLayoutVersion=4;
     try{localStorage.setItem(GAME_KEY,JSON.stringify(gameState))}catch(e){}
   }
   if(typeof playerCreatures!=='undefined')ensurePlayerCreatureSlots();
@@ -2447,7 +2443,7 @@ function renderGame(){
            P1 top-left faces left, P2 top-right faces right,
            P3 bottom-left faces left, P4 bottom-right faces right. */
         seatOrder=index+1;
-        baseRotation=(index===0||index===2)?270:90;
+        baseRotation=(index===0||index===2)?90:270;
       }
       card.style.order=String(seatOrder);
       var finalRotation=((baseRotation+(Number(player.rotation)||0))%360+360)%360;
@@ -2457,7 +2453,7 @@ function renderGame(){
         <div class="playerHeader"><div class="playerIdentity"><span class="playerName">'+escapeHTML(player.name)+'</span><button class="editPlayerName" type="button" aria-label="Edit player name">EDIT</button></div><button class="rotateSeat" type="button" aria-label="Rotate player panel">↻</button><button class="resetPlayer" type="button">RESET</button></div>\
         <div class="lifePanel">\
           <button class="lifeDown lifeNudge" type="button" aria-label="Lose 1 life">−</button>\
-          <button class="lifeTotal editLife" type="button" aria-label="Edit life total"><span class="lifeValueFace '+((playerCount===4&&(index===0||index===2))?'invertLife':'')+'">'+player.life+'</span></button>\
+          <button class="lifeTotal editLife" type="button" aria-label="Edit life total"><span class="lifeValueFace">'+player.life+'</span></button>\
           <button class="lifeUp lifeNudge" type="button" aria-label="Gain 1 life">＋</button>\
         </div>\
         <div class="counterStrip">\
