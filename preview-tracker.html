@@ -1921,7 +1921,30 @@ function escapeHTML(v){var d=document.createElement("div");d.textContent=String(
 function find(id){for(var i=0;i<creatures.length;i++)if(creatures[i].id===id)return creatures[i];return null}
 function adjust(id,n){var c=find(id);if(!c)return;snapshot();c.c=Math.max(0,c.c+n);finish()}
 function render(){
-  var f=el("field");f.innerHTML="";el("empty").className=creatures.length?"empty hidden":"empty";
+  var f=el("field"), trackerMain=el("trackerView").querySelector("main");
+  var savedScroll={x:window.scrollX,y:window.scrollY,
+    top:trackerMain?trackerMain.scrollTop:0,left:trackerMain?trackerMain.scrollLeft:0};
+  function creatureShape(c){return JSON.stringify([c.id,c.name,c.p,c.t]);}
+  // Counter-only changes keep the existing cards, focused controls, and scroll
+  // container intact. Rebind from scratch when Undo replaces creature objects.
+  var cards=Array.prototype.slice.call(f.children);
+  var sameCards=cards.length===creatures.length&&cards.every(function(card,index){
+    var c=creatures[index];normalize(c);
+    return card._creatureRef===c&&card.getAttribute('data-creature-shape')===creatureShape(c);
+  });
+  if(sameCards){
+    cards.forEach(function(card,index){
+      var c=creatures[index];
+      card.querySelector('.power').textContent=(c.p+c.c)+'/'+(c.t+c.c);
+      card.querySelector('.count strong').textContent=String(c.c);
+      Array.prototype.forEach.call(card.querySelectorAll('.lnk'),function(box){
+        box.checked=c.links.indexOf(box.getAttribute('data-id'))>=0;
+      });
+    });
+    el("undo").disabled=(undoState===null);
+    return;
+  }
+  f.innerHTML="";el("empty").className=creatures.length?"empty hidden":"empty";
   for(var i=0;i<creatures.length;i++){
     (function(c){
     normalize(c);
@@ -1932,6 +1955,7 @@ function render(){
     }
     if(!targets)targets="<div>Add another creature first.</div>";
     var card=document.createElement("section");card.className="card";
+    card._creatureRef=c;card.setAttribute("data-creature-shape",creatureShape(c));
     card.innerHTML=
      '<div class="head"><div><div class="name">'+escapeHTML(c.name)+'</div><div class="base">Base '+c.p+'/'+c.t+'</div></div><div class="power">'+(c.p+c.c)+'/'+(c.t+c.c)+'</div></div>'+ 
      '<div class="count"><span>+1/+1 Counters</span><strong>'+c.c+'</strong></div>'+ 
@@ -1969,6 +1993,8 @@ function render(){
    })(creatures[i]);
   }
   el("undo").disabled=(undoState===null);
+  if(trackerMain){trackerMain.scrollTop=savedScroll.top;trackerMain.scrollLeft=savedScroll.left;}
+  if(window.scrollX!==savedScroll.x||window.scrollY!==savedScroll.y)window.scrollTo(savedScroll.x,savedScroll.y);
 }
 // Player-facing keyboard: readonly fields keep the iOS keyboard closed.
 var creatureKeyboard={field:null,cursor:0,shift:false,symbols:false};
