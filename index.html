@@ -3060,7 +3060,7 @@ var cardCameraStream=null, cardDetectTimer=null, lastDetectedCard=null, stableCa
 var AUTO_CAPTURE_FRAMES=6, cameraSession=0;
 
 function loadOpenCV(){
-  if(window.cv&&window.cv.Mat)return Promise.resolve(window.cv);
+  if(window.cv&&window.cv.Mat)return Promise.resolve({runtime:window.cv});
   if(window.__wolfOpenCVPromise)return window.__wolfOpenCVPromise;
   var pending=new Promise(function(resolve,reject){
     var urls=["https://docs.opencv.org/4.13.0/opencv.js","https://docs.opencv.org/4.10.0/opencv.js"];
@@ -3068,7 +3068,7 @@ function loadOpenCV(){
     function clearTimers(){clearTimeout(poll);clearTimeout(deadline);poll=null;deadline=null;}
     function done(cv){
       if(finished||!cv||!cv.Mat)return;
-      finished=true;clearTimers();window.cv=cv;resolve(cv);
+      finished=true;clearTimers();window.cv=cv;resolve({runtime:cv});
     }
     function next(reason){
       if(finished)return;
@@ -3489,7 +3489,8 @@ function startCardCamera(){
         el("scanStatus").textContent="Fill the guide with the card and hold still for auto-scan. You can also tap Scan This Card.";
         el("cameraState").textContent="LOADING CARD DETECTION";
         el("scanStatus").textContent="Loading auto-scan. The first load may take a little longer; keep this screen open.";
-        loadOpenCV().then(function(cv){
+        loadOpenCV().then(function(loaded){
+          var cv=loaded.runtime;
           if(session!==cameraSession||!cardCameraStream)return;
           activeCV=cv;
           el("scanStatus").textContent="Show all four card corners and hold still. Capture begins when the outline is steady and focused.";
