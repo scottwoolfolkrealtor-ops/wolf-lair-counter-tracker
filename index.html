@@ -1862,7 +1862,8 @@ body.trackerPreview #gameView .poisonUp:disabled{opacity:.35;cursor:default;box-
    <input id="commanderName" placeholder="Commander" style="margin-top:8px">
 
    <div class="deckEntryTools">
-    <button id="scanCardBtn" type="button">📷 Scan Card</button>
+    <button id="scanCardBtn" type="button">📷 Photo Scan</button>
+    <button id="autoScanCardBtn" type="button">◎ Auto Scan · Test</button>
     <button id="searchCardBtn" type="button">⌕ Search Card</button>
     <button id="pasteDeckBtn" type="button">▤ Paste Decklist</button>
     <button id="importDeckBtn" type="button">⇩ Import File</button>
@@ -3056,7 +3057,7 @@ function warmOCRWorker(){
   return wolfOCRWorkerPromise;
 }
 var cardCameraStream=null, cardDetectTimer=null, lastDetectedCard=null, stableCardFrames=0, missedCardFrames=0, autoCaptureBusy=false;
-var AUTO_CAPTURE_FRAMES=4;
+var AUTO_CAPTURE_FRAMES=6, cameraSession=0;
 
 function loadOpenCV(){
   if(window.cv&&window.cv.Mat)return Promise.resolve(window.cv);
@@ -3088,6 +3089,7 @@ function loadOpenCV(){
   return window.__wolfOpenCVPromise;
 }
 function stopCardCamera(){
+  cameraSession++;
   if(cardDetectTimer){clearInterval(cardDetectTimer);cardDetectTimer=null}
   if(cardCameraStream){
     cardCameraStream.getTracks().forEach(function(t){try{t.stop()}catch(e){}});
@@ -3142,6 +3144,20 @@ function drawCardOverlay(points,found,progress){
     else state.textContent="CENTER CARD";
   }
 }
+function cardOutlineSteady(previous,points,size){
+  return !!previous&&points.every(function(p,i){
+    var q=previous.points[i];return Math.hypot(p.x-q.x,p.y-q.y)/size<.018;
+  });
+}
+function cardFocusScore(data,width,height){
+  var gray=new Float32Array(width*height),sum=0,sumSq=0,n=0;
+  for(var i=0;i<gray.length;i++)gray[i]=data[i*4]*.299+data[i*4+1]*.587+data[i*4+2]*.114;
+  for(var y=1;y<height-1;y++)for(var x=1;x<width-1;x++){
+    var p=y*width+x,v=4*gray[p]-gray[p-1]-gray[p+1]-gray[p-width]-gray[p+width];
+    sum+=v;sumSq+=v*v;n++;
+  }
+  return n?sumSq/n-Math.pow(sum/n,2):0;
+}
 function detectCardFrame(cv){
   if(autoCaptureBusy)return;
   var video=el("scanVideo"), overlay=el("scanOverlay");
@@ -3179,18 +3195,8 @@ function detectCardFrame(cv){
         cx=(pts[0].x+pts[1].x+pts[2].x+pts[3].x)/4;
         cy=(pts[0].y+pts[1].y+pts[2].y+pts[3].y)/4;
       }else{
-        // Phone cameras/glare often break one edge of a card. A centered,
-        // card-proportioned bounding box is a more forgiving backup.
-        var br=cv.boundingRect(cnt);
-        width=br.width;height=br.height;
-        ratioArea=(br.width*br.height)/frameArea;
-        cx=br.x+br.width/2;cy=br.y+br.height/2;
-        pts=[
-          {x:br.x,y:br.y},
-          {x:br.x+br.width,y:br.y},
-          {x:br.x+br.width,y:br.y+br.height},
-          {x:br.x,y:br.y+br.height}
-        ];
+        // Auto capture requires four visible corners; arbitrary boxes cannot lock.
+        approx.delete();cnt.delete();continue;
       }
 
       var ar=width/Math.max(1,height);
@@ -3210,40 +3216,29 @@ function detectCardFrame(cv){
       missedCardFrames=0;
       var now={cx:best.cx/dw,cy:best.cy/dh,w:best.width/dw,h:best.height/dh};
 
-      if(lastDetectedCard){
-        var prev=lastDetectedCard.norm;
-        now={
-          cx:prev.cx*.35+now.cx*.65,
-          cy:prev.cy*.35+now.cy*.65,
-          w:prev.w*.35+now.w*.65,
-          h:prev.h*.35+now.h*.65
-        };
-      }
-
+      var previous=lastDetectedCard;
+      var steady=cardOutlineSteady(previous,best.points,Math.max(best.width,best.height));
+      // Measure detail near the title, at a fixed resolution for consistent scoring.
+      var title=best.points, tx=Math.min(title[0].x,title[1].x), ty=Math.min(title[0].y,title[1].y);
+      var focusCanvas=document.createElement("canvas");focusCanvas.width=240;focusCanvas.height=40;
+      var fc=focusCanvas.getContext("2d");
+      fc.drawImage(video,tx/dw*video.videoWidth,ty/dh*video.videoHeight,
+        best.width/dw*video.videoWidth,best.height*.14/dh*video.videoHeight,0,0,240,40);
+      var sharp=cardFocusScore(fc.getImageData(0,0,240,40).data,240,40)>=70;
       lastDetectedCard={points:best.points,norm:now,detectW:dw,detectH:dh};
-      stableCardFrames=Math.min(AUTO_CAPTURE_FRAMES,stableCardFrames+1);
-      guideCaptureFrames=Math.min(GUIDE_CAPTURE_FRAMES,guideCaptureFrames+1);
-
-      drawCardOverlay(best.points,true,guideCaptureFrames/GUIDE_CAPTURE_FRAMES*AUTO_CAPTURE_FRAMES);
-
-      if(guideCaptureFrames>=GUIDE_CAPTURE_FRAMES){
+      stableCardFrames=steady&&sharp?Math.min(AUTO_CAPTURE_FRAMES,stableCardFrames+1):0;
+      drawCardOverlay(best.points,true,stableCardFrames);
+      if(!sharp)el("cameraState").textContent="WAITING FOR FOCUS";
+      else if(!steady)el("cameraState").textContent="CARD FOUND — HOLD STILL";
+      if(stableCardFrames>=AUTO_CAPTURE_FRAMES){
         autoCaptureBusy=true;
         captureDetectedCard(cv,lastDetectedCard);
       }
     }else{
       missedCardFrames++;
 
-      // A brief autofocus miss should not wipe the lock, but random scenery
-      // cannot build toward capture because only valid card rectangles add progress.
-      guideCaptureFrames=Math.max(0,guideCaptureFrames-.75);
-      stableCardFrames=Math.max(0,stableCardFrames-.5);
-
-      if(lastDetectedCard&&missedCardFrames<=2&&guideCaptureFrames>0){
-        drawCardOverlay(lastDetectedCard.points,true,guideCaptureFrames/GUIDE_CAPTURE_FRAMES*AUTO_CAPTURE_FRAMES);
-      }else{
-        if(missedCardFrames>2)lastDetectedCard=null;
-        drawCardOverlay(null,false,guideCaptureFrames/GUIDE_CAPTURE_FRAMES*AUTO_CAPTURE_FRAMES);
-      }
+      stableCardFrames=0;lastDetectedCard=null;
+      drawCardOverlay(null,false,0);
     }
   }catch(e){
     drawCardOverlay(null,false,0);
@@ -3288,8 +3283,8 @@ function captureDetectedCard(cv,detected){
     el("scanStatus").textContent="Card cropped. Reading the title bar…";
     return scanImageFile(file,{alreadyCropped:true});
   }).catch(function(){
-    autoCaptureBusy=false;stableCardFrames=0;
-    setDeckStatus("I couldn't crop that card cleanly. Keep the whole card inside the guide and tap Capture Now.",true);
+    autoCaptureBusy=false;stableCardFrames=0;lastDetectedCard=null;
+    if(cardCameraStream)setDeckStatus("Capture failed. Try Scan This Card or Photo Scan.",true);
   });
 }
 var fallbackFrameSample=null, fallbackStableFrames=0, fallbackDetectTimer=null, activeCV=null, guideCaptureFrames=0;
@@ -3435,6 +3430,7 @@ function captureBasicCard(){
 function startCardCamera(){
   stopCardCamera();
   closeDeckTools();
+  var session=++cameraSession;
   el("scanPanel").className="cardToolPanel scanPanel";
   el("liveScanner").className="liveScanner";
   el("scanStatus").textContent="Opening camera…";
@@ -3459,11 +3455,13 @@ function startCardCamera(){
     video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}},
     audio:false
   }).then(function(stream){
+    if(session!==cameraSession){stream.getTracks().forEach(function(t){t.stop();});return;}
     cardCameraStream=stream;
     var video=el("scanVideo");
     video.srcObject=stream;
     video.onloadedmetadata=function(){
       video.play().then(function(){
+        if(session!==cameraSession)return;
         var stage=el("cameraStage");
         if(stage)stage.style.aspectRatio=video.videoWidth+" / "+video.videoHeight;
         var overlay=el("scanOverlay");
@@ -3472,12 +3470,22 @@ function startCardCamera(){
         drawCardOverlay(null,false,0);
         el("cameraState").textContent="READY";
         el("scanStatus").textContent="Fill the guide with the card and hold still for auto-scan. You can also tap Scan This Card.";
-        fallbackDetectTimer=setInterval(runFallbackStability,250);
+        el("cameraState").textContent="LOADING CARD DETECTION";
+        loadOpenCV().then(function(cv){
+          if(session!==cameraSession||!cardCameraStream)return;
+          activeCV=cv;
+          cardDetectTimer=setInterval(function(){detectCardFrame(cv);},250);
+        }).catch(function(){
+          if(session!==cameraSession)return;
+          el("cameraState").textContent="AUTO SCAN UNAVAILABLE";
+          el("scanStatus").textContent="Card detection could not load. Use Scan This Card or Phone Camera.";
+        });
       }).catch(function(){
         el("scanStatus").textContent="Camera opened but could not start video. Try Use Photo.";
       });
     };
   }).catch(function(){
+    if(session!==cameraSession)return;
     stopCardCamera();
     el("scanPanel").className="cardToolPanel scanPanel";
     el("scanStatus").textContent="Camera permission wasn't available. Use a photo instead.";
@@ -3699,6 +3707,7 @@ function startReliableCardScan(){
   if(input){input.value="";input.click();}
 }
 el("scanCardBtn").onclick=startReliableCardScan;
+el("autoScanCardBtn").onclick=startCardCamera;
 el("manualCapture").onclick=function(){
   if(autoCaptureBusy)return;
   autoCaptureBusy=true;
