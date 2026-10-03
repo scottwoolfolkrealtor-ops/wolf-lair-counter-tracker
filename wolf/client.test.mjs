@@ -10,7 +10,7 @@ function setup({saved=new Map(),fetcher,storageBlocked=false}={}){
  let serial=0;const submissions=[],rowsByRecognition=new WeakMap();
  class Node{
   constructor(tag){this.tag=tag;this.children=[];this.handlers={};this.value='';this.checked=false;this.open=false;this.textContent='';this.attrs={};}
-  set innerHTML(value){this.html=value;for(const m of value.matchAll(/id="([^"]+)"/g)){if(!nodes.has(m[1]))nodes.set(m[1],new Node(m[1]));}get('wolfRemember').checked=true;get('wolfAutoSend').checked=true;get('wolfAccessSettings').open=true;}
+  set innerHTML(value){this.html=value;for(const m of value.matchAll(/id="([^"]+)"/g)){if(!nodes.has(m[1]))nodes.set(m[1],new Node(m[1]));}for(const m of value.matchAll(/<input\b[^>]*id="([^"]+)"[^>]*\bchecked\b[^>]*>/g))get(m[1]).checked=true;if(value.includes('id="wolfAccessSettings"'))get('wolfAccessSettings').open=true;}
   appendChild(n){this.children.push(n);return n;}
   replaceChildren(){this.children=[];}
   addEventListener(name,fn){this.handlers[name]=fn;}
@@ -18,6 +18,7 @@ function setup({saved=new Map(),fetcher,storageBlocked=false}={}){
   cloneNode(){return new Node(this.tag);}
   insertAdjacentElement(position,n){this.status=n;}
   showModal(){this.open=true;}
+  close(){this.open=false;if(this.handlers.close)this.handlers.close();}
   requestSubmit(){const pending=this.onsubmit({preventDefault(){}});submissions.push(pending);}
   focus(){}
  }
@@ -52,7 +53,9 @@ function setup({saved=new Map(),fetcher,storageBlocked=false}={}){
  function result(words){const current=recognizers.at(-1),rows=rowsByRecognition.get(current)||[];const row=[{transcript:words}];row.isFinal=true;rows.push(row);rowsByRecognition.set(current,rows);current.onresult({resultIndex:rows.length-1,results:rows});}
  async function submit(){get('wolfQuestion').value='How do these counters work?';if(!get('wolfAccess').value)get('wolfAccess').value=ACCESS;return get('wolfQuestionForm').onsubmit({preventDefault(){}});}
  function runAuto(){for(const [id,t] of [...timers])if(t.delay===1400){timers.delete(id);t.fn();}}
- return {get,game,tracker,dialog,document,docEvents,pageEvents,askGame,recognizers,timers,spoken,calls,result,submit,runRestart,runAuto,submissions,wake:()=>game.children[0].onclick(),saved};
+ const accessDialog=document.body.children[1];
+ function saveVoice(code=ACCESS,remember=true){get('wolfVoiceAccessCode').value=code;get('wolfVoiceRemember').checked=remember;get('wolfVoiceAccessForm').onsubmit({preventDefault(){}});}
+ return {get,game,tracker,dialog,accessDialog,document,docEvents,pageEvents,askGame,recognizers,timers,spoken,calls,result,submit,saveVoice,runRestart,runAuto,submissions,wake:()=>game.children[0].onclick(),saved};
 }
 test('valid code persists across visits, forget removes it and no listening starts by itself',async()=>{
  const x=setup();await x.submit();assert.equal(x.saved.get(KEY),ACCESS);
@@ -62,15 +65,18 @@ test('valid code persists across visits, forget removes it and no listening star
 test('unchecking remember removes a saved code and does not save the next successful request',async()=>{
  const x=setup({saved:new Map([[KEY,ACCESS]])});x.get('wolfRemember').checked=false;x.get('wolfRemember').onchange.call(x.get('wolfRemember'));await x.submit();assert.equal(x.saved.has(KEY),false);
 });
-test('wake phrase keeps battlefield visible and warns about missing access',()=>{
+test('first voice setup saves code before listening or making a paid request, and bypasses setup on return',()=>{
  const x=setup();assert.equal(x.dialog.open,false);x.wake();assert.equal(x.dialog.open,false);
+ assert.equal(x.accessDialog.open,true);assert.equal(x.recognizers.length,0);assert.equal(x.calls.length,0);
+ x.saveVoice();assert.equal(x.accessDialog.open,false);assert.equal(x.get('wolfVoiceAccessCode').value,'');assert.equal(x.saved.get(KEY),ACCESS);assert.equal(x.recognizers.length,1);assert.equal(x.calls.length,0);
  x.recognizers[0].onend();x.runRestart();assert.equal(x.recognizers.length,2);
  x.result('Hey Wolf how does landfall work');assert.equal(x.dialog.open,false);assert.equal(x.get('wolfQuestion').value,'how does landfall work');
  x.dialog.open=false;x.dialog.handlers.close();assert.equal(x.recognizers.at(-1).aborted,undefined);
  x.result('hey wolf another question');assert.equal(x.dialog.open,false);assert.equal(x.get('wolfQuestion').value,'another question');assert.equal(x.calls.length,0);
+ const y=setup({saved:x.saved});y.wake();assert.equal(y.accessDialog.open,false);assert.equal(y.dialog.open,false);assert.equal(y.recognizers.length,1);
 });
 test('paid request and playback pause microphone, then listening resumes after playback',async()=>{
- let finish;const x=setup({fetcher:()=>new Promise(resolve=>{finish=resolve;})});x.wake();x.result('Hey Wolf check my counters');
+ let finish;const x=setup({saved:new Map([[KEY,ACCESS]]),fetcher:()=>new Promise(resolve=>{finish=resolve;})});x.wake();x.result('Hey Wolf check my counters');
  x.get('wolfAutoRead').checked=true;const pending=x.submit();assert.equal(x.recognizers[0].aborted,true);assert.equal(x.game.children[0].attrs['aria-pressed'],'true');
  finish(Response.json({answer:'Counters double.',sources:[]}));await pending;assert.equal(x.spoken.length,1);
  x.runRestart();assert.equal(x.recognizers.length,1);
@@ -78,11 +84,11 @@ test('paid request and playback pause microphone, then listening resumes after p
  assert.equal(x.calls[0].init.headers.Authorization,'Bearer '+ACCESS);assert.ok(!x.calls[0].init.body.includes(ACCESS));
 });
 test('permission denial and repeated immediate disconnects stop retries',()=>{
- const x=setup();x.wake();x.recognizers[0].onerror({error:'not-allowed'});x.runRestart();assert.equal(x.recognizers.length,1);assert.equal(x.game.children[0].attrs['aria-pressed'],'false');
- const y=setup();y.wake();for(let i=0;i<3;i++){y.recognizers.at(-1).onend();y.runRestart();}assert.equal(y.recognizers.length,3);assert.equal(y.game.children[0].attrs['aria-pressed'],'false');
+ const x=setup({saved:new Map([[KEY,ACCESS]])});x.wake();x.recognizers[0].onerror({error:'not-allowed'});x.runRestart();assert.equal(x.recognizers.length,1);assert.equal(x.game.children[0].attrs['aria-pressed'],'false');
+ const y=setup({saved:new Map([[KEY,ACCESS]])});y.wake();for(let i=0;i<3;i++){y.recognizers.at(-1).onend();y.runRestart();}assert.equal(y.recognizers.length,3);assert.equal(y.game.children[0].attrs['aria-pressed'],'false');
 });
 test('backgrounding stops microphone and cancels pending restarts',()=>{
- const x=setup();x.wake();x.document.hidden=true;x.docEvents.get('visibilitychange')();assert.equal(x.recognizers[0].aborted,true);x.runRestart();assert.equal(x.recognizers.length,1);assert.equal(x.game.children[0].attrs['aria-pressed'],'false');
+ const x=setup({saved:new Map([[KEY,ACCESS]])});x.wake();x.document.hidden=true;x.docEvents.get('visibilitychange')();assert.equal(x.recognizers[0].aborted,true);x.runRestart();assert.equal(x.recognizers.length,1);assert.equal(x.game.children[0].attrs['aria-pressed'],'false');
 });
 test('invalid saved credential is removed; blocked storage does not block chat',async()=>{
  const x=setup({saved:new Map([[KEY,ACCESS]]),fetcher:()=>Response.json({error:'Invalid code'},{status:401})});await x.submit();assert.equal(x.saved.has(KEY),false);assert.equal(x.get('wolfAccessSettings').open,true);
@@ -101,7 +107,7 @@ test('spoken wake question sends after pause once, even if recognition ends firs
 });
 test('wake phrase without a question or without a code never sends',()=>{
  const x=setup({saved:new Map([[KEY,ACCESS]])});x.wake();x.result('Hey Wolf');x.runAuto();assert.equal(x.calls.length,0);
- const y=setup();y.wake();y.result('Hey Wolf how many counters');y.runAuto();assert.equal(y.calls.length,0);assert.match(y.get('wolfStatus').textContent,/private access code/);
+ const y=setup();y.wake();y.runAuto();assert.equal(y.calls.length,0);assert.equal(y.recognizers.length,0);assert.equal(y.accessDialog.open,true);
 });
 test('interim speech delays sending and final speech includes the continuation',async()=>{
  const x=setup({saved:new Map([[KEY,ACCESS]])});x.wake();x.result('Hey Wolf does this trigger');
@@ -159,4 +165,56 @@ test('voice error is read aloud without opening chat',async()=>{
  const x=setup({saved:new Map([[KEY,ACCESS]]),fetcher:()=>Response.json({error:'Private test limit reached'},{status:429})});
  x.wake();x.result('Hey Wolf check my trigger');x.runAuto();await Promise.all(x.submissions);
  assert.equal(x.dialog.open,false);assert.equal(x.spoken.length,1);assert.match(x.spoken[0].text,/limit reached/);
+});
+
+test('cancelling or leaving access setup blank never starts a microphone or opens chat',()=>{
+ const x=setup();x.wake();x.saveVoice('   ');assert.equal(x.accessDialog.open,true);assert.match(x.get('wolfVoiceAccessStatus').textContent,/Enter/);
+ assert.equal(x.recognizers.length,0);assert.equal(x.calls.length,0);
+ x.get('wolfVoiceAccessCancel').onclick();assert.equal(x.accessDialog.open,false);assert.equal(x.dialog.open,false);assert.equal(x.saved.has(KEY),false);
+});
+test('voice setup can keep access for this visit without persisting it',()=>{
+ const x=setup();x.wake();x.saveVoice(ACCESS,false);assert.equal(x.get('wolfAccess').value,ACCESS);assert.equal(x.saved.has(KEY),false);assert.equal(x.recognizers.length,1);
+ x.get('wolfStop').onclick();x.wake();assert.equal(x.accessDialog.open,false);assert.equal(x.recognizers.length,2);
+ const y=setup({saved:x.saved});y.wake();assert.equal(y.accessDialog.open,true);assert.equal(y.recognizers.length,0);
+});
+test('entering an access code in chat remembers it without requiring an answer',()=>{
+ const x=setup();x.get('wolfAccess').value=ACCESS;x.get('wolfAccess').handlers.change.call(x.get('wolfAccess'));
+ assert.equal(x.saved.get(KEY),ACCESS);assert.equal(x.calls.length,0);
+ const y=setup({saved:x.saved});y.wake();assert.equal(y.accessDialog.open,false);assert.equal(y.recognizers.length,1);
+});
+test('voice finds a code saved by another page after the battlefield loaded',()=>{
+ const saved=new Map(),x=setup({saved});saved.set(KEY,ACCESS);x.wake();
+ assert.equal(x.get('wolfAccess').value,ACCESS);assert.equal(x.accessDialog.open,false);assert.equal(x.recognizers.length,1);
+});
+test('invalid code stops wake listening, removes credentials and offers setup on the next tap',async()=>{
+ const x=setup({saved:new Map([[KEY,ACCESS]]),fetcher:()=>Response.json({error:'Invalid access code'},{status:401})});
+ x.wake();x.result('Hey Wolf check this play');x.runAuto();await Promise.all(x.submissions);
+ assert.equal(x.saved.has(KEY),false);assert.equal(x.get('wolfAccess').value,'');assert.equal(x.dialog.open,false);
+ x.spoken[0].onend();x.runRestart();assert.equal(x.recognizers.length,1);
+ x.wake();assert.equal(x.accessDialog.open,true);assert.equal(x.calls.length,1);
+});
+test('blocked browser storage still allows voice with the code for this visit',async()=>{
+ const x=setup({storageBlocked:true});x.wake();x.saveVoice();assert.equal(x.recognizers.length,1);assert.equal(x.accessDialog.open,false);
+ x.result('Hey Wolf check my counters');x.runAuto();await Promise.all(x.submissions);assert.equal(x.calls.length,1);assert.equal(x.spoken.length,1);
+ assert.match(x.get('wolfStatus').textContent,/could not remember/);
+});
+
+const testPageSource=readFileSync(new URL('../wolf-test.html',import.meta.url),'utf8').match(/<script>([\s\S]*?)<\/script>/)[1];
+function setupTestPage(saved,fetcher=()=>Response.json({answer:'A checked answer.',sources:[]})){
+ const nodes=new Map(['code','remember','test','question','notes','send','status','answer','sources'].map(id=>[id,{value:'',textContent:'',checked:id==='remember',replaceChildren(){}}]));
+ vm.runInNewContext(testPageSource,{
+  document:{getElementById:id=>nodes.get(id)},
+  localStorage:{getItem:k=>saved.get(k)||null,setItem:(k,v)=>saved.set(k,v),removeItem:k=>saved.delete(k)},
+  fetch:fetcher,AbortController,URL,Set,TypeError,setTimeout:()=>1,clearTimeout(){}
+ });
+ return {get:id=>nodes.get(id),submit:()=>nodes.get('test').onsubmit({preventDefault(){}})};
+}
+test('a successful remembered test-page answer supplies access to battlefield voice',async()=>{
+ const saved=new Map(),page=setupTestPage(saved);page.get('code').value=ACCESS;page.get('question').value='How many counters?';await page.submit();
+ const x=setup({saved});x.wake();assert.equal(x.accessDialog.open,false);assert.equal(x.recognizers.length,1);
+ const revisit=setupTestPage(saved);assert.equal(revisit.get('code').value,ACCESS);
+});
+test('the test page respects forgetting and clears rejected credentials',async()=>{
+ const saved=new Map([[KEY,ACCESS]]),page=setupTestPage(saved);page.get('remember').checked=false;page.get('remember').onchange.call(page.get('remember'));page.get('question').value='How many counters?';await page.submit();assert.equal(saved.has(KEY),false);
+ saved.set(KEY,ACCESS);const rejected=setupTestPage(saved,()=>Response.json({error:'Invalid code'},{status:401}));rejected.get('question').value='How many counters?';await rejected.submit();assert.equal(saved.has(KEY),false);assert.equal(rejected.get('code').value,'');
 });
