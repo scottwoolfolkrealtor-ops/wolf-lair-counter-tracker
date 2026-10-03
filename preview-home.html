@@ -263,10 +263,15 @@ body{background:#020605}
   #home>.brandHero .brandLogo{max-height:none!important}
 }
 
+
+.homeSoundControls{position:relative;z-index:3;display:flex;justify-content:flex-end;margin-bottom:6px}
+.homeSoundControls .soundToggle{min-height:40px;padding:7px 12px;border:1px solid #9c8559;border-radius:10px;background:#122219;color:#f3e4c8;font-size:12px;touch-action:manipulation}
+.homeSoundControls .soundToggle[aria-pressed="false"]{opacity:.7}
 </style>
 </head>
 <body>
 <section id="home">
+<div class="homeSoundControls"><button class="soundToggle" type="button" aria-pressed="true" aria-label="Mute sound effects">Sound on</button></div>
   <div id="lairScene" class="lairScene" aria-hidden="true">
     <div class="lairLayer sceneBase"></div>
     <div class="lairLayer sceneVortex"></div>
@@ -652,13 +657,13 @@ el('loadProfile').onclick=function(){loadPro(); gameState=clone(proState.game ||
 el('copyJson').onclick=function(){var text=el('proArea').value; if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).catch(function(){})} else {el('proArea').select();document.execCommand('copy');}};
 el('resetProfile').onclick=function(){try{localStorage.removeItem('wolfLairPro1')}catch(e){}; proState={lastSaved:new Date().toISOString(), tracker:{count:creatures.length}, decks:{count:decks.length}, game:clone(gameState)}; el('proArea').value=JSON.stringify(proState,null,2);};
 
-el('openTracker').onclick=function(){location.href='./preview-tracker.html?tracker=5'};
+el('openTracker').onclick=function(){window.WolfAudio.navigate('./preview-tracker.html?tracker=5')};
 el('backHome').onclick=function(){el('trackerView').className='hidden';el('home').className='';window.scrollTo(0,0)};
 
-el('openDecks').onclick=function(){location.href='./preview-tracker.html?mode=decks&decks=1'};
+el('openDecks').onclick=function(){window.WolfAudio.navigate('./preview-tracker.html?mode=decks&decks=1')};
 el('backDecksHome').onclick=function(){closeDeckForm();el('decksView').className='hidden';el('home').className='';window.scrollTo(0,0)};
 
-el('openGame').onclick=function(){location.href='./preview-tracker.html?tracker=5&mode=game'};
+el('openGame').onclick=function(){window.WolfAudio.navigate('./preview-tracker.html?tracker=5&mode=game')};
 el('backGameHome').onclick=function(){el('gameView').className='hidden';el('home').className='';window.scrollTo(0,0)};
 
 el('openPro').onclick=function(){el('home').className='hidden';el('proView').className='';loadPro();window.scrollTo(0,0)};
@@ -714,6 +719,131 @@ loadGame();
 load();render();
 renderDecks();
 renderGame();
+})();
+</script>
+<script>
+(function(){
+  var enabled=true,context=null,master=null,noiseBuffer=null,voices=[];
+  try{enabled=localStorage.getItem('wolfLairSoundEnabled')!=='false';}catch(e){}
+  function syncButtons(){
+    document.querySelectorAll('.soundToggle').forEach(function(button){
+      button.textContent=enabled?'Sound on':'Sound off';
+      button.setAttribute('aria-pressed',String(enabled));
+      button.setAttribute('aria-label',enabled?'Mute sound effects':'Unmute sound effects');
+      button.title=enabled?'Mute sound effects':'Unmute sound effects';
+    });
+  }
+  function stopVoice(voice){
+    clearTimeout(voice.timer);
+    voice.sources.forEach(function(source){try{source.stop();source.disconnect();}catch(e){}});
+    voice.nodes.forEach(function(node){try{node.disconnect();}catch(e){}});
+    voices=voices.filter(function(v){return v!==voice;});
+  }
+  function setEnabled(value){
+    enabled=!!value;
+    try{localStorage.setItem('wolfLairSoundEnabled',String(enabled));}catch(e){}
+    if(master)master.gain.value=enabled?0.35:0;
+    if(!enabled)voices.slice().forEach(stopVoice);
+    syncButtons();
+  }
+  function init(){
+    if(context)return true;
+    var Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)return false;
+    context=new Audio();master=context.createGain();master.gain.value=enabled?0.35:0;
+    var limiter=context.createDynamicsCompressor();limiter.threshold.value=-15;limiter.knee.value=15;limiter.ratio.value=8;
+    master.connect(limiter);limiter.connect(context.destination);
+    noiseBuffer=context.createBuffer(1,context.sampleRate,context.sampleRate);
+    var data=noiseBuffer.getChannelData(0);for(var i=0;i<data.length;i++)data[i]=Math.random()*2-1;
+    return true;
+  }
+  function synth(kind){
+    if(!enabled)return;
+    while(voices.length>=4)stopVoice(voices[0]);
+    var now=context.currentTime,voice={sources:[],nodes:[],timer:null};voices.push(voice);
+    function envelope(start,duration,level){
+      var gain=context.createGain();voice.nodes.push(gain);gain.connect(master);
+      gain.gain.setValueAtTime(0.0001,start);
+      gain.gain.exponentialRampToValueAtTime(level,start+0.008);
+      gain.gain.exponentialRampToValueAtTime(0.0001,start+duration);
+      return gain;
+    }
+    function tone(type,from,to,offset,duration,level){
+      var start=now+offset,source=context.createOscillator();voice.sources.push(source);
+      source.type=type;source.frequency.setValueAtTime(from,start);
+      source.frequency.exponentialRampToValueAtTime(to,start+duration);
+      source.connect(envelope(start,duration,level));source.start(start);source.stop(start+duration+0.01);
+    }
+    function noise(type,from,to,offset,duration,level){
+      var start=now+offset,source=context.createBufferSource(),filter=context.createBiquadFilter();
+      voice.sources.push(source);voice.nodes.push(filter);source.buffer=noiseBuffer;
+      filter.type=type;filter.Q.value=1.4;filter.frequency.setValueAtTime(from,start);
+      filter.frequency.exponentialRampToValueAtTime(to,start+duration);
+      source.connect(filter);filter.connect(envelope(start,duration,level));source.start(start);source.stop(start+duration+0.01);
+    }
+    if(kind==='click'){
+      noise('highpass',1800,950,0,0.028,0.10);
+      tone('triangle',520,280,0,0.035,0.12);
+    }else if(kind==='typing'){
+      noise('bandpass',2200,1100,0,0.018,0.065);
+      tone('sine',420,280,0,0.022,0.07);
+    }else if(kind==='lifeLoss'){
+      noise('bandpass',6500,700,0,0.16,0.34);
+      tone('triangle',260,95,0.02,0.12,0.12);
+    }else if(kind==='lifeGain'){
+      tone('sine',523,660,0,0.16,0.22);
+      tone('sine',784,1047,0.075,0.22,0.18);
+    }else if(kind==='poison'){
+      noise('lowpass',650,120,0,0.25,0.25);
+      [0,0.065,0.14].forEach(function(offset,i){tone('sine',150+i*50,65+i*20,offset,0.09,0.3);});
+    }else if(kind==='commander'){
+      noise('bandpass',7500,500,0,0.2,0.45);
+      tone('triangle',160,45,0.025,0.28,0.38);
+      tone('sine',920,650,0.035,0.15,0.12);
+    }
+    voice.timer=setTimeout(function(){stopVoice(voice);},600);
+  }
+  function play(kind){
+    if(!enabled)return;
+    try{
+      if(!init())return;
+      if(context.state!=='running'){
+        var requested=Date.now();
+        context.resume().then(function(){if(enabled&&Date.now()-requested<500){try{synth(kind);}catch(e){}}}).catch(function(){});
+      }else synth(kind);
+    }catch(e){} // Audio must never prevent a life/counter change.
+  }
+  var navigationPending=false;
+  function navigate(url){
+    if(navigationPending)return;
+    navigationPending=true;
+    // Let the short menu click finish before unloading the page.
+    if(enabled)setTimeout(function(){window.location.href=url;},100);
+    else window.location.href=url;
+  }
+  window.WolfAudio={play:play,setEnabled:setEnabled,navigate:navigate};
+  document.addEventListener('click',function(event){
+    var target=event.target;
+    var button=target&&target.closest?target.closest('button, [role="button"]'):null;
+    if(!button||button.disabled||button.getAttribute('aria-disabled')==='true')return;
+    if(button.matches('.soundToggle, .lifeDown, .lifeUp, .cmdUp, .poisonUp'))return;
+    play(button.closest('#creatureKeyboard')?'typing':'click');
+  },true);
+  document.addEventListener('keydown',function(event){
+    var target=event.target;
+    if(target&&['nm','pw','th'].indexOf(target.id)>=0&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&
+       (event.key.length===1||event.key==='Backspace'))play('typing');
+  },true);
+  window.addEventListener('storage',function(event){
+    if(event.key==='wolfLairSoundEnabled'){
+      enabled=event.newValue!=='false';
+      if(master)master.gain.value=enabled?0.35:0;
+      if(!enabled)voices.slice().forEach(stopVoice);
+      syncButtons();
+    }
+  });
+  document.querySelectorAll('.soundToggle').forEach(function(button){button.addEventListener('click',function(){setEnabled(!enabled);});});
+  document.addEventListener('visibilitychange',function(){if(document.hidden)voices.slice().forEach(stopVoice);});
+  syncButtons();
 })();
 </script>
 </body>

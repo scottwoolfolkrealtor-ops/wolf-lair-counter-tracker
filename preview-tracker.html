@@ -3456,9 +3456,9 @@ renderGame();
   var backGame=document.getElementById('backGameHome');
   var backDecks=document.getElementById('backDecksHome');
   var toGame=document.getElementById('quickGameMode');
-  if(back)back.onclick=function(){location.href='./preview-home.html?preview=6';};
-  if(backGame)backGame.onclick=function(){location.href='./preview-home.html?preview=6';};
-  if(backDecks)backDecks.onclick=function(){location.href='./preview-home.html?preview=6';};
+  if(back)back.onclick=function(){window.WolfAudio.navigate('./preview-home.html?preview=6');};
+  if(backGame)backGame.onclick=function(){window.WolfAudio.navigate('./preview-home.html?preview=6');};
+  if(backDecks)backDecks.onclick=function(){window.WolfAudio.navigate('./preview-home.html?preview=6');};
   if(toGame){
     toGame.onclick=showGame;
     // Resolve touch taps before input blur or layout movement can swallow click.
@@ -3542,7 +3542,13 @@ renderGame();
       filter.frequency.exponentialRampToValueAtTime(to,start+duration);
       source.connect(filter);filter.connect(envelope(start,duration,level));source.start(start);source.stop(start+duration+0.01);
     }
-    if(kind==='lifeLoss'){
+    if(kind==='click'){
+      noise('highpass',1800,950,0,0.028,0.10);
+      tone('triangle',520,280,0,0.035,0.12);
+    }else if(kind==='typing'){
+      noise('bandpass',2200,1100,0,0.018,0.065);
+      tone('sine',420,280,0,0.022,0.07);
+    }else if(kind==='lifeLoss'){
       noise('bandpass',6500,700,0,0.16,0.34);
       tone('triangle',260,95,0.02,0.12,0.12);
     }else if(kind==='lifeGain'){
@@ -3568,7 +3574,35 @@ renderGame();
       }else synth(kind);
     }catch(e){} // Audio must never prevent a life/counter change.
   }
-  window.WolfAudio={play:play,setEnabled:setEnabled};
+  var navigationPending=false;
+  function navigate(url){
+    if(navigationPending)return;
+    navigationPending=true;
+    // Let the short menu click finish before unloading the page.
+    if(enabled)setTimeout(function(){window.location.href=url;},100);
+    else window.location.href=url;
+  }
+  window.WolfAudio={play:play,setEnabled:setEnabled,navigate:navigate};
+  document.addEventListener('click',function(event){
+    var target=event.target;
+    var button=target&&target.closest?target.closest('button, [role="button"]'):null;
+    if(!button||button.disabled||button.getAttribute('aria-disabled')==='true')return;
+    if(button.matches('.soundToggle, .lifeDown, .lifeUp, .cmdUp, .poisonUp'))return;
+    play(button.closest('#creatureKeyboard')?'typing':'click');
+  },true);
+  document.addEventListener('keydown',function(event){
+    var target=event.target;
+    if(target&&['nm','pw','th'].indexOf(target.id)>=0&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&
+       (event.key.length===1||event.key==='Backspace'))play('typing');
+  },true);
+  window.addEventListener('storage',function(event){
+    if(event.key==='wolfLairSoundEnabled'){
+      enabled=event.newValue!=='false';
+      if(master)master.gain.value=enabled?0.35:0;
+      if(!enabled)voices.slice().forEach(stopVoice);
+      syncButtons();
+    }
+  });
   document.querySelectorAll('.soundToggle').forEach(function(button){button.addEventListener('click',function(){setEnabled(!enabled);});});
   document.addEventListener('visibilitychange',function(){if(document.hidden)voices.slice().forEach(stopVoice);});
   syncButtons();
