@@ -30,6 +30,7 @@ body.trackerPreview #gameView .gameNavigation .wolfWakeButton{
  background:#111b16;border:1px solid #668060;border-radius:12px;color:#cbd7c9;touch-action:manipulation;
 }
 .wolfVoiceIcon{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;font-size:23px;line-height:1;background:#1b2821;transition:background .2s,box-shadow .2s}
+.wolfVoiceIcon img{display:block;width:28px;height:28px;object-fit:contain;border:0;pointer-events:none}
 .wolfVoiceLabel{font:700 9px/1.2 system-ui;white-space:nowrap}
 .wolfWakeButton[data-state="listening"] .wolfVoiceIcon{background:#235e2e;box-shadow:0 0 0 2px #8ef88c,0 0 15px #67ff7e;animation:wolfListenGlow 1.6s ease-in-out infinite}
 .wolfWakeButton[data-state="listening"] .wolfVoiceLabel{color:#baffbd}
@@ -37,6 +38,8 @@ body.trackerPreview #gameView .gameNavigation .wolfWakeButton{
 .wolfWakeButton[data-state="speaking"] .wolfVoiceIcon{background:#174969;box-shadow:0 0 0 2px #7fddff,0 0 17px #5dccff;animation:wolfSpeakingGlow .55s ease-in-out infinite alternate}
 .wolfWakeButton[data-state="speaking"] .wolfVoiceLabel{color:#b4edff}
 .wolfWakeButton[data-state="error"] .wolfVoiceIcon{background:#5b241d;box-shadow:0 0 0 2px #ef997c}
+.wolfWakeButton[data-state="queued"] .wolfVoiceIcon,.wolfWakeButton[data-state="answer"] .wolfVoiceIcon{background:#674d1b;box-shadow:0 0 0 2px #f5c668,0 0 12px #efbe5c}
+.wolfWakeButton[data-state="answer"] .wolfVoiceLabel{color:#ffe5a8}
 @keyframes wolfListenGlow{50%{filter:brightness(1.25)}}
 @keyframes wolfSpeakingGlow{to{filter:brightness(1.4);transform:scale(1.07)}}
 @media(prefers-reduced-motion:reduce){.wolfWakeButton .wolfVoiceIcon{animation:none!important}}
