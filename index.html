@@ -2342,6 +2342,14 @@ function loadGame(){
 function saveGame(){
   try{localStorage.setItem(GAME_KEY,JSON.stringify(gameState))}catch(e){}
 }
+function playCounterChange(kind,before,after){
+  var defeat=(kind==='life'&&before>0&&after<=0)||
+    (kind==='commander'&&before<21&&after>=21)||
+    (kind==='poison'&&before<10&&after>=10);
+  if(defeat){window.WolfAudio.play(kind+'Defeat');return;}
+  if(kind==='life'&&after!==before)window.WolfAudio.play(after>before?'lifeGain':'lifeLoss');
+  else if(kind!=='life'&&after>before)window.WolfAudio.play(kind);
+}
 function renderGame(){
   if(el('trackerView').hasAttribute('data-seat-aligned'))orientPlayerTracker();
   var board=el('gameBoard');
@@ -2412,7 +2420,7 @@ function renderGame(){
         card.querySelector('.poisonChip').classList.toggle('danger',player.poison>=10);
         saveGame();
       }
-      card.querySelector('.lifeDown').onclick=function(){player.life--;updatePlayerCounters();window.WolfAudio.play('lifeLoss');};
+      card.querySelector('.lifeDown').onclick=function(){var before=player.life;player.life--;updatePlayerCounters();playCounterChange('life',before,player.life);};
       card.querySelector('.lifeUp').onclick=function(){player.life++;updatePlayerCounters();window.WolfAudio.play('lifeGain');};
       card.querySelector('.editLife').onclick=function(){
         var numberButton=this, panel=card.querySelector('.lifePanel');
@@ -2434,7 +2442,7 @@ function renderGame(){
           if(commit&&!isNaN(n))player.life=Math.max(-999,Math.min(999,n));
           panel.replaceChild(numberButton,input);
           updatePlayerCounters();
-          if(player.life!==previousLife)window.WolfAudio.play(player.life>previousLife?'lifeGain':'lifeLoss');
+          playCounterChange('life',previousLife,player.life);
         }
         input.oninput=sizeInput;
         input.onblur=function(){finishLifeEdit(true);};
@@ -2446,9 +2454,9 @@ function renderGame(){
         input.select();
       };
       card.querySelector('.cmdDown').onclick=function(){player.commander=Math.max(0,player.commander-1);updatePlayerCounters();};
-      card.querySelector('.cmdUp').onclick=function(){player.commander++;updatePlayerCounters();window.WolfAudio.play('commander');};
+      card.querySelector('.cmdUp').onclick=function(){var before=player.commander;player.commander++;updatePlayerCounters();playCounterChange('commander',before,player.commander);};
       card.querySelector('.poisonDown').onclick=function(){player.poison=Math.max(0,player.poison-1);updatePlayerCounters();};
-      card.querySelector('.poisonUp').onclick=function(){player.poison++;updatePlayerCounters();window.WolfAudio.play('poison');};
+      card.querySelector('.poisonUp').onclick=function(){var before=player.poison;player.poison++;updatePlayerCounters();playCounterChange('poison',before,player.poison);};
       card.querySelector('.rotateSeat').onclick=function(){player.rotation=((Number(player.rotation)||0)+180)%360;saveGame();renderGame();};
       card.querySelector('.resetPlayer').onclick=function(){player.life=40;player.commander=0;player.poison=0;player.roll=null;saveGame();renderGame();};
       card.querySelector('.editPlayerName').onclick=function(){
@@ -3746,7 +3754,27 @@ renderGame();
       filter.frequency.exponentialRampToValueAtTime(to,start+duration);
       source.connect(filter);filter.connect(envelope(start,duration,level));source.start(start);source.stop(start+duration+0.01);
     }
-    if(kind==='click'){
+    if(kind==='lifeDefeat'){
+      // Final sword strike followed by a falling, hollow death bell.
+      noise('bandpass',6500,350,0,0.28,0.4);
+      tone('triangle',180,38,0.06,0.65,0.32);
+      tone('sine',392,98,0.18,0.85,0.23);
+      tone('sine',294,73.5,0.25,0.8,0.16);
+    }else if(kind==='commanderDefeat'){
+      // Heavy execution impact, metallic ring, then low rumble.
+      noise('bandpass',8000,450,0,0.3,0.45);
+      tone('triangle',210,35,0.03,0.8,0.4);
+      tone('sine',1250,620,0.04,0.55,0.14);
+      tone('sine',930,460,0.07,0.55,0.12);
+      noise('lowpass',300,65,0.25,0.85,0.28);
+    }else if(kind==='poisonDefeat'){
+      // Bubbling sludge collapses into a dark, fading hiss.
+      noise('lowpass',950,80,0,0.9,0.32);
+      [0,0.09,0.2,0.34,0.5].forEach(function(offset,i){
+        tone('sine',240-i*25,45,offset,0.24,0.28);
+      });
+      tone('triangle',100,28,0.35,0.75,0.2);
+    }else if(kind==='click'){
       noise('highpass',1800,950,0,0.028,0.10);
       tone('triangle',520,280,0,0.035,0.12);
     }else if(kind==='typing'){
@@ -3766,7 +3794,7 @@ renderGame();
       tone('triangle',160,45,0.025,0.28,0.38);
       tone('sine',920,650,0.035,0.15,0.12);
     }
-    voice.timer=setTimeout(function(){stopVoice(voice);},600);
+    voice.timer=setTimeout(function(){stopVoice(voice);},/Defeat$/.test(kind)?1300:600);
   }
   function play(kind){
     if(!enabled)return;
