@@ -1489,6 +1489,41 @@ body.trackerPreview #trackerView[data-seat-aligned] .backHome{margin:0 0 5px;pad
 body.trackerPreview #trackerView[data-seat-aligned] header.trackerTitle{padding-top:8px;padding-bottom:8px}
 body.trackerPreview #trackerView[data-seat-aligned] button{touch-action:manipulation}
 
+/* Keyboard belongs to the same rotated surface as its player's form. */
+body.trackerPreview #trackerView .creatureKeyboard{
+  position:fixed;z-index:70;left:0;right:0;bottom:0;
+  padding:6px 8px max(6px,env(safe-area-inset-bottom));
+  background:linear-gradient(160deg,#14281b,#080f0b);border-top:1px solid #8b9d62;
+  box-shadow:0 -5px 20px #0008;touch-action:manipulation;
+}
+body.trackerPreview #trackerView[data-keyboard-open] main{padding-bottom:285px}
+body.trackerPreview #trackerView[data-keyboard-open] nav{display:none}
+body.trackerPreview #trackerView[data-seat-aligned] .creatureKeyboard{position:relative;flex:none;left:auto;right:auto;bottom:auto;padding:5px 8px}
+body.trackerPreview #trackerView[data-seat-aligned][data-keyboard-open] main{padding-bottom:12px}
+body.trackerPreview #trackerView .keyboardTabs,
+body.trackerPreview #trackerView .keyboardPreview,
+body.trackerPreview #trackerView .keyboardRow{display:flex;gap:4px;margin-bottom:4px}
+body.trackerPreview #trackerView .creatureKeyboard button{
+  flex:1;min-width:0;min-height:36px;padding:3px 2px;border:1px solid #567248;
+  border-radius:6px;background:linear-gradient(#2c4431,#15261c);color:#f7edd9;
+  font:600 16px/1 system-ui;touch-action:manipulation;user-select:none;-webkit-user-select:none;
+}
+body.trackerPreview #trackerView .creatureKeyboard button:active{background:#4e7846}
+body.trackerPreview #trackerView .keyboardTabs button{font-size:11px;min-height:28px}
+body.trackerPreview #trackerView .keyboardTabs button[aria-pressed="true"]{border-color:#d6b978;background:#425437}
+body.trackerPreview #trackerView .keyboardValue{flex:1;min-width:0;overflow-x:auto;white-space:pre;font-size:16px;line-height:28px;padding:0 6px;background:#06100b;border-radius:5px;color:#f7edd9}
+body.trackerPreview #trackerView .keyboardCaret{color:#b9ee97}
+body.trackerPreview #trackerView .keyboardPreview button{flex:0 0 38px;min-height:28px;font-size:12px}
+body.trackerPreview #trackerView .keyboardActions{margin-bottom:0}
+body.trackerPreview #trackerView .keyboardActions button{font-size:12px}
+body.trackerPreview #trackerView .keyboardActions .keyboardSpace{flex:3}
+body.trackerPreview #trackerView .keyboardActions .keyboardAdd{flex:2;background:#31542e}
+body.trackerPreview #trackerView .keyboardActive{outline:2px solid #a8cb7c;outline-offset:-2px}
+body.trackerPreview #trackerView[data-sideways="true"] .creatureKeyboard button{min-height:28px}
+body.trackerPreview #trackerView[data-sideways="true"] .keyboardTabs button,
+body.trackerPreview #trackerView[data-sideways="true"] .keyboardPreview button{min-height:24px}
+body.trackerPreview #trackerView[data-sideways="true"] .keyboardValue{line-height:24px}
+
 </style>
 </head>
 <body class="trackerPreview">
@@ -1726,6 +1761,7 @@ body.trackerPreview #trackerView[data-seat-aligned] button{touch-action:manipula
 <div id="empty" class="empty">Tap + Add to start tracking creatures.</div>
 <div id="field"></div>
 </main>
+<div id="creatureKeyboard" class="creatureKeyboard hidden" role="group" aria-label="Creature keyboard"></div>
 <nav><button id="show" type="button">＋ Add</button><button id="undo" type="button" disabled>↶ Undo</button><button id="bill" type="button">×2 Double All</button></nav>
 </div>
 </section>
@@ -1812,6 +1848,7 @@ function orientPlayerTracker(){
   view.style.setProperty('--tracker-rotation',angle+'deg');
 }
 function setActivePlayer(index){
+  closeCreatureKeyboard();
   ensurePlayerCreatureSlots();
   activePlayerIndex=Math.max(0,Math.min(index,playerCreatures.length-1));
   creatures=playerCreatures[activePlayerIndex];
@@ -1904,16 +1941,129 @@ function render(){
   }
   el("undo").disabled=(undoState===null);
 }
+// Player-facing keyboard: readonly fields keep the iOS keyboard closed.
+var creatureKeyboard={field:null,cursor:0,shift:false,symbols:false};
+var creatureFieldIds=['nm','pw','th'];
+var creatureFieldNames={nm:'Creature name',pw:'Power',th:'Toughness'};
+function closeCreatureKeyboard(){
+  el('creatureKeyboard').classList.add('hidden');
+  el('trackerView').removeAttribute('data-keyboard-open');
+  creatureFieldIds.forEach(function(id){el(id).classList.remove('keyboardActive');});
+  if(document.activeElement&&creatureFieldIds.indexOf(document.activeElement.id)>=0)document.activeElement.blur();
+  creatureKeyboard.field=null;
+}
+function openCreatureKeyboard(id){
+  if(creatureFieldIds.indexOf(id)<0)return;
+  creatureKeyboard.field=el(id);
+  creatureKeyboard.cursor=el(id).value.length;
+  creatureKeyboard.symbols=false;
+  creatureKeyboard.shift=id==='nm'&&!el(id).value;
+  creatureFieldIds.forEach(function(fieldId){el(fieldId).classList.toggle('keyboardActive',fieldId===id);});
+  el('trackerView').setAttribute('data-keyboard-open','true');
+  el('creatureKeyboard').classList.remove('hidden');
+  renderCreatureKeyboard();
+}
+function editCreatureKeyboard(text,backspace){
+  var field=creatureKeyboard.field;if(!field)return;
+  var pos=Math.max(0,Math.min(creatureKeyboard.cursor,field.value.length));
+  var value=field.value;
+  if(backspace){
+    if(pos===0)return;
+    value=value.slice(0,pos-1)+value.slice(pos);pos--;
+  }else{
+    value=value.slice(0,pos)+text+value.slice(pos);pos+=text.length;
+  }
+  if(field.id!=='nm'&&!/^-?\d{0,5}$/.test(value))return;
+  if(field.id==='nm'&&value.length>120)return;
+  field.value=value;creatureKeyboard.cursor=pos;
+  field.dispatchEvent(new Event('input',{bubbles:true}));
+  if(creatureKeyboard.shift&&text){creatureKeyboard.shift=false;}
+  renderCreatureKeyboard();
+}
+function creatureKeyboardAction(action){
+  var field=creatureKeyboard.field;if(!field)return;
+  if(action==='backspace')editCreatureKeyboard('',true);
+  else if(action==='clear'){field.value='';creatureKeyboard.cursor=0;field.dispatchEvent(new Event('input',{bubbles:true}));renderCreatureKeyboard();}
+  else if(action==='left'||action==='right'){creatureKeyboard.cursor=Math.max(0,Math.min(field.value.length,creatureKeyboard.cursor+(action==='left'?-1:1)));renderCreatureKeyboard();}
+  else if(action==='shift'){creatureKeyboard.shift=!creatureKeyboard.shift;renderCreatureKeyboard();}
+  else if(action==='symbols'){creatureKeyboard.symbols=!creatureKeyboard.symbols;renderCreatureKeyboard();}
+  else if(action==='space')editCreatureKeyboard(' ',false);
+  else if(action==='done')closeCreatureKeyboard();
+  else if(action==='next'){
+    var i=creatureFieldIds.indexOf(field.id);
+    if(i<2)openCreatureKeyboard(creatureFieldIds[i+1]);else closeCreatureKeyboard();
+  }
+  else if(action==='add')el('add').click();
+}
+function renderCreatureKeyboard(){
+  var field=creatureKeyboard.field;if(!field)return;
+  var keyboard=el('creatureKeyboard');keyboard.innerHTML='';
+  function key(parent,label,action,text){
+    var button=document.createElement('button');button.type='button';button.textContent=label;
+    button.setAttribute('aria-label',action==='backspace'?'Backspace':action==='left'?'Move cursor left':action==='right'?'Move cursor right':label);
+    if(action==='shift')button.setAttribute('aria-pressed',String(creatureKeyboard.shift));
+    button.onclick=function(){if(action)creatureKeyboardAction(action);else editCreatureKeyboard(text,false);};
+    parent.appendChild(button);return button;
+  }
+  var tabs=document.createElement('div');tabs.className='keyboardTabs';
+  creatureFieldIds.forEach(function(id){var b=key(tabs,creatureFieldNames[id],null,'');b.onclick=function(){openCreatureKeyboard(id);};b.setAttribute('aria-pressed',String(field.id===id));});
+  key(tabs,'Done','done');keyboard.appendChild(tabs);
+  var preview=document.createElement('div');preview.className='keyboardPreview';
+  var value=document.createElement('div');value.className='keyboardValue';value.setAttribute('aria-label',creatureFieldNames[field.id]+': '+field.value);
+  value.appendChild(document.createTextNode(field.value.slice(0,creatureKeyboard.cursor)));
+  var caret=document.createElement('span');caret.className='keyboardCaret';caret.textContent='│';value.appendChild(caret);
+  value.appendChild(document.createTextNode(field.value.slice(creatureKeyboard.cursor)));preview.appendChild(value);
+  key(preview,'‹','left');key(preview,'›','right');key(preview,'Clear','clear');keyboard.appendChild(preview);
+  var rows;
+  if(field.id!=='nm')rows=['12345','67890'];
+  else if(creatureKeyboard.symbols)rows=['1234567890',"-'/,.!?&()",':;_+*=#%@'];
+  else rows=['qwertyuiop','asdfghjkl','zxcvbnm'];
+  rows.forEach(function(letters){var row=document.createElement('div');row.className='keyboardRow';
+    Array.from(letters).forEach(function(letter){var char=creatureKeyboard.shift?letter.toUpperCase():letter;key(row,char,null,char);});keyboard.appendChild(row);
+  });
+  var actions=document.createElement('div');actions.className='keyboardRow keyboardActions';
+  if(field.id==='nm'){
+    key(actions,creatureKeyboard.symbols?'ABC':'123','symbols');
+    if(!creatureKeyboard.symbols)key(actions,'Shift','shift');
+    key(actions,'Space','space').className='keyboardSpace';
+  }else key(actions,'−',null,'-');
+  key(actions,'⌫','backspace');key(actions,field.id==='th'?'Done':'Next','next');
+  if(field.id==='th')key(actions,'Add creature','add').className='keyboardAdd';
+  keyboard.appendChild(actions);
+  value.scrollLeft=value.scrollWidth;
+}
+creatureFieldIds.forEach(function(id){
+  var field=el(id);field.readOnly=true;field.inputMode='none';field.autocomplete='off';
+  field.setAttribute('aria-label',creatureFieldNames[id]);field.setAttribute('aria-controls','creatureKeyboard');
+  field.onclick=function(){openCreatureKeyboard(id);};
+  field.onfocus=function(){openCreatureKeyboard(id);};
+  field.onkeydown=function(e){
+    if(e.ctrlKey||e.metaKey||e.altKey)return;
+    if(!creatureKeyboard.field)openCreatureKeyboard(id);
+    if(e.key==='Tab')return;
+    if(e.key==='Backspace'){e.preventDefault();creatureKeyboardAction('backspace');}
+    else if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();creatureKeyboardAction(e.key==='ArrowLeft'?'left':'right');}
+    else if(e.key==='Enter'){e.preventDefault();creatureKeyboardAction('next');}
+    else if(e.key==='Escape'){e.preventDefault();closeCreatureKeyboard();}
+    else if(e.key.length===1){e.preventDefault();editCreatureKeyboard(e.key,false);}
+  };
+  field.addEventListener('paste',function(e){if(e.clipboardData){e.preventDefault();if(creatureKeyboard.field!==field)openCreatureKeyboard(id);editCreatureKeyboard(e.clipboardData.getData('text'),false);}});
+});
+el('creatureKeyboard').addEventListener('pointerdown',function(e){if(e.target.closest('button'))e.preventDefault();});
+el('quickGameMode').addEventListener('click',closeCreatureKeyboard);
+el('backHome').addEventListener('click',closeCreatureKeyboard);
+
 el("show").onclick=function(){
   el("form").className="";
   if(el("trackerView").hasAttribute("data-seat-aligned"))el("trackerView").querySelector("main").scrollTo(0,0);
   else window.scrollTo(0,0);
-  el("nm").focus({preventScroll:true});
+  openCreatureKeyboard("nm");
 };
 el("add").onclick=function(){
   el("msg").textContent="";
   var name=el("nm").value.trim(), p=parseInt(el("pw").value,10), t=parseInt(el("th").value,10);
   if(!name||isNaN(p)||isNaN(t)){el("msg").textContent="Enter name, power, and toughness.";return}
+  closeCreatureKeyboard();
   snapshot();creatures.push({id:"c"+Date.now()+"_"+Math.floor(Math.random()*1000000),name:name,p:p,t:t,c:0,links:[]});
   el("nm").value="";el("pw").value="";el("th").value="";el("form").className="hidden";finish();
 };
@@ -3287,3 +3437,4 @@ renderGame();
 </script>
 </body>
 </html>
+
