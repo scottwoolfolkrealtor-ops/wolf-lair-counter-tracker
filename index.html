@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>The Wolf Lair</title>
+<link rel="preconnect" href="https://api.scryfall.com" crossorigin>
+<link rel="preconnect" href="https://cards.scryfall.io" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="dns-prefetch" href="//api.scryfall.com">
+<link rel="dns-prefetch" href="//cards.scryfall.io">
 <style>
 *{box-sizing:border-box}body{margin:0;background:#06100b;color:#f4f6f4;font-family:system-ui,-apple-system,sans-serif}
 main{max-width:900px;margin:auto;padding:14px 14px 92px}header{text-align:center;padding:18px 0}
@@ -58,44 +63,21 @@ nav button{min-height:52px}button:disabled{opacity:.4}
 .deckCard h3{margin:0 0 5px;font-size:20px}.deckMeta{color:#aebcaf;font-size:13px;margin-bottom:10px}
 .deckActions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.deckPreview{font-size:13px;color:#c7d2ca;white-space:pre-line;max-height:100px;overflow:hidden;margin:8px 0}
 
-.gameShell{display:grid;gap:12px;max-width:1200px;margin:0 auto}
-.gameBoard{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:stretch}
-.playerCard{background:#0b1710;border:1px solid #45604d;border-radius:18px;padding:10px;display:grid;grid-template-rows:auto auto auto auto;height:100%;min-width:0}
-.playerHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px}
-.playerName{font-size:17px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lifeTotal{font-size:clamp(46px,8vw,78px);font-weight:900;line-height:.95;text-align:center;padding:4px 0 8px}
-.statRow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:6px}
-.statBox{background:#07110d;border:1px solid #45604d;border-radius:10px;padding:6px 4px;text-align:center;min-width:0}
-.statLabel{display:block;color:#aebcaf;font-size:10px;text-transform:uppercase;letter-spacing:.7px}
-.statValue{display:block;font-size:22px;font-weight:800;margin-top:2px}
-.lifeControls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:8px}
-.lifeControls button{min-height:44px;padding:7px 4px;font-size:13px}
-.gameTools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
-.phaseBanner{text-align:center;border:1px solid #45604d;border-radius:12px;background:#0b1710;padding:10px}
-.phaseBanner strong{display:block;font-size:12px;color:#aebcaf;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px}
-.phaseBanner span{font-size:20px;font-weight:800}
-@media(max-width:640px){
-  #gameView main{padding-left:8px;padding-right:8px}
-  #gameView header{padding:10px 0}
-  #gameView header .wolf{font-size:22px}
-  #gameView header h1{font-size:24px}
-  #gameView header small{letter-spacing:4px}
-  .gameShell{gap:8px}
-  .gameBoard{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-  .playerCard{padding:8px;border-radius:14px}
-  .playerHeader{margin-bottom:2px}
-  .playerName{font-size:14px}
-  .playerHeader .resetPlayer{font-size:11px;padding:6px}
-  .lifeTotal{font-size:clamp(42px,17vw,68px);padding:2px 0 6px}
-  .lifeControls{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
-  .lifeControls button{min-height:40px;font-size:11px;padding:5px 2px}
-  .statRow{gap:4px}
-  .statBox{padding:5px 2px}
-  .statLabel{font-size:8px;letter-spacing:.35px}
-  .statValue{font-size:18px}
-  .gameTools{gap:6px}
-  .phaseBanner{padding:8px}
-}
+.gameShell{display:grid;gap:12px}
+.gameBoard{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.playerCard{background:#0b1710;border:1px solid #45604d;border-radius:18px;padding:12px}
+.playerHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.playerName{font-size:18px;font-weight:800}
+.lifeTotal{font-size:52px;font-weight:900;line-height:1;text-align:center;padding:8px 0 12px}
+.statRow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.statBox{background:#07110d;border:1px solid #45604d;border-radius:10px;padding:8px;text-align:center}
+.statLabel{display:block;color:#aebcaf;font-size:11px;text-transform:uppercase;letter-spacing:1px}
+.statValue{display:block;font-size:26px;font-weight:800;margin-top:4px}
+.lifeControls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.gameTools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.phaseBanner{text-align:center;border:1px solid #45604d;border-radius:12px;background:#0b1710;padding:12px}
+.phaseBanner strong{display:block;font-size:14px;color:#aebcaf;text-transform:uppercase;letter-spacing:2px;margin-bottom:6px}
+.phaseBanner span{font-size:22px;font-weight:800}
 .proPanel{display:grid;gap:12px}
 .quickCard{background:#0b1710;border:1px solid #45604d;border-radius:16px;padding:12px}
 .quickCard h3{margin:0 0 8px;font-size:18px}
@@ -127,9 +109,1590 @@ textarea.proArea{width:100%;min-height:180px;background:#06100b;color:#fff;borde
 @media(max-width:640px){.sceneVortex{-webkit-mask-image:radial-gradient(ellipse 46% 24% at 52% 13%,#000 0 45%,rgba(0,0,0,.8) 60%,transparent 82%);mask-image:radial-gradient(ellipse 46% 24% at 52% 13%,#000 0 45%,rgba(0,0,0,.8) 60%,transparent 82%)}.sceneGreen{opacity:.45}.sceneFog{opacity:.62}.sceneFogB{opacity:.48}}
 @media(prefers-reduced-motion:reduce){.sceneVortex,.sceneWater,.sceneFog,.sceneFogB,.sceneGreen,.sceneLightning{animation:none!important}.sceneVortex{opacity:.12}.sceneWater{opacity:.16}.sceneFog,.sceneFogB{opacity:.25}.sceneGreen{opacity:.24}}
 
+
+/* === COUNTER TRACKER VISUAL PREVIEW — STATIC / BATTERY FRIENDLY === */
+body.trackerPreview{background:#030605}
+body.trackerPreview #home{display:none!important}
+body.trackerPreview .lairScene{display:none!important}
+
+body.trackerPreview #trackerView{
+  position:relative;
+  min-height:100vh;
+  isolation:isolate;
+  overflow-x:hidden;
+  background:#030605;
+}
+body.trackerPreview #trackerView::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg,rgba(3,6,5,.22),rgba(3,6,5,.62) 58%,rgba(2,4,3,.82)),
+    var(--lair-scene),
+    radial-gradient(circle at 20% 20%,#163020,#030605 72%);
+  background-size:cover,cover,cover;
+  background-position:center center,center center,center center;
+  background-repeat:no-repeat;
+  filter:saturate(.82) brightness(.74) contrast(1.08);
+}
+body.trackerPreview #trackerView::after{
+  content:'';
+  position:fixed;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  background:
+    radial-gradient(ellipse at center,transparent 38%,rgba(0,0,0,.36) 100%),
+    linear-gradient(90deg,rgba(0,0,0,.23),transparent 25%,transparent 75%,rgba(0,0,0,.23));
+}
+body.trackerPreview #trackerView main{
+  position:relative;
+  z-index:2;
+  max-width:980px;
+  margin:0 auto;
+  padding:12px 12px 102px;
+}
+body.trackerPreview #trackerView .backHome{
+  margin:2px 0 10px;
+  padding:9px 13px;
+  border-radius:999px;
+  color:#e7d4b7;
+  background:linear-gradient(180deg,rgba(32,24,17,.94),rgba(12,12,10,.96));
+  border:1px solid rgba(192,137,74,.55);
+  box-shadow:0 5px 16px rgba(0,0,0,.28);
+}
+body.trackerPreview #trackerView header{
+  display:grid;
+  grid-template-columns:58px 1fr;
+  grid-template-rows:auto auto;
+  gap:0 12px;
+  align-items:center;
+  text-align:left;
+  padding:13px 14px;
+  margin:0 0 12px;
+  border-radius:16px;
+  background:
+    linear-gradient(135deg,rgba(22,24,21,.96),rgba(8,11,9,.96));
+  border:1px solid rgba(196,142,77,.52);
+  box-shadow:
+    inset 0 1px 0 rgba(255,238,210,.06),
+    0 12px 28px rgba(0,0,0,.34);
+}
+body.trackerPreview #trackerView header .wolf{
+  grid-row:1 / 3;
+  width:52px;height:52px;
+  display:grid;place-items:center;
+  margin:0;
+  border-radius:14px;
+  font-size:26px;
+  color:#e4bb7a;
+  background:radial-gradient(circle at 40% 30%,rgba(77,108,63,.7),rgba(14,18,14,.96) 70%);
+  border:1px solid rgba(183,139,79,.55);
+  box-shadow:inset 0 0 0 1px rgba(84,215,100,.08);
+}
+body.trackerPreview #trackerView header h1{
+  margin:0;
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:22px;
+  line-height:1.05;
+  letter-spacing:.4px;
+  color:#f4eadb;
+}
+body.trackerPreview #trackerView header small{
+  margin-top:5px;
+  letter-spacing:3.2px;
+  color:#b9a57f;
+  font-size:11px;
+  font-weight:800;
+}
+
+body.trackerPreview #trackerView #form{
+  border:1px solid rgba(193,139,75,.5);
+  border-radius:16px;
+  padding:12px;
+  margin-bottom:12px;
+  background:linear-gradient(180deg,rgba(16,18,16,.97),rgba(7,10,8,.97));
+  box-shadow:0 10px 26px rgba(0,0,0,.3);
+}
+body.trackerPreview #trackerView input{
+  background:rgba(2,5,4,.92);
+  color:#f7f2e9;
+  border:1px solid rgba(135,117,87,.58);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+}
+body.trackerPreview #trackerView input:focus{
+  outline:none;
+  border-color:rgba(112,211,103,.8);
+  box-shadow:0 0 0 2px rgba(68,165,72,.14);
+}
+body.trackerPreview #trackerView button{
+  background:linear-gradient(180deg,rgba(40,36,28,.96),rgba(15,16,13,.98));
+  color:#f3e9d9;
+  border:1px solid rgba(161,124,74,.52);
+  box-shadow:inset 0 1px 0 rgba(255,240,210,.045);
+}
+body.trackerPreview #trackerView button:active{transform:translateY(1px)}
+body.trackerPreview #trackerView #add,
+body.trackerPreview #trackerView .plus,
+body.trackerPreview #trackerView .addx{
+  border-color:rgba(81,180,87,.7);
+  background:linear-gradient(180deg,rgba(30,74,37,.96),rgba(13,35,18,.98));
+  color:#eaffdf;
+}
+body.trackerPreview #trackerView .minus,
+body.trackerPreview #trackerView .remove{
+  border-color:rgba(151,87,67,.56);
+  background:linear-gradient(180deg,rgba(65,35,28,.94),rgba(25,17,15,.98));
+}
+
+body.trackerPreview #trackerView #field{
+  grid-template-columns:1fr;
+  gap:12px;
+}
+body.trackerPreview #trackerView .card{
+  position:relative;
+  overflow:hidden;
+  border:1px solid rgba(190,136,73,.48);
+  border-radius:17px;
+  padding:13px;
+  background:
+    radial-gradient(circle at 88% 0%,rgba(49,91,50,.14),transparent 33%),
+    linear-gradient(160deg,rgba(18,21,18,.97),rgba(6,9,7,.98) 74%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,240,215,.045),
+    0 12px 28px rgba(0,0,0,.34);
+}
+body.trackerPreview #trackerView .card::before{
+  content:'';
+  position:absolute;
+  left:12px;right:12px;top:0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(230,177,99,.52),transparent);
+}
+body.trackerPreview #trackerView .name{
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:20px;
+  color:#f3e5d2;
+}
+body.trackerPreview #trackerView .base{
+  color:#9eaa9e;
+  margin-top:2px;
+}
+body.trackerPreview #trackerView .power{
+  min-width:86px;
+  text-align:right;
+  font-size:34px;
+  color:#dff5d9;
+  text-shadow:0 0 14px rgba(75,193,81,.15);
+}
+body.trackerPreview #trackerView .count{
+  align-items:center;
+  margin:14px -3px 9px;
+  padding:9px 10px;
+  border-radius:11px;
+  color:#c9b48f;
+  background:rgba(4,7,5,.68);
+  border:1px solid rgba(111,91,60,.38);
+}
+body.trackerPreview #trackerView .count strong{
+  color:#9ee899;
+  font-size:29px;
+}
+body.trackerPreview #trackerView .controls button{
+  min-height:54px;
+}
+body.trackerPreview #trackerView .links{
+  margin-top:10px;
+  border:1px solid rgba(121,105,78,.45);
+  border-radius:12px;
+  padding:9px;
+  color:#c8c4ba;
+  background:rgba(3,6,4,.62);
+}
+body.trackerPreview #trackerView .links b{
+  color:#d9bd8e;
+}
+body.trackerPreview #trackerView .linkrow{
+  padding:3px 0;
+}
+body.trackerPreview #trackerView .linkrow input{
+  accent-color:#63b968;
+}
+body.trackerPreview #trackerView .empty{
+  margin-top:8px;
+  border:1px dashed rgba(170,128,74,.42);
+  border-radius:16px;
+  color:#b7b0a3;
+  background:rgba(6,10,7,.74);
+  padding:42px 12px;
+}
+body.trackerPreview #trackerView nav{
+  z-index:30;
+  background:linear-gradient(180deg,rgba(14,15,13,.97),rgba(5,7,6,.99));
+  border-top:1px solid rgba(194,141,76,.55);
+  box-shadow:0 -12px 30px rgba(0,0,0,.38);
+}
+body.trackerPreview #trackerView nav button{
+  min-height:56px;
+  border-color:rgba(158,119,69,.52);
+}
+body.trackerPreview #trackerView nav #show{
+  border-color:rgba(80,178,86,.72);
+  background:linear-gradient(180deg,rgba(29,72,35,.98),rgba(12,33,17,.99));
+}
+body.trackerPreview #trackerView nav #undo{
+  color:#d9c6a6;
+}
+body.trackerPreview #trackerView nav #bill{
+  color:#f0d8b0;
+  border-color:rgba(192,133,66,.66);
+}
+
+@media(min-width:700px){
+  body.trackerPreview #trackerView #field{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(min-width:1050px){
+  body.trackerPreview #trackerView #field{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:420px){
+  body.trackerPreview #trackerView main{padding-left:9px;padding-right:9px}
+  body.trackerPreview #trackerView header{grid-template-columns:50px 1fr;padding:11px}
+  body.trackerPreview #trackerView header .wolf{width:46px;height:46px;font-size:23px}
+  body.trackerPreview #trackerView header h1{font-size:20px}
+  body.trackerPreview #trackerView header small{font-size:10px;letter-spacing:2.4px}
+  body.trackerPreview #trackerView .card{padding:11px}
+  body.trackerPreview #trackerView .name{font-size:19px}
+  body.trackerPreview #trackerView .power{font-size:31px}
+  body.trackerPreview #trackerView nav{gap:6px;padding-left:7px;padding-right:7px}
+  body.trackerPreview #trackerView nav button{font-size:13px;padding:8px 5px}
+}
+/* no animation, backdrop-filter, or continuous GPU effects in tracker preview */
+
+
+/* Battlefield Command title treatment */
+body.trackerPreview #trackerView header.trackerTitle{
+  display:block;
+  text-align:left;
+  padding:15px 16px 14px;
+}
+body.trackerPreview #trackerView .trackerBrand{
+  color:#b69a6b;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:4px;
+  margin-bottom:5px;
+}
+body.trackerPreview #trackerView header.trackerTitle h1{
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:25px;
+  letter-spacing:1px;
+  color:#f3e8d5;
+  margin:0;
+}
+body.trackerPreview #trackerView header.trackerTitle small{
+  display:block;
+  margin-top:5px;
+  color:#91b68b;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:2.4px;
+}
+@media(max-width:420px){
+  body.trackerPreview #trackerView header.trackerTitle{padding:13px 14px 12px}
+  body.trackerPreview #trackerView .trackerBrand{font-size:9px;letter-spacing:3.2px}
+  body.trackerPreview #trackerView header.trackerTitle h1{font-size:22px}
+  body.trackerPreview #trackerView header.trackerTitle small{font-size:9px;letter-spacing:1.9px}
+}
+
+
+/* Quick Play switch: Game Mode <-> Battlefield Command */
+body.trackerPreview #trackerView header.trackerTitle,
+body.trackerPreview #gameView header.gameTitle{
+  position:relative;
+  padding-right:132px;
+}
+body.trackerPreview .quickSwitch{
+  position:absolute;
+  right:12px;
+  top:50%;
+  transform:translateY(-50%);
+  min-height:40px;
+  padding:8px 11px;
+  border-radius:999px;
+  font-size:11px;
+  letter-spacing:.7px;
+  white-space:nowrap;
+  color:#efe2cb;
+  border:1px solid rgba(191,137,73,.65);
+  background:linear-gradient(180deg,rgba(49,39,27,.97),rgba(18,17,13,.99));
+  box-shadow:0 6px 16px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,241,214,.05);
+}
+body.trackerPreview .quickSwitch:active{transform:translateY(calc(-50% + 1px))}
+body.trackerPreview #gameView{
+  min-height:100vh;
+  background:
+    linear-gradient(180deg,rgba(3,6,5,.5),rgba(3,6,5,.86)),
+    var(--lair-scene),
+    #030605;
+  background-size:cover;
+  background-position:center;
+  background-attachment:fixed;
+}
+body.trackerPreview #gameView main{max-width:980px}
+body.trackerPreview #gameView header.gameTitle{
+  display:grid;
+  grid-template-columns:52px 1fr;
+  grid-template-rows:auto auto;
+  align-items:center;
+  gap:0 11px;
+  text-align:left;
+  padding:13px 132px 13px 14px;
+  border:1px solid rgba(196,142,77,.48);
+  border-radius:16px;
+  background:linear-gradient(135deg,rgba(22,24,21,.96),rgba(8,11,9,.96));
+  box-shadow:0 12px 28px rgba(0,0,0,.34);
+}
+body.trackerPreview #gameView header.gameTitle .wolf{
+  grid-row:1/3;
+  width:46px;height:46px;
+  display:grid;place-items:center;
+  border-radius:13px;
+  background:rgba(8,12,9,.9);
+  border:1px solid rgba(183,139,79,.5);
+}
+body.trackerPreview #gameView header.gameTitle h1{
+  margin:0;
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:22px;
+  color:#f3e8d5;
+}
+body.trackerPreview #gameView header.gameTitle small{
+  margin-top:4px;
+  color:#a99778;
+  letter-spacing:2.4px;
+  font-size:10px;
+}
+body.trackerPreview #gameView .playerCard,
+body.trackerPreview #gameView .phaseBanner{
+  background:linear-gradient(160deg,rgba(18,21,18,.97),rgba(6,9,7,.98));
+  border-color:rgba(190,136,73,.45);
+  box-shadow:0 10px 24px rgba(0,0,0,.3);
+}
+body.trackerPreview #gameView button{
+  background:linear-gradient(180deg,rgba(40,36,28,.96),rgba(15,16,13,.98));
+  border-color:rgba(161,124,74,.52);
+}
+@media(max-width:520px){
+  body.trackerPreview #trackerView header.trackerTitle,
+  body.trackerPreview #gameView header.gameTitle{
+    padding-right:112px;
+  }
+  body.trackerPreview .quickSwitch{
+    right:9px;
+    padding:8px 9px;
+    font-size:10px;
+  }
+  body.trackerPreview #trackerView header.trackerTitle h1{font-size:19px}
+  body.trackerPreview #gameView header.gameTitle h1{font-size:20px}
+}
+
+
+/* Per-player battlefield access + refined Table Command header */
+body.trackerPreview #gameView header.tableCommandTitle{
+  display:block;
+  text-align:left;
+  padding:15px 16px 14px;
+}
+body.trackerPreview #gameView header.tableCommandTitle .trackerBrand{
+  color:#b69a6b;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:4px;
+  margin-bottom:5px;
+}
+body.trackerPreview #gameView header.tableCommandTitle h1{
+  margin:0;
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:25px;
+  line-height:1.05;
+  letter-spacing:1px;
+  color:#f3e8d5;
+}
+body.trackerPreview #gameView header.tableCommandTitle small{
+  display:block;
+  margin-top:5px;
+  color:#91b68b;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:2.2px;
+}
+body.trackerPreview #gameView .playerCreatures{
+  width:100%;
+  min-height:48px;
+  margin:0 0 10px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  border-color:rgba(82,174,89,.68);
+  background:
+    linear-gradient(180deg,rgba(27,69,34,.96),rgba(11,31,16,.98));
+  color:#eef8e9;
+  letter-spacing:.7px;
+  font-size:12px;
+}
+body.trackerPreview #gameView .playerCreatures span{
+  color:#a8d8a2;
+  font-size:10px;
+  letter-spacing:.5px;
+  font-weight:800;
+}
+body.trackerPreview #gameView .playerCreatures::after{
+  content:'›';
+  color:#d9c18f;
+  font-size:20px;
+  line-height:1;
+  margin-left:auto;
+}
+body.trackerPreview #trackerView #activePlayerLabel{
+  color:#c9a972;
+}
+@media(max-width:420px){
+  body.trackerPreview #gameView header.tableCommandTitle{padding:13px 14px 12px}
+  body.trackerPreview #gameView header.tableCommandTitle .trackerBrand{font-size:9px;letter-spacing:3.2px}
+  body.trackerPreview #gameView header.tableCommandTitle h1{font-size:22px}
+  body.trackerPreview #gameView header.tableCommandTitle small{font-size:9px;letter-spacing:1.7px}
+}
+
+
+/* Editable player names */
+body.trackerPreview #gameView .playerHeader{
+  align-items:center;
+  gap:8px;
+}
+body.trackerPreview #gameView .playerIdentity{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  flex:1;
+}
+body.trackerPreview #gameView .playerName{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-family:Georgia,'Times New Roman',serif;
+  color:#f2e7d5;
+}
+body.trackerPreview #gameView .editPlayerName{
+  min-height:30px;
+  padding:5px 8px;
+  border-radius:999px;
+  font-size:9px;
+  letter-spacing:1px;
+  color:#cdb88f;
+  border-color:rgba(167,126,72,.46);
+  background:rgba(11,14,11,.72);
+}
+body.trackerPreview #gameView .playerNameInput{
+  min-width:0;
+  flex:1;
+  height:42px;
+  padding:8px 10px;
+  font-size:16px;
+  font-weight:800;
+  border-color:rgba(104,184,103,.72);
+}
+body.trackerPreview #gameView .playerNameActions{
+  display:flex;
+  gap:5px;
+}
+body.trackerPreview #gameView .playerNameActions button{
+  min-height:38px;
+  padding:7px 9px;
+  font-size:11px;
+}
+@media(max-width:420px){
+  body.trackerPreview #gameView .playerHeader{align-items:flex-start}
+  body.trackerPreview #gameView .playerIdentity{flex-wrap:wrap}
+  body.trackerPreview #gameView .playerNameInput{flex-basis:100%}
+}
+
+
+/* Direct life-total editing */
+body.trackerPreview #gameView .lifePanel{
+  text-align:center;
+  margin:2px 0 8px;
+}
+body.trackerPreview #gameView .lifeTotal.editLife{
+  width:100%;
+  min-height:74px;
+  padding:6px 8px 2px;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+  font-size:56px;
+  font-weight:900;
+  line-height:1;
+  color:#f4eadb;
+  text-align:center;
+}
+body.trackerPreview #gameView .lifeTotal.editLife:active{
+  transform:none;
+}
+body.trackerPreview #gameView .lifeHint{
+  display:block;
+  margin-top:-2px;
+  color:#8f9d8f;
+  font-size:9px;
+  text-transform:uppercase;
+  letter-spacing:1.4px;
+  font-weight:800;
+}
+body.trackerPreview #gameView .lifeEditRow{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto auto;
+  gap:6px;
+  align-items:center;
+  padding:8px 0 4px;
+}
+body.trackerPreview #gameView .lifeEditInput{
+  width:100%;
+  min-width:0;
+  height:54px;
+  padding:7px 10px;
+  text-align:center;
+  font-size:28px;
+  font-weight:900;
+  border-color:rgba(104,184,103,.72);
+}
+body.trackerPreview #gameView .lifeEditRow button{
+  min-height:48px;
+  padding:8px 10px;
+  font-size:11px;
+}
+
+
+/* Table roster controls */
+body.trackerPreview #gameView .playerRosterTools{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:2px;
+}
+body.trackerPreview #gameView .playerRosterTools button{
+  min-height:48px;
+}
+body.trackerPreview #gameView #addPlayer{
+  border-color:rgba(82,174,89,.68);
+  background:linear-gradient(180deg,rgba(29,72,35,.96),rgba(12,33,17,.98));
+  color:#eaf7e7;
+}
+body.trackerPreview #gameView #removePlayer{
+  border-color:rgba(151,87,67,.52);
+  background:linear-gradient(180deg,rgba(56,31,25,.94),rgba(23,16,14,.98));
+  color:#e6c9c0;
+}
+body.trackerPreview #gameView .playerRosterTools button:disabled{
+  opacity:.34;
+}
+body.trackerPreview #gameView .playerLimitMsg{
+  min-height:18px;
+  margin:-3px 0 2px;
+  text-align:center;
+  color:#918c80;
+  font-size:10px;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+@media(max-width:420px){
+  body.trackerPreview #gameView .playerRosterTools{
+    grid-template-columns:1fr;
+    gap:6px;
+  }
+}
+
+
+/* === DECK VAULT PREVIEW — STATIC / PHONE + TABLET FRIENDLY === */
+body.trackerPreview #decksView{
+  min-height:100vh;
+  position:relative;
+  isolation:isolate;
+  background:
+    linear-gradient(180deg,rgba(3,6,5,.48),rgba(3,6,5,.88)),
+    var(--lair-scene),
+    #030605;
+  background-size:cover;
+  background-position:center;
+}
+body.trackerPreview #decksView main{
+  position:relative;
+  z-index:2;
+  max-width:980px;
+  padding:12px 12px 42px;
+}
+body.trackerPreview #decksView header.deckTitle{
+  display:block;
+  text-align:left;
+  padding:15px 16px 14px;
+  margin:0 0 12px;
+  border:1px solid rgba(196,142,77,.48);
+  border-radius:16px;
+  background:linear-gradient(135deg,rgba(22,24,21,.96),rgba(8,11,9,.96));
+  box-shadow:0 12px 28px rgba(0,0,0,.34);
+}
+body.trackerPreview #decksView header.deckTitle .trackerBrand{
+  color:#b69a6b;font-size:10px;font-weight:900;letter-spacing:4px;margin-bottom:5px;
+}
+body.trackerPreview #decksView header.deckTitle h1{
+  margin:0;font-family:Georgia,'Times New Roman',serif;font-size:25px;letter-spacing:1px;color:#f3e8d5;
+}
+body.trackerPreview #decksView header.deckTitle small{
+  display:block;margin-top:5px;color:#91b68b;font-size:10px;font-weight:800;letter-spacing:2.2px;
+}
+body.trackerPreview #decksView .deckForm,
+body.trackerPreview #decksView .deckCard{
+  background:linear-gradient(160deg,rgba(18,21,18,.97),rgba(6,9,7,.98));
+  border-color:rgba(190,136,73,.45);
+  box-shadow:0 10px 24px rgba(0,0,0,.3);
+}
+body.trackerPreview #decksView .deckFormHead{
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;
+}
+body.trackerPreview #decksView .deckEyebrow{
+  color:#9fae9d;font-size:9px;letter-spacing:1.8px;font-weight:800;
+}
+body.trackerPreview #decksView .deckFormHead strong{
+  display:block;margin-top:3px;font-family:Georgia,'Times New Roman',serif;font-size:20px;color:#f0e4d1;
+}
+body.trackerPreview #decksView .deckEntryTools{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0;
+}
+body.trackerPreview #decksView .deckEntryTools button{
+  min-height:52px;border-color:rgba(167,126,72,.52);
+}
+body.trackerPreview #decksView #scanCardBtn,
+body.trackerPreview #decksView #searchCardBtn{
+  border-color:rgba(82,174,89,.64);
+  background:linear-gradient(180deg,rgba(29,72,35,.96),rgba(12,33,17,.98));
+}
+body.trackerPreview #decksView .cardToolPanel{
+  margin:8px 0 10px;padding:10px;border-radius:12px;
+  background:rgba(4,8,5,.82);border:1px solid rgba(144,112,69,.4);
+}
+body.trackerPreview #decksView .cardSearchRow{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;
+}
+body.trackerPreview #decksView .cardSearchRow button{min-width:88px}
+body.trackerPreview #decksView .scanPreviewWrap{
+  display:grid;grid-template-columns:minmax(0,110px) 1fr;gap:10px;align-items:center;
+  color:#bcb5a9;font-size:12px;line-height:1.4;
+}
+body.trackerPreview #decksView #scanPreview{
+  width:100%;max-height:145px;object-fit:cover;object-position:top;border-radius:9px;border:1px solid rgba(170,128,73,.42);
+}
+body.trackerPreview #decksView .cardLookupResult{
+  display:grid;grid-template-columns:92px minmax(0,1fr);gap:12px;align-items:center;
+  margin:8px 0 10px;padding:10px;border-radius:13px;
+  border:1px solid rgba(83,172,88,.54);
+  background:linear-gradient(145deg,rgba(17,36,20,.95),rgba(6,11,7,.98));
+}
+body.trackerPreview #decksView .cardLookupMedia img{
+  display:block;width:92px;border-radius:7px;
+}
+body.trackerPreview #decksView .cardLookupInfo{min-width:0}
+body.trackerPreview #decksView .cardLookupInfo .lookupSource{
+  display:block;color:#8fbd8c;font-size:9px;letter-spacing:1.6px;font-weight:900;margin-bottom:4px;
+}
+body.trackerPreview #decksView .cardLookupInfo strong{
+  display:block;font-family:Georgia,'Times New Roman',serif;font-size:18px;color:#f0e5d3;overflow-wrap:anywhere;
+}
+body.trackerPreview #decksView .cardLookupInfo small{display:block;color:#a9a498;margin:4px 0 9px}
+body.trackerPreview #decksView .cardLookupInfo button{min-height:44px;width:100%;border-color:rgba(83,172,88,.62)}
+body.trackerPreview #decksView .deckToolStatus{
+  min-height:19px;margin:4px 1px 7px;color:#a7b49f;font-size:11px;
+}
+body.trackerPreview #decksView .deckToolStatus.error{color:#e3a79a}
+body.trackerPreview #decksView .deckListLabel{
+  display:block;margin:8px 1px 4px;color:#c8b285;font-size:10px;letter-spacing:1.5px;font-weight:900;text-transform:uppercase;
+}
+body.trackerPreview #decksView textarea#deckCards{
+  min-height:220px;background:rgba(2,5,4,.92);border-color:rgba(135,117,87,.58);
+}
+body.trackerPreview #decksView .deckFormActions{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px;
+}
+body.trackerPreview #decksView .deckFormActions button{min-height:50px}
+body.trackerPreview #decksView #saveDeck{
+  border-color:rgba(82,174,89,.68);
+  background:linear-gradient(180deg,rgba(29,72,35,.96),rgba(12,33,17,.98));
+}
+body.trackerPreview #decksView .deckCardTop{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+}
+body.trackerPreview #decksView .deckCount{
+  min-width:42px;height:42px;display:grid;place-items:center;border-radius:50%;
+  border:1px solid rgba(167,126,72,.5);color:#e3c692;background:rgba(7,10,8,.78);font-weight:900;
+}
+body.trackerPreview #decksView .deckEmpty strong{color:#e2d3bb}
+@media(min-width:700px){
+  body.trackerPreview #decksView #deckList{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  body.trackerPreview #decksView .deckCard{margin-bottom:0}
+}
+@media(max-width:420px){
+  body.trackerPreview #decksView .deckEntryTools{grid-template-columns:1fr 1fr;gap:6px}
+  body.trackerPreview #decksView .deckEntryTools button{font-size:12px;padding:8px 5px}
+  body.trackerPreview #decksView .scanPreviewWrap{grid-template-columns:78px 1fr}
+  body.trackerPreview #decksView .cardLookupResult{grid-template-columns:72px minmax(0,1fr)}
+  body.trackerPreview #decksView .cardLookupMedia img{width:72px}
+}
+
+
+/* Scanner confirmation / correction */
+body.trackerPreview #decksView .scanRecovery{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
+  margin-top:7px;
+}
+body.trackerPreview #decksView .scanRecovery button{
+  min-height:40px;
+  font-size:11px;
+  color:#d6c7ae;
+  border-color:rgba(151,112,68,.46);
+  background:rgba(11,14,11,.72);
+}
+body.trackerPreview #decksView #wrongCard{
+  border-color:rgba(169,99,76,.52);
+  color:#e1b7aa;
+}
+
+
+/* Live auto-crop card scanner */
+body.trackerPreview #decksView .liveScanner{
+  margin-bottom:10px;
+}
+body.trackerPreview #decksView .cameraStage{
+  position:relative;
+  width:100%;
+  overflow:hidden;
+  border-radius:14px;
+  background:#020302;
+  border:1px solid rgba(192,139,75,.55);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.025);
+}
+body.trackerPreview #decksView #scanVideo{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+body.trackerPreview #decksView #scanOverlay{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+}
+body.trackerPreview #decksView .cameraHint{
+  position:absolute;
+  left:50%;
+  bottom:10px;
+  transform:translateX(-50%);
+  width:max-content;
+  max-width:92%;
+  padding:7px 10px;
+  border-radius:999px;
+  text-align:center;
+  background:rgba(2,5,3,.78);
+  border:1px solid rgba(202,158,91,.38);
+  color:#e7d6b8;
+  backdrop-filter:blur(4px);
+}
+body.trackerPreview #decksView .cameraHint span{
+  display:block;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:1.5px;
+}
+body.trackerPreview #decksView .cameraHint small{
+  display:block;
+  margin-top:2px;
+  color:#b8b5aa;
+  font-size:9px;
+}
+body.trackerPreview #decksView .scanCameraActions{
+  display:grid;
+  grid-template-columns:1.2fr 1fr .8fr;
+  gap:6px;
+  margin-top:7px;
+}
+body.trackerPreview #decksView .scanCameraActions button{
+  min-height:44px;
+  font-size:11px;
+}
+body.trackerPreview #decksView #manualCapture{
+  border-color:rgba(82,174,89,.68);
+  background:linear-gradient(180deg,rgba(29,72,35,.96),rgba(12,33,17,.98));
+}
+body.trackerPreview #decksView #cancelScanner{
+  border-color:rgba(151,87,67,.5);
+}
+@media(max-width:380px){
+  body.trackerPreview #decksView .scanCameraActions{
+    grid-template-columns:1fr 1fr;
+  }
+  body.trackerPreview #decksView #cancelScanner{
+    grid-column:1 / -1;
+  }
+}
+
+
+/* Deck add safety + quick undo/removal */
+body.trackerPreview #decksView .deckListHead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-top:8px;
+}
+body.trackerPreview #decksView .deckListHead .deckListLabel{
+  margin:0;
+}
+body.trackerPreview #decksView #undoDeckChange{
+  min-height:36px;
+  padding:6px 9px;
+  border-radius:999px;
+  font-size:10px;
+  color:#d8c8ae;
+  border-color:rgba(166,124,71,.48);
+  background:rgba(11,14,11,.72);
+}
+body.trackerPreview #decksView #undoDeckChange:disabled{
+  opacity:.32;
+}
+body.trackerPreview #decksView #addFoundCard:disabled{
+  opacity:1;
+  color:#dff3da;
+  border-color:rgba(83,172,88,.62);
+  background:linear-gradient(180deg,rgba(27,66,32,.94),rgba(11,29,15,.98));
+}
+body.trackerPreview #decksView .afterAddActions{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:5px;
+  margin-top:7px;
+}
+body.trackerPreview #decksView .afterAddActions button{
+  min-height:38px;
+  padding:6px 5px;
+  font-size:10px;
+}
+body.trackerPreview #decksView #removeOneCopy{
+  border-color:rgba(166,91,69,.5);
+  color:#e5b9aa;
+}
+@media(max-width:390px){
+  body.trackerPreview #decksView .afterAddActions{
+    grid-template-columns:1fr 1fr;
+  }
+  body.trackerPreview #decksView #undoThisAdd{
+    grid-column:1 / -1;
+  }
+}
+
+
+/* Multi-result card search */
+body.trackerPreview #decksView .cardSearchResults{
+  display:grid;
+  gap:7px;
+  margin-top:9px;
+  max-height:420px;
+  overflow:auto;
+  padding-right:2px;
+}
+body.trackerPreview #decksView .cardSearchChoice{
+  width:100%;
+  min-height:70px;
+  display:grid;
+  grid-template-columns:44px minmax(0,1fr) auto;
+  gap:9px;
+  align-items:center;
+  padding:7px 9px;
+  text-align:left;
+  border-radius:11px;
+  background:linear-gradient(145deg,rgba(17,22,18,.96),rgba(7,10,8,.98));
+  border:1px solid rgba(143,111,69,.4);
+}
+body.trackerPreview #decksView .cardSearchChoice img,
+body.trackerPreview #decksView .searchCardPlaceholder{
+  width:44px;
+  height:61px;
+  border-radius:5px;
+  object-fit:cover;
+  display:block;
+  background:rgba(5,8,6,.9);
+  border:1px solid rgba(145,112,69,.35);
+}
+body.trackerPreview #decksView .searchCardPlaceholder{
+  display:grid;
+  place-items:center;
+  color:#91836d;
+  font-size:9px;
+  font-weight:900;
+}
+body.trackerPreview #decksView .cardSearchChoiceText{
+  min-width:0;
+}
+body.trackerPreview #decksView .cardSearchChoiceText strong{
+  display:block;
+  color:#eee2cf;
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:15px;
+  overflow-wrap:anywhere;
+}
+body.trackerPreview #decksView .cardSearchChoiceText small{
+  display:block;
+  margin-top:3px;
+  color:#a39d91;
+  font-size:10px;
+}
+body.trackerPreview #decksView .chooseCard{
+  color:#a9d5a4;
+  font-size:10px;
+  font-weight:900;
+  white-space:nowrap;
+}
+body.trackerPreview #decksView .searchLoading,
+body.trackerPreview #decksView .searchEmpty{
+  padding:12px;
+  border-radius:10px;
+  color:#b8b2a6;
+  background:rgba(5,8,6,.68);
+  border:1px dashed rgba(145,112,69,.35);
+  font-size:12px;
+  line-height:1.4;
+}
+@media(max-width:420px){
+  body.trackerPreview #decksView .cardSearchChoice{
+    grid-template-columns:38px minmax(0,1fr);
+  }
+  body.trackerPreview #decksView .cardSearchChoice img,
+  body.trackerPreview #decksView .searchCardPlaceholder{
+    width:38px;height:53px;
+  }
+  body.trackerPreview #decksView .chooseCard{
+    grid-column:2;
+    justify-self:start;
+  }
+}
+
+
+/* Card pricing */
+body.trackerPreview #decksView .cardPrices{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin:8px 0 2px;
+}
+body.trackerPreview #decksView .cardPrices>div{
+  min-width:72px;
+  padding:6px 8px;
+  border-radius:9px;
+  background:rgba(4,8,5,.72);
+  border:1px solid rgba(133,107,69,.38);
+}
+body.trackerPreview #decksView .cardPrices span{
+  display:block;
+  color:#9d978b;
+  font-size:8px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:1px;
+}
+body.trackerPreview #decksView .cardPrices strong{
+  display:block;
+  margin-top:2px;
+  color:#e9d6ad;
+  font-family:system-ui,-apple-system,sans-serif;
+  font-size:14px;
+}
+body.trackerPreview #decksView .priceNote{
+  margin:0 0 8px;
+  color:#858c82;
+  font-size:8px;
+  letter-spacing:.5px;
+}
+body.trackerPreview #decksView .searchPrice{
+  display:block;
+  margin-top:4px;
+  color:#d9c08e;
+  font-size:11px;
+  font-style:normal;
+  font-weight:800;
+}
+
+
+/* Exact printing + deck value */
+body.trackerPreview #decksView .deckValuePanel{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin:10px 0 4px;
+  padding:10px 12px;
+  border-radius:13px;
+  border:1px solid rgba(82,174,89,.46);
+  background:linear-gradient(145deg,rgba(16,34,19,.92),rgba(6,11,7,.96));
+}
+body.trackerPreview #decksView .deckValuePanel span{
+  display:block;
+  color:#8fa88d;
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:1.6px;
+}
+body.trackerPreview #decksView .deckValuePanel strong{
+  display:block;
+  margin-top:2px;
+  color:#ead6aa;
+  font-size:22px;
+  line-height:1;
+}
+body.trackerPreview #decksView .deckValuePanel small{
+  display:block;
+  margin-top:4px;
+  color:#9e9a90;
+  font-size:9px;
+}
+body.trackerPreview #decksView .finishLabel{
+  display:block;
+  margin:7px 0 3px;
+  color:#bba781;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:1.1px;
+  text-transform:uppercase;
+}
+body.trackerPreview #decksView .finishChoice{
+  width:100%;
+  min-height:44px;
+  margin:0 0 8px;
+  padding:8px 10px;
+  border-radius:9px;
+  color:#f0e7d8;
+  background:#06100b;
+  border:1px solid rgba(135,117,87,.58);
+  font-size:16px;
+}
+body.trackerPreview #decksView .deckSavedValue{
+  margin-top:4px;
+  color:#d1b77f;
+  font-size:10px;
+  font-weight:700;
+}
+
+
+/* Compact Table Command: keep the whole table visible on phones */
+@media(max-width:640px){
+  body.trackerPreview #gameView{
+    background-attachment:scroll;
+  }
+  body.trackerPreview #gameView main{
+    padding:8px 7px 18px;
+  }
+  body.trackerPreview #gameView .backHome{
+    margin-bottom:5px;
+    min-height:34px;
+    padding:6px 9px;
+    font-size:10px;
+  }
+  body.trackerPreview #gameView header.tableCommandTitle{
+    margin-bottom:7px;
+    padding:9px 11px 8px;
+    border-radius:12px;
+  }
+  body.trackerPreview #gameView header.tableCommandTitle .trackerBrand{
+    margin-bottom:2px;
+    font-size:7px;
+    letter-spacing:2.5px;
+  }
+  body.trackerPreview #gameView header.tableCommandTitle h1{
+    font-size:18px;
+  }
+  body.trackerPreview #gameView header.tableCommandTitle small{
+    margin-top:2px;
+    font-size:7px;
+    letter-spacing:1.25px;
+  }
+  body.trackerPreview #gameView .gameShell{
+    gap:7px;
+  }
+  body.trackerPreview #gameView .gameBoard{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:6px;
+    align-items:start;
+  }
+  body.trackerPreview #gameView .gameBoard[data-player-count="3"] .playerCard:last-child{
+    grid-column:1 / -1;
+  }
+  body.trackerPreview #gameView .playerCard{
+    min-width:0;
+    padding:7px;
+    border-radius:12px;
+  }
+  body.trackerPreview #gameView .playerHeader{
+    gap:3px;
+    margin-bottom:3px;
+    align-items:center;
+  }
+  body.trackerPreview #gameView .playerIdentity{
+    gap:3px;
+    flex-wrap:nowrap;
+  }
+  body.trackerPreview #gameView .playerName{
+    font-size:12px;
+  }
+  body.trackerPreview #gameView .editPlayerName,
+  body.trackerPreview #gameView .resetPlayer{
+    min-height:25px;
+    padding:4px 5px;
+    font-size:7px;
+  }
+  body.trackerPreview #gameView .lifePanel{
+    margin:0 0 4px;
+  }
+  body.trackerPreview #gameView .lifeTotal.editLife{
+    min-height:47px;
+    padding:1px 4px 0;
+    font-size:42px;
+  }
+  body.trackerPreview #gameView .lifeHint{
+    display:none;
+  }
+  body.trackerPreview #gameView .playerCreatures{
+    min-height:34px;
+    margin:0 0 5px;
+    padding:5px 6px;
+    gap:3px;
+    font-size:8px;
+    letter-spacing:.3px;
+  }
+  body.trackerPreview #gameView .playerCreatures span{
+    font-size:7px;
+  }
+  body.trackerPreview #gameView .playerCreatures::after{
+    font-size:14px;
+  }
+  body.trackerPreview #gameView .lifeControls{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:4px;
+    margin-top:4px;
+  }
+  body.trackerPreview #gameView .lifeControls button{
+    min-width:0;
+    min-height:31px;
+    padding:4px 3px;
+    font-size:8px;
+    border-radius:7px;
+  }
+  body.trackerPreview #gameView .statRow{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:4px;
+    margin-top:5px;
+  }
+  body.trackerPreview #gameView .statRow .statBox:first-child{
+    display:none;
+  }
+  body.trackerPreview #gameView .statBox{
+    padding:4px 2px;
+    border-radius:7px;
+  }
+  body.trackerPreview #gameView .statLabel{
+    font-size:7px;
+    letter-spacing:.5px;
+  }
+  body.trackerPreview #gameView .statValue{
+    margin-top:1px;
+    font-size:16px;
+  }
+  body.trackerPreview #gameView .playerRosterTools{
+    grid-template-columns:1fr 1fr;
+    gap:5px;
+    margin-top:0;
+  }
+  body.trackerPreview #gameView .playerRosterTools button{
+    min-height:34px;
+    padding:6px 5px;
+    font-size:9px;
+  }
+  body.trackerPreview #gameView .playerLimitMsg{
+    min-height:12px;
+    margin:-2px 0 0;
+    font-size:8px;
+  }
+  body.trackerPreview #gameView .lifeEditRow{
+    grid-template-columns:1fr;
+    gap:4px;
+    padding:3px 0;
+  }
+  body.trackerPreview #gameView .lifeEditInput{
+    height:40px;
+    font-size:22px;
+  }
+  body.trackerPreview #gameView .lifeEditRow button{
+    min-height:30px;
+    padding:4px;
+    font-size:8px;
+  }
+}
+@media(max-width:360px){
+  body.trackerPreview #gameView .playerName{font-size:11px}
+  body.trackerPreview #gameView .lifeTotal.editLife{font-size:38px}
+  body.trackerPreview #gameView .lifeControls button{font-size:7px}
+}
+
+
+/* Tabletop seating layout — 1 full, 2 vertical halves, 3/4 quadrants */
+@media(max-width:640px){
+  body.trackerPreview #gameView main{
+    min-height:100svh;
+    display:flex;
+    flex-direction:column;
+    padding:6px 6px 10px;
+  }
+  body.trackerPreview #gameView .backHome{
+    margin-bottom:3px;
+    min-height:28px;
+    padding:4px 7px;
+    font-size:8px;
+  }
+  body.trackerPreview #gameView header.tableCommandTitle{
+    margin-bottom:4px;
+    padding:6px 9px;
+    border-radius:10px;
+  }
+  body.trackerPreview #gameView header.tableCommandTitle .trackerBrand{font-size:6px;letter-spacing:2px;margin-bottom:1px}
+  body.trackerPreview #gameView header.tableCommandTitle h1{font-size:15px}
+  body.trackerPreview #gameView header.tableCommandTitle small{margin-top:1px;font-size:6px;letter-spacing:1px}
+
+  body.trackerPreview #gameView .gameShell{
+    flex:1;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  body.trackerPreview #gameView .gameBoard{
+    flex:1;
+    min-height:0;
+    display:grid !important;
+    gap:4px;
+    align-items:stretch !important;
+  }
+
+  /* 1 player: full table */
+  body.trackerPreview #gameView .gameBoard[data-player-count="1"]{
+    grid-template-columns:1fr !important;
+    grid-template-rows:1fr;
+  }
+
+  /* 2 players: vertical divider, each player faces their side of the phone */
+  body.trackerPreview #gameView .gameBoard[data-player-count="2"]{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    grid-template-rows:1fr;
+  }
+  body.trackerPreview #gameView .gameBoard[data-player-count="2"] .playerCard:nth-child(1) .playerFace{
+    transform:rotate(90deg);
+  }
+  body.trackerPreview #gameView .gameBoard[data-player-count="2"] .playerCard:nth-child(2) .playerFace{
+    transform:rotate(-90deg);
+  }
+
+  /* 3/4 players: add the horizontal divider to form four equal squares */
+  body.trackerPreview #gameView .gameBoard[data-player-count="3"],
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"]{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    grid-template-rows:repeat(2,minmax(0,1fr));
+  }
+  body.trackerPreview #gameView .gameBoard[data-player-count="3"] .playerCard,
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .playerCard{
+    grid-column:auto !important;
+  }
+  body.trackerPreview #gameView .gameBoard[data-player-count="3"] .playerCard:nth-child(-n+2) .playerFace,
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .playerCard:nth-child(-n+2) .playerFace{
+    transform:rotate(180deg);
+  }
+  body.trackerPreview #gameView .gameBoard[data-player-count="3"] .playerCard:nth-child(n+3) .playerFace,
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .playerCard:nth-child(n+3) .playerFace{
+    transform:none;
+  }
+
+  body.trackerPreview #gameView .playerCard,
+  body.trackerPreview #gameView .openTableSeat{
+    min-height:0;
+    overflow:hidden;
+  }
+  body.trackerPreview #gameView .playerCard{
+    padding:5px;
+    border-radius:10px;
+  }
+  body.trackerPreview #gameView .playerFace{
+    height:100%;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    transform-origin:center center;
+  }
+
+  body.trackerPreview #gameView .openTableSeat{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:3px;
+    width:100%;
+    border-radius:10px;
+    border:1px dashed rgba(153,126,82,.45);
+    background:rgba(9,12,10,.62);
+    color:#bfa77d;
+  }
+  body.trackerPreview #gameView .openTableSeat strong{font-size:9px;letter-spacing:1.2px}
+  body.trackerPreview #gameView .openTableSeat span{font-size:8px;color:#94b990}
+
+  /* Compact player identity */
+  body.trackerPreview #gameView .playerHeader{
+    gap:3px;
+    margin-bottom:1px;
+    align-items:center;
+  }
+  body.trackerPreview #gameView .playerIdentity{gap:3px;flex-wrap:nowrap}
+  body.trackerPreview #gameView .playerName{font-size:10px}
+  body.trackerPreview #gameView .editPlayerName,
+  body.trackerPreview #gameView .resetPlayer{
+    min-height:21px;
+    padding:2px 4px;
+    font-size:6px;
+  }
+
+  /* Life becomes the main control: minus | total | plus */
+  body.trackerPreview #gameView .lifePanel{
+    display:grid;
+    grid-template-columns:34px minmax(0,1fr) 34px;
+    align-items:center;
+    gap:3px;
+    margin:0;
+  }
+  body.trackerPreview #gameView .lifeTotal.editLife{
+    min-height:46px;
+    padding:0;
+    font-size:42px;
+  }
+  body.trackerPreview #gameView .lifeNudge{
+    min-width:0;
+    min-height:36px;
+    padding:0;
+    font-size:20px;
+    line-height:1;
+    border-radius:9px;
+  }
+
+  /* Symbol-based Commander / Poison controls */
+  body.trackerPreview #gameView .counterStrip{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:4px;
+    margin-top:3px;
+  }
+  body.trackerPreview #gameView .counterChip{
+    min-width:0;
+    display:grid;
+    grid-template-columns:17px 24px minmax(20px,1fr) 24px;
+    align-items:center;
+    gap:2px;
+    min-height:30px;
+    padding:2px 3px;
+    border:1px solid rgba(151,120,73,.42);
+    border-radius:8px;
+    background:rgba(5,9,7,.72);
+  }
+  body.trackerPreview #gameView .poisonChip{
+    border-color:rgba(104,160,88,.5);
+  }
+  body.trackerPreview #gameView .counterIcon{
+    width:16px;
+    height:16px;
+    display:grid;
+    place-items:center;
+  }
+  body.trackerPreview #gameView .counterIcon svg{
+    width:16px;
+    height:16px;
+    fill:none;
+    stroke:#d5c39d;
+    stroke-width:1.65;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+  body.trackerPreview #gameView .poisonChip .counterIcon svg{
+    stroke:#9fd28c;
+  }
+  body.trackerPreview #gameView .counterValue{
+    text-align:center;
+    font-size:15px;
+    font-weight:900;
+    color:#efe3d2;
+  }
+  body.trackerPreview #gameView .miniStep{
+    min-width:0;
+    min-height:24px;
+    padding:0;
+    border-radius:6px;
+    font-size:14px;
+    line-height:1;
+  }
+
+  body.trackerPreview #gameView .playerCreatures{
+    min-height:27px;
+    margin:3px 0 0;
+    padding:3px 5px;
+    font-size:7px;
+  }
+  body.trackerPreview #gameView .playerCreatures span{font-size:6px}
+  body.trackerPreview #gameView .playerCreatures .battlefieldLabel{font-size:7px;color:#eef8e9}
+
+  /* 1-player mode can breathe a little more */
+  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .playerName{font-size:16px}
+  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .lifeTotal.editLife{font-size:72px;min-height:80px}
+  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .lifePanel{grid-template-columns:52px minmax(0,1fr) 52px}
+  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .lifeNudge{min-height:48px;font-size:26px}
+  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .counterStrip{max-width:430px;width:100%;margin:8px auto 0}
+  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .counterChip{min-height:42px;grid-template-columns:24px 34px 1fr 34px}
+  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .counterIcon svg{width:21px;height:21px}
+  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .counterValue{font-size:21px}
+  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .miniStep{min-height:32px;font-size:17px}
+  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .playerCreatures{max-width:430px;width:100%;margin:8px auto 0;min-height:38px;font-size:10px}
+
+  /* 5/6 keep the compact multi-row fallback */
+  body.trackerPreview #gameView .gameBoard[data-player-count="5"],
+  body.trackerPreview #gameView .gameBoard[data-player-count="6"]{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    grid-auto-rows:auto;
+    flex:none;
+    overflow:visible;
+  }
+
+  body.trackerPreview #gameView .playerRosterTools{
+    flex:none;
+    grid-template-columns:1fr 1fr !important;
+    gap:4px;
+  }
+  body.trackerPreview #gameView .playerRosterTools button{
+    min-height:27px;
+    padding:3px 5px;
+    font-size:8px;
+  }
+  body.trackerPreview #gameView .playerLimitMsg{display:none}
+
+  body.trackerPreview #gameView .lifeEditRow{
+    grid-template-columns:1fr;
+    gap:3px;
+    padding:2px 0;
+  }
+  body.trackerPreview #gameView .lifeEditInput{height:36px;font-size:20px}
+  body.trackerPreview #gameView .lifeEditRow button{min-height:26px;padding:3px;font-size:8px}
+}
+
+
+/* Wolf Lair Battlefield Command refresh — artwork-forward tabletop layout */
+body.trackerPreview #gameView .playerQuickRow{
+  display:grid;grid-template-columns:minmax(72px,.72fr) minmax(0,1.28fr);gap:6px;margin-top:6px;
+}
+body.trackerPreview #gameView .turnDie{
+  min-height:48px;display:flex;align-items:center;justify-content:center;gap:7px;padding:7px 8px;
+  border-color:rgba(190,136,73,.64);
+  background:radial-gradient(circle at 35% 28%,rgba(116,160,79,.16),transparent 48%),linear-gradient(160deg,rgba(44,35,25,.96),rgba(12,16,12,.98));
+  color:#ead7b7;box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+}
+body.trackerPreview #gameView .turnDie .dieIcon{
+  width:29px;height:29px;display:grid;place-items:center;
+  clip-path:polygon(50% 0,90% 22%,100% 68%,72% 100%,28% 100%,0 68%,10% 22%);
+  background:linear-gradient(145deg,#5f7d46,#24351f 68%,#151b13);
+  box-shadow:inset 0 0 0 1px rgba(220,186,126,.62);
+  color:#f1dfbc;font:900 9px/1 system-ui,-apple-system,sans-serif;
+}
+body.trackerPreview #gameView .turnDie strong{min-width:24px;color:#f5e8cf;font:900 20px/1 Georgia,'Times New Roman',serif}
+body.trackerPreview #gameView .turnDie.critical strong{color:#9ce38f}
+body.trackerPreview #gameView .turnDie.fumble strong{color:#e6a58f}
+body.trackerPreview #gameView .playerQuickRow .playerCreatures{margin:0;min-height:48px}
+
+@media(max-width:640px){
+  body.trackerPreview #gameView{
+    background:linear-gradient(180deg,rgba(2,5,4,.16),rgba(2,5,4,.46)),var(--lair-scene),#030605;
+    background-size:cover;background-position:center;
+  }
+  body.trackerPreview #gameView main{
+    height:100svh;min-height:100svh;max-height:100svh;overflow:hidden;
+    padding:4px 4px calc(4px + env(safe-area-inset-bottom));
+  }
+  body.trackerPreview #gameView .backHome{min-height:25px;margin-bottom:2px;padding:3px 7px;font-size:8px;background:rgba(8,12,9,.82)}
+  body.trackerPreview #gameView header.tableCommandTitle{
+    flex:0 0 auto;margin-bottom:3px;padding:4px 8px 5px;border-radius:9px;
+    background:linear-gradient(135deg,rgba(17,21,17,.84),rgba(7,10,8,.88));
+  }
+  body.trackerPreview #gameView header.tableCommandTitle .trackerBrand{margin-bottom:0;font-size:5.5px;letter-spacing:1.8px}
+  body.trackerPreview #gameView header.tableCommandTitle h1{font-size:14px;line-height:1}
+  body.trackerPreview #gameView header.tableCommandTitle small{margin-top:1px;font-size:5.5px;letter-spacing:.9px}
+  body.trackerPreview #gameView .gameShell{flex:1 1 auto;min-height:0;gap:3px}
+  body.trackerPreview #gameView .gameBoard{flex:1 1 auto;min-height:0;gap:4px}
+  body.trackerPreview #gameView .playerCard{
+    min-height:0;padding:6px;border-radius:11px;
+    background:linear-gradient(160deg,rgba(18,24,18,.84),rgba(5,10,7,.90)),radial-gradient(circle at 75% 20%,rgba(85,130,70,.13),transparent 45%);
+    border-color:rgba(191,139,76,.54);box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 5px 14px rgba(0,0,0,.28);
+  }
+  body.trackerPreview #gameView .playerFace{height:100%;justify-content:center}
+  body.trackerPreview #gameView .playerHeader{margin-bottom:3px}
+  body.trackerPreview #gameView .playerName{font-size:12px}
+  body.trackerPreview #gameView .editPlayerName,body.trackerPreview #gameView .resetPlayer{min-height:23px;padding:3px 5px;font-size:6.5px}
+  body.trackerPreview #gameView .lifePanel{grid-template-columns:38px minmax(0,1fr) 38px;gap:4px;margin:1px 0 2px}
+  body.trackerPreview #gameView .lifeTotal.editLife{min-height:58px;font-size:54px;text-shadow:0 2px 10px rgba(0,0,0,.55)}
+  body.trackerPreview #gameView .lifeNudge{min-height:43px;font-size:23px}
+  body.trackerPreview #gameView .counterStrip{gap:5px;margin-top:3px}
+  body.trackerPreview #gameView .counterChip{
+    min-height:34px;grid-template-columns:18px 26px minmax(22px,1fr) 26px;gap:2px;padding:3px;background:rgba(4,8,6,.70);
+  }
+  body.trackerPreview #gameView .counterValue{font-size:17px}
+  body.trackerPreview #gameView .miniStep{min-height:27px;font-size:15px}
+  body.trackerPreview #gameView .playerQuickRow{gap:4px;margin-top:4px;grid-template-columns:minmax(66px,.68fr) minmax(0,1.32fr)}
+  body.trackerPreview #gameView .turnDie,body.trackerPreview #gameView .playerQuickRow .playerCreatures{min-height:39px}
+  body.trackerPreview #gameView .turnDie{gap:5px;padding:4px 5px}
+  body.trackerPreview #gameView .turnDie .dieIcon{width:25px;height:25px;font-size:8px}
+  body.trackerPreview #gameView .turnDie strong{font-size:18px}
+  body.trackerPreview #gameView .playerQuickRow .playerCreatures{padding:4px 5px;font-size:8px}
+  body.trackerPreview #gameView .playerQuickRow .playerCreatures span{font-size:7px}
+  body.trackerPreview #gameView .playerRosterTools{flex:0 0 auto;grid-template-columns:1fr 1fr;gap:4px;margin:0}
+  body.trackerPreview #gameView .playerRosterTools button{min-height:28px;padding:3px 5px;font-size:7.5px;border-radius:8px;background:rgba(11,18,12,.84)}
+  body.trackerPreview #gameView .playerLimitMsg{min-height:8px;margin:0;font-size:6.5px;line-height:1}
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"]{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    grid-template-rows:repeat(2,minmax(0,1fr)) !important;
+    min-height:0;
+  }
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .playerCard{width:100%;height:100%}
+}
+@media(max-width:380px){
+  body.trackerPreview #gameView .lifeTotal.editLife{font-size:48px}
+  body.trackerPreview #gameView .lifePanel{grid-template-columns:34px minmax(0,1fr) 34px}
+  body.trackerPreview #gameView .turnDie strong{font-size:16px}
+}
+
 </style>
 </head>
-<body>
+<body class="trackerPreview">
 <section id="home">
   <div id="lairScene" class="lairScene" aria-hidden="true">
     <div class="lairLayer sceneBase"></div>
@@ -246,8 +1809,8 @@ textarea.proArea{width:100%;min-height:180px;background:#06100b;color:#fff;borde
           <text x="24" y="20" text-anchor="middle" font-size="7" font-weight="900" fill="#a8f178" font-family="system-ui,sans-serif">20</text>
         </svg>
       </span>
-      <strong>Game Mode</strong>
-      <small>Life totals, commander damage, poison and turn flow for the table.</small>
+      <strong>Battlefield Command</strong>
+      <small>Tabletop life, commander damage, poison, D20 rolls and battlefield access.</small>
     </button>
     <button class="appTile" id="openPro" type="button">
       <span class="ico" aria-hidden="true">
@@ -268,15 +1831,79 @@ textarea.proArea{width:100%;min-height:180px;background:#06100b;color:#fff;borde
 <section id="decksView" class="hidden">
  <main>
   <button id="backDecksHome" class="backHome" type="button">‹ Wolf Lair Home</button>
-  <header><div class="wolf">📚</div><h1>My Decks</h1><small>WOLF LAIR</small></header>
+  <header class="deckTitle">
+   <div class="trackerBrand">THE WOLF LAIR</div>
+   <h1>DECK VAULT</h1>
+   <small>BUILD • SCAN • IMPORT</small>
+  </header>
   <div id="deckList"></div>
   <button id="newDeck" class="wide" type="button">＋ New Deck</button>
   <div id="deckForm" class="hidden deckForm">
+   <div class="deckFormHead">
+    <div>
+     <div class="deckEyebrow">DECK WORKBENCH</div>
+     <strong id="deckFormTitle">New Deck</strong>
+    </div>
+   </div>
    <input id="deckName" placeholder="Deck name">
    <input id="commanderName" placeholder="Commander" style="margin-top:8px">
+
+   <div class="deckEntryTools">
+    <button id="scanCardBtn" type="button">📷 Scan Card</button>
+    <button id="searchCardBtn" type="button">⌕ Search Card</button>
+    <button id="pasteDeckBtn" type="button">▤ Paste Decklist</button>
+    <button id="importDeckBtn" type="button">⇩ Import File</button>
+   </div>
+
+   <input id="cardScanInput" class="hidden" type="file" accept="image/*" capture="environment">
+   <input id="deckImportInput" class="hidden" type="file" accept=".txt,.csv,text/plain,text/csv">
+
+   <div id="cardSearchPanel" class="hidden cardToolPanel">
+    <div class="cardSearchRow">
+     <input id="cardSearchInput" type="search" placeholder="Search a Magic card">
+     <button id="runCardSearch" type="button">Search</button>
+    </div>
+    <div id="cardSearchResults" class="hidden cardSearchResults"></div>
+   </div>
+
+   <div id="scanPanel" class="hidden cardToolPanel scanPanel">
+    <div id="liveScanner" class="hidden liveScanner">
+     <div id="cameraStage" class="cameraStage">
+      <video id="scanVideo" autoplay playsinline muted></video>
+      <canvas id="scanOverlay" aria-hidden="true"></canvas>
+      <div class="cameraHint"><span id="cameraState">CENTER CARD</span><small>Tap Scan This Card — Phone Camera is the fallback</small></div>
+     </div>
+     <div class="scanCameraActions">
+      <button id="manualCapture" type="button">Scan This Card</button>
+      <button id="photoFallback" type="button">Phone Camera</button>
+      <button id="cancelScanner" type="button">Cancel</button>
+     </div>
+    </div>
+    <div class="scanPreviewWrap">
+     <img id="scanPreview" class="hidden" alt="Cropped card scan preview">
+     <div id="scanStatus">Wolf Lair will find the card edges, center the frame, capture automatically, and crop away the table.</div>
+    </div>
+   </div>
+
+   <div id="cardLookupResult" class="hidden cardLookupResult"></div>
+   <div id="deckToolStatus" class="deckToolStatus" aria-live="polite"></div>
+
+   <div id="deckValuePanel" class="deckValuePanel">
+    <div>
+     <span>ESTIMATED DECK VALUE</span>
+     <strong id="deckValueTotal">$0.00</strong>
+     <small id="deckValueCoverage">0 priced cards</small>
+    </div>
+   </div>
+   <div class="deckListHead">
+    <label class="deckListLabel" for="deckCards">Deck List</label>
+    <button id="undoDeckChange" type="button" disabled>↶ Undo Last Change</button>
+   </div>
    <textarea id="deckCards" placeholder="Paste deck list here&#10;&#10;Example:&#10;1 Sol Ring&#10;1 Command Tower"></textarea>
-   <button id="saveDeck" class="wide" type="button">Save Deck</button>
-   <button id="cancelDeck" class="wide" type="button">Cancel</button>
+   <div class="deckFormActions">
+    <button id="saveDeck" type="button">Save Deck</button>
+    <button id="cancelDeck" type="button">Cancel</button>
+   </div>
    <div id="deckMsg" class="msg"></div>
   </div>
  </main>
@@ -285,7 +1912,12 @@ textarea.proArea{width:100%;min-height:180px;background:#06100b;color:#fff;borde
 <section id="trackerView" class="hidden">
 <main>
 <button id="backHome" class="backHome" type="button">‹ Wolf Lair Home</button>
-<header><div class="wolf">⚔️</div><h1>The Wolf Lair</h1><small>COUNTER TRACKER</small></header>
+<header class="trackerTitle">
+  <div id="activePlayerLabel" class="trackerBrand">PLAYER 1 • THE WOLF LAIR</div>
+  <h1>BATTLEFIELD COMMAND</h1>
+  <small>CREATURE &amp; COUNTER CONTROL</small>
+  <button id="quickGameMode" class="quickSwitch" type="button">GAME MODE ›</button>
+</header>
 <div id="form" class="hidden">
 <input id="nm" placeholder="Creature name">
 <div class="pt"><input id="pw" inputmode="numeric" placeholder="Power"><input id="th" inputmode="numeric" placeholder="Toughness"></div>
@@ -300,17 +1932,18 @@ textarea.proArea{width:100%;min-height:180px;background:#06100b;color:#fff;borde
 <section id="gameView" class="hidden">
   <main>
     <button id="backGameHome" class="backHome" type="button">‹ Wolf Lair Home</button>
-    <header><div class="wolf">🎲</div><h1>Game Mode</h1><small>TABLETOP</small></header>
+    <header class="gameTitle tableCommandTitle">
+  <div class="trackerBrand">THE WOLF LAIR</div>
+  <h1>TABLE COMMAND</h1>
+  <small>LIFE • COMMANDER • POISON</small>
+</header>
     <div class="gameShell">
       <div id="gameBoard" class="gameBoard"></div>
-      <div class="gameTools">
-        <button id="nextPhase" type="button">Next Phase</button>
-        <button id="resetMatch" type="button">Reset Match</button>
+      <div class="playerRosterTools">
+        <button id="addPlayer" type="button">＋ Add Player</button>
+        <button id="removePlayer" type="button">− Remove Last Player</button>
       </div>
-      <div class="phaseBanner">
-        <strong>Current Phase</strong>
-        <span id="phaseName">Beginning</span>
-      </div>
+      <div id="playerLimitMsg" class="playerLimitMsg" aria-live="polite"></div>
     </div>
   </main>
 </section>
@@ -340,7 +1973,8 @@ textarea.proArea{width:100%;min-height:180px;background:#06100b;color:#fff;borde
 <script>
 (function(){
 "use strict";
-var KEY="wolfLairClean1", creatures=[], undoState=null;
+var LEGACY_KEY="wolfLairClean1", PLAYER_KEY="wolfLairPlayerCreatures1";
+var playerCreatures=[[],[]], activePlayerIndex=0, creatures=playerCreatures[0], undoState=null;
 function el(id){return document.getElementById(id)}
 function clone(x){return JSON.parse(JSON.stringify(x))}
 function normalize(c){
@@ -349,15 +1983,50 @@ function normalize(c){
   c.p=Number(c.p)||0;c.t=Number(c.t)||0;c.c=Math.max(0,Number(c.c)||0);
   if(!Array.isArray(c.links))c.links=[];
 }
-function save(){try{localStorage.setItem(KEY,JSON.stringify(creatures))}catch(e){}}
+function ensurePlayerCreatureSlots(){
+  var count=(gameState&&gameState.players&&gameState.players.length)||2;
+  while(playerCreatures.length<count)playerCreatures.push([]);
+  if(playerCreatures.length>count)playerCreatures.length=count;
+}
+function setActivePlayer(index){
+  ensurePlayerCreatureSlots();
+  activePlayerIndex=Math.max(0,Math.min(index,playerCreatures.length-1));
+  creatures=playerCreatures[activePlayerIndex];
+  undoState=null;
+  updateBattlefieldPlayerLabel();
+  render();
+}
+function updateBattlefieldPlayerLabel(){
+  var label=el("activePlayerLabel");
+  if(!label)return;
+  var p=(gameState&&gameState.players&&gameState.players[activePlayerIndex])||{name:"Player "+(activePlayerIndex+1)};
+  label.textContent=String(p.name||("Player "+(activePlayerIndex+1))).toUpperCase()+" • THE WOLF LAIR";
+}
+function save(){
+  try{
+    playerCreatures[activePlayerIndex]=creatures;
+    localStorage.setItem(PLAYER_KEY,JSON.stringify(playerCreatures));
+  }catch(e){}
+}
 function load(){
   try{
-   var raw=localStorage.getItem(KEY), data=raw?JSON.parse(raw):[];
-   if(Array.isArray(data)){creatures=data;for(var i=0;i<creatures.length;i++)normalize(creatures[i])}
-  }catch(e){creatures=[]}
+    var raw=localStorage.getItem(PLAYER_KEY), data=raw?JSON.parse(raw):null;
+    if(Array.isArray(data)){
+      playerCreatures=data.map(function(list){return Array.isArray(list)?list:[];});
+    }else{
+      var legacyRaw=localStorage.getItem(LEGACY_KEY), legacy=legacyRaw?JSON.parse(legacyRaw):[];
+      playerCreatures=[Array.isArray(legacy)?legacy:[],[]];
+      try{localStorage.setItem(PLAYER_KEY,JSON.stringify(playerCreatures))}catch(e2){}
+    }
+    ensurePlayerCreatureSlots();
+    for(var p=0;p<playerCreatures.length;p++){
+      for(var i=0;i<playerCreatures[p].length;i++)normalize(playerCreatures[p][i]);
+    }
+    creatures=playerCreatures[activePlayerIndex];
+  }catch(e){playerCreatures=[[],[]];creatures=playerCreatures[0]}
 }
 function snapshot(){undoState=clone(creatures);el("undo").disabled=false}
-function finish(){save();render()}
+function finish(){save();render();renderGame()}
 function escapeHTML(v){var d=document.createElement("div");d.textContent=String(v);return d.innerHTML}
 function find(id){for(var i=0;i<creatures.length;i++)if(creatures[i].id===id)return creatures[i];return null}
 function adjust(id,n){var c=find(id);if(!c)return;snapshot();c.c=Math.max(0,c.c+n);finish()}
@@ -428,71 +2097,173 @@ el("bill").onclick=function(){
   for(var i=0;i<creatures.length;i++)creatures[i].c*=2;finish();
 };
 
+var GAME_KEY='wolfLairGame2';
 var gameState={
   players:[
-    {name:'Player 1', life:20, commander:0, poison:0},
-    {name:'Player 2', life:20, commander:0, poison:0}
+    {name:'Player 1', life:40, commander:0, poison:0}
   ],
   phases:['Beginning','Precombat','Combat','Postcombat','Ending'],
   phaseIndex:0
 };
 function loadGame(){
   try{
-    var raw=localStorage.getItem('wolfLairGame1');
-    if(raw){var parsed=JSON.parse(raw); if(parsed&&Array.isArray(parsed.players)){gameState=parsed;}}
+    var raw=localStorage.getItem(GAME_KEY);
+    if(raw){
+      var parsed=JSON.parse(raw);
+      if(parsed&&Array.isArray(parsed.players)&&parsed.players.length>=1&&parsed.players.length<=6){
+        gameState=parsed;
+      }
+    }
   }catch(e){}
-  if(!gameState.players||gameState.players.length!==2){
-    gameState={players:[{name:'Player 1', life:20, commander:0, poison:0},{name:'Player 2', life:20, commander:0, poison:0}], phases:['Beginning','Precombat','Combat','Postcombat','Ending'], phaseIndex:0};
+  if(!gameState.players||gameState.players.length<1||gameState.players.length>6){
+    gameState={players:[{name:'Player 1', life:40, commander:0, poison:0}], phases:['Beginning','Precombat','Combat','Postcombat','Ending'], phaseIndex:0};
   }
   if(!gameState.phases||!gameState.phases.length){gameState.phases=['Beginning','Precombat','Combat','Postcombat','Ending'];}
+  if(typeof playerCreatures!=='undefined')ensurePlayerCreatureSlots();
 }
 function saveGame(){
-  try{localStorage.setItem('wolfLairGame1',JSON.stringify(gameState))}catch(e){}
+  try{localStorage.setItem(GAME_KEY,JSON.stringify(gameState))}catch(e){}
 }
 function renderGame(){
   var board=el('gameBoard');
   board.innerHTML='';
+  board.setAttribute('data-player-count',String(gameState.players.length));
   for(var i=0;i<gameState.players.length;i++){
     (function(player,index){
       var card=document.createElement('div');
       card.className='playerCard';
+      var creatureCount=(playerCreatures[index]||[]).length;
       card.innerHTML='\
-        <div class="playerHeader"><span class="playerName">'+escapeHTML(player.name)+'</span><button class="resetPlayer" type="button">Reset</button></div>\
-        <div class="lifeTotal">'+player.life+'</div>\
-        <div class="lifeControls">\
-          <button class="lifeDown" type="button">−1 Life</button>\
-          <button class="lifeUp" type="button">+1 Life</button>\
-          <button class="cmdDown" type="button">−1 Cmd</button>\
-          <button class="cmdUp" type="button">+1 Cmd</button>\
-          <button class="poisonDown" type="button">−1 Poison</button>\
-          <button class="poisonUp" type="button">+1 Poison</button>\
+        <div class="playerFace">\
+        <div class="playerHeader"><div class="playerIdentity"><span class="playerName">'+escapeHTML(player.name)+'</span><button class="editPlayerName" type="button" aria-label="Edit player name">EDIT</button></div><button class="resetPlayer" type="button">RESET</button></div>\
+        <div class="lifePanel">\
+          <button class="lifeDown lifeNudge" type="button" aria-label="Lose 1 life">−</button>\
+          <button class="lifeTotal editLife" type="button" aria-label="Edit life total">'+player.life+'</button>\
+          <button class="lifeUp lifeNudge" type="button" aria-label="Gain 1 life">＋</button>\
         </div>\
-        <div class="statRow">\
-          <div class="statBox"><span class="statLabel">Life</span><span class="statValue">'+player.life+'</span></div>\
-          <div class="statBox"><span class="statLabel">Cmd</span><span class="statValue">'+player.commander+'</span></div>\
-          <div class="statBox"><span class="statLabel">Poison</span><span class="statValue">'+player.poison+'</span></div>\
+        <div class="counterStrip">\
+          <div class="counterChip commanderChip">\
+            <span class="counterIcon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 18h14M7 16l-2-9 5 4 2-6 2 6 5-4-2 9H7z"/></svg></span>\
+            <button class="cmdDown miniStep" type="button" aria-label="Remove 1 commander damage">−</button>\
+            <span class="counterValue">'+player.commander+'</span>\
+            <button class="cmdUp miniStep" type="button" aria-label="Add 1 commander damage">＋</button>\
+          </div>\
+          <div class="counterChip poisonChip">\
+            <span class="counterIcon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3c-4 0-7 3-7 6.6 0 2.2 1.1 4.1 3 5.3V18h2v3h4v-3h2v-3.1c1.9-1.2 3-3.1 3-5.3C19 6 16 3 12 3z"/><circle cx="9.4" cy="9.7" r="1.4"/><circle cx="14.6" cy="9.7" r="1.4"/><path d="M10 14h4"/></svg></span>\
+            <button class="poisonDown miniStep" type="button" aria-label="Remove 1 poison counter">−</button>\
+            <span class="counterValue">'+player.poison+'</span>\
+            <button class="poisonUp miniStep" type="button" aria-label="Add 1 poison counter">＋</button>\
+          </div>\
+        </div>\
+        <div class="playerQuickRow">\
+          <button class="turnDie '+(player.roll===20?'critical':(player.roll===1?'fumble':''))+'" type="button" aria-label="Roll a twenty-sided die"><span class="dieIcon">D20</span><strong>'+(player.roll||'—')+'</strong></button>\
+          <button class="playerCreatures" type="button"><span class="battlefieldLabel">BATTLEFIELD</span><span>'+creatureCount+' CREATURE'+(creatureCount===1?'':'S')+'</span></button>\
+        </div>\
         </div>';
       card.querySelector('.lifeDown').onclick=function(){player.life--;saveGame();renderGame();};
       card.querySelector('.lifeUp').onclick=function(){player.life++;saveGame();renderGame();};
+      card.querySelector('.editLife').onclick=function(){
+        var panel=card.querySelector('.lifePanel');
+        if(!panel)return;
+        panel.innerHTML='<div class="lifeEditRow"><input class="lifeEditInput" type="number" inputmode="numeric" min="-999" max="999" value="'+player.life+'" aria-label="Life total"><button class="saveLife" type="button">Save</button><button class="cancelLife" type="button">Cancel</button></div>';
+        var input=panel.querySelector('.lifeEditInput');
+        function commitLife(){
+          var n=parseInt(input.value,10);
+          if(isNaN(n))return;
+          player.life=Math.max(-999,Math.min(999,n));
+          saveGame();
+          renderGame();
+        }
+        panel.querySelector('.saveLife').onclick=commitLife;
+        panel.querySelector('.cancelLife').onclick=function(){renderGame();};
+        input.onkeydown=function(e){
+          if(e.key==='Enter'){e.preventDefault();commitLife();}
+          if(e.key==='Escape'){e.preventDefault();renderGame();}
+        };
+        input.focus();
+        input.select();
+      };
       card.querySelector('.cmdDown').onclick=function(){player.commander=Math.max(0,player.commander-1);saveGame();renderGame();};
       card.querySelector('.cmdUp').onclick=function(){player.commander++;saveGame();renderGame();};
       card.querySelector('.poisonDown').onclick=function(){player.poison=Math.max(0,player.poison-1);saveGame();renderGame();};
       card.querySelector('.poisonUp').onclick=function(){player.poison++;saveGame();renderGame();};
-      card.querySelector('.resetPlayer').onclick=function(){player.life=20;player.commander=0;player.poison=0;saveGame();renderGame();};
+      card.querySelector('.resetPlayer').onclick=function(){player.life=40;player.commander=0;player.poison=0;saveGame();renderGame();};
+      card.querySelector('.editPlayerName').onclick=function(){
+        var identity=card.querySelector('.playerIdentity');
+        if(!identity)return;
+        var current=String(player.name||('Player '+(index+1)));
+        identity.innerHTML='<input class="playerNameInput" type="text" maxlength="24" value="'+escapeHTML(current)+'" aria-label="Player name"><div class="playerNameActions"><button class="savePlayerName" type="button">Save</button><button class="cancelPlayerName" type="button">Cancel</button></div>';
+        var input=identity.querySelector('.playerNameInput');
+        var saveBtn=identity.querySelector('.savePlayerName');
+        var cancelBtn=identity.querySelector('.cancelPlayerName');
+        function commitName(){
+          var next=input.value.trim();
+          if(!next)next='Player '+(index+1);
+          player.name=next.slice(0,24);
+          saveGame();
+          if(index===activePlayerIndex)updateBattlefieldPlayerLabel();
+          renderGame();
+        }
+        saveBtn.onclick=commitName;
+        cancelBtn.onclick=function(){renderGame();};
+        input.onkeydown=function(e){
+          if(e.key==='Enter'){e.preventDefault();commitName();}
+          if(e.key==='Escape'){e.preventDefault();renderGame();}
+        };
+        input.focus();
+        input.select();
+      };
+      card.querySelector('.turnDie').onclick=function(){
+        player.roll=1+Math.floor(Math.random()*20);
+        saveGame();renderGame();
+      };
+      card.querySelector('.playerCreatures').onclick=function(){
+        setActivePlayer(index);
+        el('gameView').className='hidden';
+        el('trackerView').className='';
+        window.scrollTo(0,0);
+      };
       board.appendChild(card);
     })(gameState.players[i],i);
   }
-  el('phaseName').textContent=gameState.phases[gameState.phaseIndex] || 'Beginning';
+  if(gameState.players.length===3){
+    var openSeat=document.createElement('button');
+    openSeat.type='button';
+    openSeat.className='openTableSeat';
+    openSeat.innerHTML='<strong>OPEN SEAT</strong><span>＋ Add Player</span>';
+    openSeat.onclick=function(){
+      var add=el('addPlayer');
+      if(add&&!add.disabled)add.click();
+    };
+    board.appendChild(openSeat);
+  }
+  var addBtn=el('addPlayer'), removeBtn=el('removePlayer'), limitMsg=el('playerLimitMsg');
+  if(addBtn)addBtn.disabled=gameState.players.length>=6;
+  if(removeBtn)removeBtn.disabled=gameState.players.length<=1;
+  if(limitMsg){
+    limitMsg.textContent=gameState.players.length>=6?'Maximum 6 players':(gameState.players.length+' players at the table');
+  }
 }
-el('nextPhase').onclick=function(){
-  gameState.phaseIndex=(gameState.phaseIndex+1) % gameState.phases.length;
-  saveGame();renderGame();
+el('addPlayer').onclick=function(){
+  if(gameState.players.length>=6)return;
+  var n=gameState.players.length+1;
+  gameState.players.push({name:'Player '+n, life:40, commander:0, poison:0, roll:null});
+  ensurePlayerCreatureSlots();
+  saveGame();
+  save();
+  renderGame();
 };
-el('resetMatch').onclick=function(){
-  gameState.players=[{name:'Player 1', life:20, commander:0, poison:0},{name:'Player 2', life:20, commander:0, poison:0}];
-  gameState.phaseIndex=0;saveGame();renderGame();
+el('removePlayer').onclick=function(){
+  if(gameState.players.length<=1)return;
+  gameState.players.pop();
+  playerCreatures.pop();
+  if(activePlayerIndex>=gameState.players.length)activePlayerIndex=gameState.players.length-1;
+  creatures=playerCreatures[activePlayerIndex]||[];
+  saveGame();
+  save();
+  updateBattlefieldPlayerLabel();
+  renderGame();
 };
-
 var proState={
   lastSaved: new Date().toISOString(),
   tracker: {count: creatures.length},
@@ -526,7 +2297,7 @@ el('backGameHome').onclick=function(){el('gameView').className='hidden';el('home
 el('openPro').onclick=function(){el('home').className='hidden';el('proView').className='';loadPro();window.scrollTo(0,0)};
 el('backProHome').onclick=function(){el('proView').className='hidden';el('home').className='';window.scrollTo(0,0)};
 
-var DECKKEY="wolfLairDecks1", decks=[], editingDeck=null;
+var DECKKEY="wolfLairDecks1", decks=[], editingDeck=null, lastCardResult=null, deckUndoState=null, deckEntries=[];
 function loadDecks(){try{var x=JSON.parse(localStorage.getItem(DECKKEY)||"[]");if(Array.isArray(x))decks=x}catch(e){decks=[]}}
 function saveDecks(){try{localStorage.setItem(DECKKEY,JSON.stringify(decks))}catch(e){}}
 function deckCardCount(txt){
@@ -534,48 +2305,1117 @@ function deckCardCount(txt){
   for(var i=0;i<lines.length;i++){var m=lines[i].trim().match(/^(\d+)\s+/);if(m)total+=parseInt(m[1],10)}
   return total;
 }
+function setDeckStatus(msg,isError){
+  var box=el("deckToolStatus");
+  if(!box)return;
+  box.textContent=msg||"";
+  box.className=isError?"deckToolStatus error":"deckToolStatus";
+}
+function closeDeckTools(){
+  if(typeof stopCardCamera==="function")stopCardCamera();
+  el("cardSearchPanel").className="hidden cardToolPanel";
+  var searchResults=el("cardSearchResults");
+  if(searchResults){searchResults.className="hidden cardSearchResults";searchResults.innerHTML="";}
+  el("scanPanel").className="hidden cardToolPanel scanPanel";
+  el("cardLookupResult").className="hidden cardLookupResult";
+  el("cardLookupResult").innerHTML="";
+  lastCardResult=null;
+  setDeckStatus("");
+}
+function finishLabel(finish){
+  if(finish==="foil")return "Foil";
+  if(finish==="etched")return "Etched";
+  return "Regular";
+}
+function finishPrice(card,finish){
+  var p=(card&&card.prices)||{};
+  var raw=finish==="foil"?p.usd_foil:(finish==="etched"?p.usd_etched:p.usd);
+  var n=parseFloat(raw);
+  return isFinite(n)?n:null;
+}
+function chooseDefaultFinish(card){
+  var finishes=(card&&Array.isArray(card.finishes))?card.finishes:[];
+  if(finishes.indexOf("nonfoil")>=0&&finishPrice(card,"nonfoil")!==null)return "nonfoil";
+  if(finishes.indexOf("foil")>=0&&finishPrice(card,"foil")!==null)return "foil";
+  if(finishes.indexOf("etched")>=0&&finishPrice(card,"etched")!==null)return "etched";
+  return finishes[0]||"nonfoil";
+}
+function entryKey(card,finish){
+  return String(card&&card.id||"")+"|"+String(finish||"nonfoil");
+}
+function addStructuredEntry(card,finish){
+  if(!card||!card.id)return;
+  finish=finish||chooseDefaultFinish(card);
+  var key=entryKey(card,finish), price=finishPrice(card,finish);
+  for(var i=0;i<deckEntries.length;i++){
+    if(deckEntries[i].key===key){
+      deckEntries[i].qty=(deckEntries[i].qty||0)+1;
+      deckEntries[i].price=price;
+      renderDeckValue();
+      return;
+    }
+  }
+  var img="";
+  if(card.image_uris&&card.image_uris.small)img=card.image_uris.small;
+  else if(card.card_faces&&card.card_faces[0]&&card.card_faces[0].image_uris)img=card.card_faces[0].image_uris.small;
+  deckEntries.push({
+    key:key,
+    scryfallId:card.id,
+    name:card.name,
+    set:card.set,
+    setName:card.set_name,
+    collector:card.collector_number,
+    finish:finish,
+    qty:1,
+    price:price,
+    image:img
+  });
+  renderDeckValue();
+}
+function removeStructuredEntry(card,finish){
+  if(!card||!card.id)return;
+  var key=entryKey(card,finish);
+  for(var i=0;i<deckEntries.length;i++){
+    if(deckEntries[i].key===key){
+      deckEntries[i].qty=Math.max(0,(deckEntries[i].qty||0)-1);
+      if(deckEntries[i].qty===0)deckEntries.splice(i,1);
+      break;
+    }
+  }
+  renderDeckValue();
+}
+function deckValueData(entries){
+  entries=Array.isArray(entries)?entries:[];
+  var total=0,priced=0,tracked=0;
+  for(var i=0;i<entries.length;i++){
+    var q=Math.max(0,Number(entries[i].qty)||0);
+    tracked+=q;
+    var p=Number(entries[i].price);
+    if(isFinite(p)&&p>=0){total+=p*q;priced+=q}
+  }
+  return {total:total,priced:priced,tracked:tracked};
+}
+function renderDeckValue(){
+  var data=deckValueData(deckEntries);
+  var total=el("deckValueTotal"),coverage=el("deckValueCoverage");
+  if(total)total.textContent="$"+data.total.toFixed(2);
+  if(coverage){
+    var deckCount=deckCardCount(el("deckCards")?el("deckCards").value:"");
+    coverage.textContent=data.priced+" priced exact "+(data.priced===1?"card":"cards")+(deckCount>data.priced?" • "+(deckCount-data.priced)+" unpriced/manual":"");
+  }
+}
+function syncStructuredEntriesToText(){
+  // If a user manually lowers/removes a card quantity, never leave more priced copies than the text list contains.
+  var byName={};
+  var lines=el("deckCards").value.split(/\n/);
+  for(var i=0;i<lines.length;i++){
+    var m=lines[i].trim().match(/^(\d+)\s+(.+)$/);
+    if(m)byName[m[2].trim().toLowerCase()]=(byName[m[2].trim().toLowerCase()]||0)+(parseInt(m[1],10)||0);
+  }
+  var used={};
+  for(var j=0;j<deckEntries.length;j++){
+    var key=String(deckEntries[j].name||"").toLowerCase(), available=byName[key]||0, already=used[key]||0;
+    var allowed=Math.max(0,available-already);
+    deckEntries[j].qty=Math.min(Number(deckEntries[j].qty)||0,allowed);
+    used[key]=already+deckEntries[j].qty;
+  }
+  deckEntries=deckEntries.filter(function(e){return e.qty>0});
+  renderDeckValue();
+}
+function updateDeckUndoButton(){
+  var b=el("undoDeckChange");
+  if(b)b.disabled=!deckUndoState;
+}
+function rememberDeckChange(label){
+  deckUndoState={before:el("deckCards").value,beforeEntries:clone(deckEntries),label:label||"Deck change"};
+  updateDeckUndoButton();
+}
+function undoDeckChange(){
+  if(!deckUndoState)return;
+  var state=deckUndoState;
+  el("deckCards").value=state.before;
+  deckEntries=Array.isArray(state.beforeEntries)?clone(state.beforeEntries):[];
+  renderDeckValue();
+  deckUndoState=null;
+  updateDeckUndoButton();
+  setDeckStatus("Undid: "+state.label+".");
+}
+function cardQuantity(name){
+  var lines=el("deckCards").value.split(/\n/);
+  for(var i=0;i<lines.length;i++){
+    var m=lines[i].trim().match(/^(\d+)\s+(.+)$/);
+    if(m&&m[2].trim().toLowerCase()===String(name).toLowerCase())return parseInt(m[1],10)||0;
+  }
+  return 0;
+}
+function addCardLine(name,card,finish){
+  name=String(name||"").trim();
+  if(!name)return 0;
+  rememberDeckChange("Added "+name);
+  var area=el("deckCards"), lines=area.value.split(/\n/), found=false, qty=1;
+  for(var i=0;i<lines.length;i++){
+    var m=lines[i].trim().match(/^(\d+)\s+(.+)$/);
+    if(m&&m[2].trim().toLowerCase()===name.toLowerCase()){
+      qty=parseInt(m[1],10)+1;
+      lines[i]=qty+" "+m[2].trim();
+      found=true;break;
+    }
+  }
+  if(!found)lines.push("1 "+name);
+  area.value=lines.filter(function(x){return x.trim()!==""}).join("\n");
+  if(card)addStructuredEntry(card,finish);
+  renderDeckValue();
+  setDeckStatus(name+" added to deck. Quantity: "+qty+".");
+  return qty;
+}
+function removeCardLine(name,card,finish){
+  name=String(name||"").trim();
+  if(!name)return 0;
+  var area=el("deckCards"), lines=area.value.split(/\n/), changed=false, qty=0;
+  for(var i=0;i<lines.length;i++){
+    var m=lines[i].trim().match(/^(\d+)\s+(.+)$/);
+    if(m&&m[2].trim().toLowerCase()===name.toLowerCase()){
+      var current=parseInt(m[1],10)||1;
+      rememberDeckChange("Removed one "+name);
+      qty=Math.max(0,current-1);
+      if(qty===0)lines.splice(i,1);
+      else lines[i]=qty+" "+m[2].trim();
+      changed=true;break;
+    }
+  }
+  if(!changed){setDeckStatus(name+" is not currently in this deck.",true);return 0}
+  area.value=lines.filter(function(x){return x.trim()!==""}).join("\n");
+  if(card)removeStructuredEntry(card,finish);
+  renderDeckValue();
+  setDeckStatus(qty?name+" quantity is now "+qty+".":name+" removed from deck.");
+  return qty;
+}
+function moneyOrDash(v){
+  var n=parseFloat(v);
+  return isFinite(n)?"$"+n.toFixed(2):"—";
+}
+function cardPriceSummary(card){
+  var p=(card&&card.prices)||{};
+  var rows=[];
+  if(p.usd)rows.push('<div><span>Regular</span><strong>'+moneyOrDash(p.usd)+'</strong></div>');
+  if(p.usd_foil)rows.push('<div><span>Foil</span><strong>'+moneyOrDash(p.usd_foil)+'</strong></div>');
+  if(p.usd_etched)rows.push('<div><span>Etched</span><strong>'+moneyOrDash(p.usd_etched)+'</strong></div>');
+  if(!rows.length)rows.push('<div><span>Price</span><strong>—</strong></div>');
+  return '<div class="cardPrices">'+rows.join("")+'</div><div class="priceNote">Daily price estimate for this printing</div>';
+}
+function showCardResult(card,sourceLabel){
+  lastCardResult=card;
+  var box=el("cardLookupResult");
+  var image="";
+  if(card&&card.image_uris&&card.image_uris.small)image='<img src="'+escapeHTML(card.image_uris.small)+'" alt="'+escapeHTML(card.name)+'">';
+  else if(card&&card.card_faces&&card.card_faces[0]&&card.card_faces[0].image_uris)image='<img src="'+escapeHTML(card.card_faces[0].image_uris.small)+'" alt="'+escapeHTML(card.name)+'">';
+  var finishes=(card&&Array.isArray(card.finishes)&&card.finishes.length)?card.finishes:["nonfoil"];
+  var finishOptions=finishes.map(function(f){return '<option value="'+escapeHTML(f)+'" '+(f===chooseDefaultFinish(card)?'selected':'')+'>'+finishLabel(f)+(finishPrice(card,f)!==null?' • '+moneyOrDash(finishPrice(card,f)):'')+'</option>'}).join('');
+  box.innerHTML='<div class="cardLookupMedia">'+image+'</div><div class="cardLookupInfo"><span class="lookupSource">'+escapeHTML(sourceLabel||"CARD FOUND")+'</span><strong>'+escapeHTML(card.name)+'</strong><small>'+escapeHTML(card.set_name||"")+(card.collector_number?' • #'+escapeHTML(card.collector_number):'')+'</small>'+cardPriceSummary(card)+'<label class="finishLabel" for="finishChoice">Printing finish</label><select id="finishChoice" class="finishChoice">'+finishOptions+'</select><button id="addFoundCard" type="button">＋ Add to Deck</button><div id="afterAddActions" class="hidden afterAddActions"><button id="addAnotherCopy" type="button">＋ Another Copy</button><button id="removeOneCopy" type="button">− Remove One</button><button id="undoThisAdd" type="button">↶ Undo</button></div><div class="scanRecovery"><button id="wrongCard" type="button">Not This Card</button><button id="rescanCard" type="button">Rescan</button></div></div>';
+  box.className="cardLookupResult";
+
+  var addBtn=el("addFoundCard"), after=el("afterAddActions"), finishChoice=el("finishChoice");
+  function selectedFinish(){return finishChoice?finishChoice.value:chooseDefaultFinish(card)};
+  function reflectQuantity(){
+    var qty=cardQuantity(card.name);
+    if(qty>0){
+      addBtn.disabled=true;
+      addBtn.textContent="✓ Added to Deck ("+qty+")";
+      after.className="afterAddActions";
+    }else{
+      addBtn.disabled=false;
+      addBtn.textContent="＋ Add to Deck";
+      after.className="hidden afterAddActions";
+    }
+  }
+  addBtn.onclick=function(){
+    addCardLine(card.name,card,selectedFinish());
+    // Disable immediately so a double tap cannot add a second copy.
+    reflectQuantity();
+  };
+  el("addAnotherCopy").onclick=function(){addCardLine(card.name,card,selectedFinish());reflectQuantity()};
+  el("removeOneCopy").onclick=function(){removeCardLine(card.name,card,selectedFinish());reflectQuantity()};
+  el("undoThisAdd").onclick=function(){undoDeckChange();reflectQuantity()};
+
+  var wrong=el("wrongCard"), rescan=el("rescanCard");
+  if(wrong)wrong.onclick=function(){
+    el("cardLookupResult").className="hidden cardLookupResult";
+    el("cardSearchPanel").className="cardToolPanel";
+    el("cardSearchInput").value="";
+    var sr=el("cardSearchResults");if(sr){sr.className="hidden cardSearchResults";sr.innerHTML="";}
+    el("cardSearchInput").focus();
+    setDeckStatus("Type part of the card name and choose the correct match.");
+  };
+  if(rescan)rescan.onclick=function(){
+    closeDeckTools();
+    el("scanPanel").className="cardToolPanel scanPanel";
+    el("scanStatus").textContent="Fill most of the photo with the card and keep it upright.";
+    if(typeof startCardCamera==="function")startCardCamera(); else el("cardScanInput").click();
+  };
+}
+function lookupScryfall(query,sourceLabel){
+  query=String(query||"").trim();
+  if(!query){setDeckStatus("Enter a card name.",true);return Promise.reject(new Error("No card name"))}
+  setDeckStatus("Matching card…");
+  return fetch("https://api.scryfall.com/cards/named?fuzzy="+encodeURIComponent(query))
+    .then(function(r){if(!r.ok)throw new Error("Card not found");return r.json()})
+    .then(function(card){showCardResult(card,sourceLabel||"SEARCH RESULT");setDeckStatus("");return card})
+    .catch(function(err){setDeckStatus("Could not match that card. Try typing the name instead.",true);throw err});
+}
+function renderCardSearchResults(cards,query){
+  var box=el("cardSearchResults");
+  box.innerHTML="";
+  if(!cards||!cards.length){
+    box.className="cardSearchResults";
+    box.innerHTML='<div class="searchEmpty">No cards found for “'+escapeHTML(query)+'”.</div>';
+    return;
+  }
+  var shown=cards.slice(0,24);
+  for(var i=0;i<shown.length;i++){
+    (function(card){
+      var item=document.createElement("button");
+      item.type="button";
+      item.className="cardSearchChoice";
+      var img="";
+      if(card.image_uris&&card.image_uris.small)img=card.image_uris.small;
+      else if(card.card_faces&&card.card_faces[0]&&card.card_faces[0].image_uris)img=card.card_faces[0].image_uris.small;
+      item.innerHTML=(img?'<img src="'+escapeHTML(img)+'" alt="">':'<span class="searchCardPlaceholder">MTG</span>')+
+        '<span class="cardSearchChoiceText"><strong>'+escapeHTML(card.name)+'</strong><small>'+escapeHTML(card.set_name||"")+(card.collector_number?' • #'+escapeHTML(card.collector_number):'')+'</small><em class="searchPrice">'+(card.prices&&card.prices.usd?moneyOrDash(card.prices.usd):'No regular price')+'</em></span><span class="chooseCard">Choose ›</span>';
+      item.onclick=function(){
+        showCardResult(card,"SELECTED CARD");
+        box.className="hidden cardSearchResults";
+        setDeckStatus("Selected "+card.name+".");
+      };
+      box.appendChild(item);
+    })(shown[i]);
+  }
+  box.className="cardSearchResults";
+  setDeckStatus(cards.length>shown.length?"Showing the first "+shown.length+" of "+cards.length+" matches. Refine the name to narrow it down.":cards.length+" matching card"+(cards.length===1?"":"s")+" found.");
+}
+function searchScryfallChoices(query){
+  query=String(query||"").trim();
+  if(!query){setDeckStatus("Enter part of a card name.",true);return Promise.resolve([])}
+  setDeckStatus("Searching card names…");
+  var box=el("cardSearchResults");
+  box.className="cardSearchResults";
+  box.innerHTML='<div class="searchLoading">Searching for “'+escapeHTML(query)+'”…</div>';
+  var nameQuery='name:'+query;
+  return fetch("https://api.scryfall.com/cards/search?order=name&unique=prints&q="+encodeURIComponent(nameQuery))
+    .then(function(r){if(!r.ok)throw new Error("No cards found");return r.json()})
+    .then(function(data){
+      var cards=data&&Array.isArray(data.data)?data.data:[];
+      renderCardSearchResults(cards,query);
+      return cards;
+    })
+    .catch(function(){
+      box.className="cardSearchResults";
+      box.innerHTML='<div class="searchEmpty">No card names matched “'+escapeHTML(query)+'”. Try a different spelling.</div>';
+      setDeckStatus("No matching card names found.",true);
+      return [];
+    });
+}
 function renderDecks(){
   var box=el("deckList");box.innerHTML="";
-  if(!decks.length){box.innerHTML='<div class="empty">No decks saved yet.<br>Create your first Wolf Lair deck.</div>';return}
+  if(!decks.length){box.innerHTML='<div class="empty deckEmpty"><strong>Your vault is empty.</strong><br>Create a deck, scan cards, search by name, paste a list, or import a file.</div>';return}
   for(var i=0;i<decks.length;i++){
    (function(d){
-   var c=document.createElement("div");c.className="deckCard";
-   var count=deckCardCount(d.cards);
-   c.innerHTML='<h3>'+escapeHTML(d.name)+'</h3><div class="deckMeta">Commander: '+escapeHTML(d.commander||"Not set")+' • '+count+' cards listed</div>'+ 
-    '<div class="deckPreview">'+escapeHTML((d.cards||"").split(/\n/).slice(0,5).join("\n"))+'</div>'+ 
-    '<div class="deckActions"><button class="editDeck">Edit</button><button class="deleteDeck">Delete</button></div>';
-   c.querySelector(".editDeck").onclick=function(){
-     editingDeck=d.id;el("deckName").value=d.name;el("commanderName").value=d.commander||"";el("deckCards").value=d.cards||"";
-     el("deckForm").className="deckForm";el("newDeck").className="wide hidden";window.scrollTo(0,0);
+   var card=document.createElement("div");card.className="deckCard";
+   var count=deckCardCount(d.cards), valueData=deckValueData(d.entries||[]);
+   card.innerHTML='<div class="deckCardTop"><div><h3>'+escapeHTML(d.name)+'</h3><div class="deckMeta">Commander: '+escapeHTML(d.commander||"Not set")+' • '+count+' cards listed</div><div class="deckSavedValue">Estimated value: $'+valueData.total.toFixed(2)+' • '+valueData.priced+' priced</div></div><span class="deckCount">'+count+'</span></div>'+
+    '<div class="deckPreview">'+escapeHTML((d.cards||"").split(/\n/).slice(0,5).join("\n"))+'</div>'+
+    '<div class="deckActions"><button class="editDeck">Open Deck</button><button class="deleteDeck">Delete</button></div>';
+   card.querySelector(".editDeck").onclick=function(){
+     editingDeck=d.id;deckUndoState=null;updateDeckUndoButton();deckEntries=Array.isArray(d.entries)?clone(d.entries):[];el("deckName").value=d.name;el("commanderName").value=d.commander||"";el("deckCards").value=d.cards||"";renderDeckValue();
+     el("deckFormTitle").textContent="Edit "+d.name;
+     el("deckForm").className="deckForm";el("newDeck").className="wide hidden";closeDeckTools();window.scrollTo(0,0);
    };
-   c.querySelector(".deleteDeck").onclick=function(){
+   card.querySelector(".deleteDeck").onclick=function(){
      decks=decks.filter(function(x){return x.id!==d.id});saveDecks();renderDecks();
    };
-   box.appendChild(c);
+   box.appendChild(card);
    })(decks[i]);
   }
 }
 function closeDeckForm(){
-  editingDeck=null;el("deckForm").className="hidden deckForm";el("newDeck").className="wide";
+  editingDeck=null;deckUndoState=null;deckEntries=[];updateDeckUndoButton();renderDeckValue();el("deckForm").className="hidden deckForm";el("newDeck").className="wide";
   el("deckName").value="";el("commanderName").value="";el("deckCards").value="";el("deckMsg").textContent="";
+  el("deckFormTitle").textContent="New Deck";
+  closeDeckTools();
 }
-el("newDeck").onclick=function(){editingDeck=null;el("deckForm").className="deckForm";el("newDeck").className="wide hidden";el("deckName").focus()};
+el("undoDeckChange").onclick=undoDeckChange;
+updateDeckUndoButton();
+renderDeckValue();
+el("newDeck").onclick=function(){
+  editingDeck=null;deckUndoState=null;deckEntries=[];updateDeckUndoButton();renderDeckValue();
+  el("deckFormTitle").textContent="New Deck";
+  el("deckForm").className="deckForm";
+  el("newDeck").className="wide hidden";
+  closeDeckTools();
+  el("deckName").focus();
+};
 el("cancelDeck").onclick=closeDeckForm;
 el("saveDeck").onclick=function(){
   var n=el("deckName").value.trim(), cmd=el("commanderName").value.trim(), cards=el("deckCards").value.trim();
   if(!n){el("deckMsg").textContent="Enter a deck name.";return}
+  syncStructuredEntriesToText();
   if(editingDeck){
-   for(var i=0;i<decks.length;i++)if(decks[i].id===editingDeck){decks[i].name=n;decks[i].commander=cmd;decks[i].cards=cards;break}
+   for(var i=0;i<decks.length;i++)if(decks[i].id===editingDeck){decks[i].name=n;decks[i].commander=cmd;decks[i].cards=cards;decks[i].entries=clone(deckEntries);break}
   }else{
-   decks.push({id:"d"+Date.now()+"_"+Math.floor(Math.random()*1000000),name:n,commander:cmd,cards:cards});
+   decks.push({id:"d"+Date.now()+"_"+Math.floor(Math.random()*1000000),name:n,commander:cmd,cards:cards,entries:clone(deckEntries)});
   }
   saveDecks();closeDeckForm();renderDecks();
 };
+el("searchCardBtn").onclick=function(){
+  closeDeckTools();
+  el("cardSearchPanel").className="cardToolPanel";
+  el("cardSearchInput").focus();
+};
+el("runCardSearch").onclick=function(){searchScryfallChoices(el("cardSearchInput").value)};
+el("cardSearchInput").onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();searchScryfallChoices(this.value)}};
+el("deckCards").addEventListener("input",function(){syncStructuredEntriesToText()});
+el("pasteDeckBtn").onclick=function(){
+  closeDeckTools();
+  setDeckStatus("Paste one card per line. Quantities like “4 Lightning Bolt” are supported.");
+  el("deckCards").focus();
+};
+el("importDeckBtn").onclick=function(){el("deckImportInput").click()};
+el("deckImportInput").onchange=function(){
+  var file=this.files&&this.files[0]; if(!file)return;
+  setDeckStatus("Importing "+file.name+"…");
+  var reader=new FileReader();
+  reader.onload=function(){
+    try{
+      var text=String(reader.result||"");
+      if(/\.csv$/i.test(file.name)){
+        var rows=text.split(/\r?\n/).filter(function(x){return x.trim()});
+        if(!rows.length)throw new Error("Empty file");
+        function parseCSV(line){
+          var out=[], cur="", q=false;
+          for(var i=0;i<line.length;i++){var ch=line[i];if(ch==='"'){if(q&&line[i+1]==='"'){cur+='"';i++}else q=!q}else if(ch===','&&!q){out.push(cur);cur=""}else cur+=ch}
+          out.push(cur);return out;
+        }
+        var heads=parseCSV(rows[0]).map(function(x){return x.trim().toLowerCase()});
+        var nameIndex=heads.indexOf("product name");
+        if(nameIndex<0)nameIndex=heads.indexOf("card name");
+        if(nameIndex<0)nameIndex=heads.indexOf("name");
+        if(nameIndex<0)nameIndex=heads.indexOf("title");
+        var qtyIndex=heads.indexOf("quantity");
+        if(qtyIndex<0)qtyIndex=heads.indexOf("qty");
+        if(qtyIndex<0)qtyIndex=heads.indexOf("count");
+        if(nameIndex<0)throw new Error("Could not find a card-name column");
+        var lines=[];
+        for(var r=1;r<rows.length;r++){
+          var cols=parseCSV(rows[r]), name=(cols[nameIndex]||"").trim();
+          if(!name)continue;
+          var qty=qtyIndex>=0?parseInt(cols[qtyIndex],10):1;
+          if(!qty||qty<1)qty=1;
+          lines.push(qty+" "+name);
+        }
+        if(!lines.length)throw new Error("No cards found");
+        deckEntries=[];
+        el("deckCards").value=lines.join("\n");
+        renderDeckValue();
+        setDeckStatus(lines.length+" card rows imported from CSV. Exact printing prices can be added by scanning/searching.");
+      }else{
+        deckEntries=[];
+        el("deckCards").value=text.trim();
+        renderDeckValue();
+        setDeckStatus("Deck list imported. Exact printing prices can be added by scanning/searching.");
+      }
+    }catch(err){setDeckStatus(err.message||"Could not import that file.",true)}
+    el("deckImportInput").value="";
+  };
+  reader.onerror=function(){setDeckStatus("Could not read that file.",true)};
+  reader.readAsText(file);
+};
+function loadTesseract(){
+  if(window.Tesseract)return Promise.resolve(window.Tesseract);
+  if(window.__wolfTesseractPromise)return window.__wolfTesseractPromise;
+  window.__wolfTesseractPromise=new Promise(function(resolve,reject){
+    var urls=[
+      "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js",
+      "https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"
+    ];
+    var attempt=0;
+    function tryNext(){
+      if(window.Tesseract){resolve(window.Tesseract);return}
+      if(attempt>=urls.length){reject(new Error("Scanner OCR failed to load"));return}
+      var sc=document.createElement("script");
+      sc.src=urls[attempt++];sc.async=true;sc.crossOrigin="anonymous";
+      sc.onload=function(){window.Tesseract?resolve(window.Tesseract):tryNext()};
+      sc.onerror=tryNext;
+      document.head.appendChild(sc);
+    }
+    tryNext();
+  }).catch(function(err){window.__wolfTesseractPromise=null;throw err});
+  return window.__wolfTesseractPromise;
+}
+var wolfOCRWorker=null, wolfOCRWorkerPromise=null, wolfOCRStatusTarget=null;
+function warmOCRWorker(){
+  if(wolfOCRWorker)return Promise.resolve(wolfOCRWorker);
+  if(wolfOCRWorkerPromise)return wolfOCRWorkerPromise;
+  wolfOCRWorkerPromise=loadTesseract().then(function(T){
+    return T.createWorker("eng",1,{
+      logger:function(m){
+        var target=wolfOCRStatusTarget;
+        if(target&&m&&m.status==="recognizing text"){
+          target.textContent="Reading card… "+Math.round((m.progress||0)*100)+"%";
+        }
+      }
+    });
+  }).then(function(worker){
+    wolfOCRWorker=worker;
+    return worker;
+  }).catch(function(err){
+    wolfOCRWorkerPromise=null;
+    throw err;
+  });
+  return wolfOCRWorkerPromise;
+}
+var cardCameraStream=null, cardDetectTimer=null, lastDetectedCard=null, stableCardFrames=0, missedCardFrames=0, autoCaptureBusy=false;
+var AUTO_CAPTURE_FRAMES=4;
+
+function loadOpenCV(){
+  if(window.cv&&window.cv.Mat)return Promise.resolve(window.cv);
+  if(window.__wolfOpenCVPromise)return window.__wolfOpenCVPromise;
+  window.__wolfOpenCVPromise=new Promise(function(resolve,reject){
+    var finished=false, tries=0;
+    function done(value){if(finished)return;finished=true;resolve(value)}
+    function fail(err){if(finished)return;finished=true;window.__wolfOpenCVPromise=null;reject(err)}
+    function probe(){
+      tries++;
+      if(window.cv&&window.cv.Mat){done(window.cv);return}
+      if(window.cv&&typeof window.cv.then==="function"){
+        window.cv.then(function(realCv){
+          window.cv=realCv;
+          if(realCv&&realCv.Mat)done(realCv);else if(tries<80)setTimeout(probe,120);
+        }).catch(function(){if(tries<80)setTimeout(probe,120);else fail(new Error("OpenCV unavailable"))});
+        return;
+      }
+      if(tries<80)setTimeout(probe,120);else fail(new Error("OpenCV unavailable"));
+    }
+    var s=document.createElement("script");
+    s.src="https://docs.opencv.org/4.10.0/opencv.js";
+    s.async=true;
+    s.onload=probe;
+    s.onerror=function(){fail(new Error("OpenCV failed to load"))};
+    document.head.appendChild(s);
+    probe();
+  });
+  return window.__wolfOpenCVPromise;
+}
+function stopCardCamera(){
+  if(cardDetectTimer){clearInterval(cardDetectTimer);cardDetectTimer=null}
+  if(cardCameraStream){
+    cardCameraStream.getTracks().forEach(function(t){try{t.stop()}catch(e){}});
+    cardCameraStream=null;
+  }
+  var video=el("scanVideo");
+  if(video)video.srcObject=null;
+  lastDetectedCard=null;stableCardFrames=0;missedCardFrames=0;autoCaptureBusy=false;
+  stopFallbackDetector();
+  activeCV=null;
+  var live=el("liveScanner");if(live)live.className="hidden liveScanner";
+}
+function orderCardPoints(points){
+  var pts=points.slice();
+  var sums=pts.map(function(p){return p.x+p.y});
+  var diffs=pts.map(function(p){return p.y-p.x});
+  function atMin(arr){var ix=0;for(var i=1;i<arr.length;i++)if(arr[i]<arr[ix])ix=i;return pts[ix]}
+  function atMax(arr){var ix=0;for(var i=1;i<arr.length;i++)if(arr[i]>arr[ix])ix=i;return pts[ix]}
+  return [atMin(sums),atMin(diffs),atMax(sums),atMax(diffs)]; // TL, TR, BR, BL
+}
+function defaultCardRect(w,h){
+  var targetRatio=2.5/3.5, ch=h*.78, cw=ch*targetRatio;
+  if(cw>w*.82){cw=w*.82;ch=cw/targetRatio}
+  var x=(w-cw)/2,y=(h-ch)/2;
+  return [{x:x,y:y},{x:x+cw,y:y},{x:x+cw,y:y+ch},{x:x,y:y+ch}];
+}
+function drawCardOverlay(points,found,progress){
+  var video=el("scanVideo"), overlay=el("scanOverlay"), state=el("cameraState");
+  if(!video||!overlay||!video.videoWidth)return;
+  var dw=overlay.width,dh=overlay.height,ctx=overlay.getContext("2d");
+  ctx.clearRect(0,0,dw,dh);
+  var pts=points&&points.length===4?points:defaultCardRect(dw,dh);
+  ctx.save();
+  ctx.lineWidth=Math.max(3,dw*.008);
+  ctx.strokeStyle=found?"rgba(126,235,126,.98)":"rgba(221,188,126,.88)";
+  ctx.fillStyle=found?"rgba(62,183,78,.08)":"rgba(220,180,110,.035)";
+  ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+  for(var i=1;i<4;i++)ctx.lineTo(pts[i].x,pts[i].y);
+  ctx.closePath();ctx.fill();ctx.stroke();
+  var len=Math.max(18,dw*.055);
+  ctx.lineWidth=Math.max(5,dw*.012);
+  for(var j=0;j<4;j++){
+    var p=pts[j], a=pts[(j+1)%4], prev=pts[(j+3)%4];
+    function toward(from,to,d){var dx=to.x-from.x,dy=to.y-from.y,l=Math.sqrt(dx*dx+dy*dy)||1;return{x:from.x+dx/l*d,y:from.y+dy/l*d}}
+    var p1=toward(p,a,len),p2=toward(p,prev,len);
+    ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p.x,p.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
+  }
+  ctx.restore();
+  if(state){
+    if(found&&progress>=AUTO_CAPTURE_FRAMES)state.textContent="CAPTURING";
+    else if(found)state.textContent="CARD LOCK "+Math.min(100,Math.round(progress/AUTO_CAPTURE_FRAMES*100))+"%";
+    else state.textContent="CENTER CARD";
+  }
+}
+function detectCardFrame(cv){
+  if(autoCaptureBusy)return;
+  var video=el("scanVideo"), overlay=el("scanOverlay");
+  if(!video||video.readyState<2||!video.videoWidth)return;
+  var dw=360, dh=Math.max(1,Math.round(video.videoHeight*(dw/video.videoWidth)));
+  overlay.width=dw;overlay.height=dh;
+  var work=document.createElement("canvas");work.width=dw;work.height=dh;
+  var wctx=work.getContext("2d");wctx.drawImage(video,0,0,dw,dh);
+  var src=null,gray=null,blur=null,edges=null,contours=null,hierarchy=null;
+  try{
+    src=cv.imread(work);gray=new cv.Mat();blur=new cv.Mat();edges=new cv.Mat();
+    cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
+    cv.GaussianBlur(gray,blur,new cv.Size(5,5),0,0,cv.BORDER_DEFAULT);
+    cv.Canny(blur,edges,55,150,3,false);
+    contours=new cv.MatVector();hierarchy=new cv.Mat();
+    cv.findContours(edges,contours,hierarchy,cv.RETR_LIST,cv.CHAIN_APPROX_SIMPLE);
+    var best=null,bestScore=0,frameArea=dw*dh,centerX=dw/2,centerY=dh/2;
+    for(var i=0;i<contours.size();i++){
+      var cnt=contours.get(i), area=Math.abs(cv.contourArea(cnt));
+      if(area<frameArea*.10){cnt.delete();continue}
+
+      var peri=cv.arcLength(cnt,true), approx=new cv.Mat();
+      cv.approxPolyDP(cnt,approx,0.028*peri,true);
+
+      var pts=null, ratioArea=0, width=0, height=0, cx=0, cy=0, ratioScore=0;
+
+      if(approx.rows===4&&cv.isContourConvex(approx)){
+        var raw=approx.data32S;pts=[];
+        for(var p=0;p<4;p++)pts.push({x:raw[p*2],y:raw[p*2+1]});
+        pts=orderCardPoints(pts);
+        function dist(a,b){var x=a.x-b.x,y=a.y-b.y;return Math.sqrt(x*x+y*y)}
+        width=(dist(pts[0],pts[1])+dist(pts[3],pts[2]))/2;
+        height=(dist(pts[0],pts[3])+dist(pts[1],pts[2]))/2;
+        ratioArea=Math.abs(cv.contourArea(approx))/frameArea;
+        cx=(pts[0].x+pts[1].x+pts[2].x+pts[3].x)/4;
+        cy=(pts[0].y+pts[1].y+pts[2].y+pts[3].y)/4;
+      }else{
+        // Phone cameras/glare often break one edge of a card. A centered,
+        // card-proportioned bounding box is a more forgiving backup.
+        var br=cv.boundingRect(cnt);
+        width=br.width;height=br.height;
+        ratioArea=(br.width*br.height)/frameArea;
+        cx=br.x+br.width/2;cy=br.y+br.height/2;
+        pts=[
+          {x:br.x,y:br.y},
+          {x:br.x+br.width,y:br.y},
+          {x:br.x+br.width,y:br.y+br.height},
+          {x:br.x,y:br.y+br.height}
+        ];
+      }
+
+      var ar=width/Math.max(1,height);
+      ratioScore=Math.max(0,1-Math.abs(ar-(2.5/3.5))/.30);
+      var centerDist=Math.sqrt(Math.pow((cx-centerX)/dw,2)+Math.pow((cy-centerY)/dh,2));
+      var centerScore=Math.max(0,1-centerDist*2.4);
+      var score=ratioArea*2.2+ratioScore*2.2+centerScore;
+
+      if(ratioArea>.11&&ratioArea<.78&&ratioScore>.42&&centerDist<.25&&score>bestScore){
+        bestScore=score;
+        best={points:pts,cx:cx,cy:cy,width:width,height:height,ratioScore:ratioScore,ratioArea:ratioArea};
+      }
+
+      approx.delete();cnt.delete();
+    }
+    if(best&&bestScore>1.35){
+      missedCardFrames=0;
+      var now={cx:best.cx/dw,cy:best.cy/dh,w:best.width/dw,h:best.height/dh};
+
+      if(lastDetectedCard){
+        var prev=lastDetectedCard.norm;
+        now={
+          cx:prev.cx*.35+now.cx*.65,
+          cy:prev.cy*.35+now.cy*.65,
+          w:prev.w*.35+now.w*.65,
+          h:prev.h*.35+now.h*.65
+        };
+      }
+
+      lastDetectedCard={points:best.points,norm:now,detectW:dw,detectH:dh};
+      stableCardFrames=Math.min(AUTO_CAPTURE_FRAMES,stableCardFrames+1);
+      guideCaptureFrames=Math.min(GUIDE_CAPTURE_FRAMES,guideCaptureFrames+1);
+
+      drawCardOverlay(best.points,true,guideCaptureFrames/GUIDE_CAPTURE_FRAMES*AUTO_CAPTURE_FRAMES);
+
+      if(guideCaptureFrames>=GUIDE_CAPTURE_FRAMES){
+        autoCaptureBusy=true;
+        captureDetectedCard(cv,lastDetectedCard);
+      }
+    }else{
+      missedCardFrames++;
+
+      // A brief autofocus miss should not wipe the lock, but random scenery
+      // cannot build toward capture because only valid card rectangles add progress.
+      guideCaptureFrames=Math.max(0,guideCaptureFrames-.75);
+      stableCardFrames=Math.max(0,stableCardFrames-.5);
+
+      if(lastDetectedCard&&missedCardFrames<=2&&guideCaptureFrames>0){
+        drawCardOverlay(lastDetectedCard.points,true,guideCaptureFrames/GUIDE_CAPTURE_FRAMES*AUTO_CAPTURE_FRAMES);
+      }else{
+        if(missedCardFrames>2)lastDetectedCard=null;
+        drawCardOverlay(null,false,guideCaptureFrames/GUIDE_CAPTURE_FRAMES*AUTO_CAPTURE_FRAMES);
+      }
+    }
+  }catch(e){
+    drawCardOverlay(null,false,0);
+  }finally{
+    [src,gray,blur,edges,hierarchy].forEach(function(m){if(m)try{m.delete()}catch(e){}});
+    if(contours)try{contours.delete()}catch(e){}
+  }
+}
+function cropCardFromVideo(cv,detected){
+  var video=el("scanVideo");
+  if(!video||!video.videoWidth)return Promise.reject(new Error("Camera not ready"));
+  var points=detected&&detected.points?detected.points:null;
+  var dw=detected&&detected.detectW?detected.detectW:360;
+  var dh=detected&&detected.detectH?detected.detectH:Math.round(video.videoHeight*(360/video.videoWidth));
+  if(!points)points=defaultCardRect(dw,dh);
+  var maxW=1500,scale=Math.min(1,maxW/video.videoWidth);
+  var sw=Math.round(video.videoWidth*scale),sh=Math.round(video.videoHeight*scale);
+  var source=document.createElement("canvas");source.width=sw;source.height=sh;source.getContext("2d").drawImage(video,0,0,sw,sh);
+  var ordered=orderCardPoints(points);
+  var sx=sw/dw,sy=sh/dh;
+  var srcPts=[];
+  ordered.forEach(function(p){srcPts.push(p.x*sx,p.y*sy)});
+  var outW=750,outH=1050;
+  var src=cv.imread(source),dst=new cv.Mat(),srcTri=cv.matFromArray(4,1,cv.CV_32FC2,srcPts);
+  var dstTri=cv.matFromArray(4,1,cv.CV_32FC2,[0,0,outW-1,0,outW-1,outH-1,0,outH-1]);
+  var M=cv.getPerspectiveTransform(srcTri,dstTri);
+  cv.warpPerspective(src,dst,M,new cv.Size(outW,outH),cv.INTER_LINEAR,cv.BORDER_REPLICATE,new cv.Scalar());
+  var crop=document.createElement("canvas");crop.width=outW;crop.height=outH;cv.imshow(crop,dst);
+  src.delete();dst.delete();srcTri.delete();dstTri.delete();M.delete();
+  return new Promise(function(resolve,reject){
+    crop.toBlob(function(blob){
+      if(!blob){reject(new Error("Could not crop card"));return}
+      resolve(new File([blob],"wolf-lair-card.jpg",{type:"image/jpeg"}));
+    },"image/jpeg",.92);
+  });
+}
+function captureDetectedCard(cv,detected){
+  var state=el("cameraState");if(state)state.textContent="CAPTURING";
+  cropCardFromVideo(cv,detected).then(function(file){
+    stopCardCamera();
+    var panel=el("scanPanel");panel.className="cardToolPanel scanPanel";
+    el("scanStatus").textContent="Card cropped. Reading the title bar…";
+    return scanImageFile(file,{alreadyCropped:true});
+  }).catch(function(){
+    autoCaptureBusy=false;stableCardFrames=0;
+    setDeckStatus("I couldn't crop that card cleanly. Keep the whole card inside the guide and tap Capture Now.",true);
+  });
+}
+var fallbackFrameSample=null, fallbackStableFrames=0, fallbackDetectTimer=null, activeCV=null, guideCaptureFrames=0;
+var GUIDE_CAPTURE_FRAMES=5;
+
+function stopFallbackDetector(){
+  if(fallbackDetectTimer){clearInterval(fallbackDetectTimer);fallbackDetectTimer=null}
+  fallbackFrameSample=null;fallbackStableFrames=0;guideCaptureFrames=0;
+}
+function sampleGuideRegion(){
+  var video=el("scanVideo");
+  if(!video||video.readyState<2||!video.videoWidth)return null;
+  var w=48,h=68,canvas=document.createElement("canvas");canvas.width=w;canvas.height=h;
+  var ctx=canvas.getContext("2d");
+  var rect=defaultCardRect(video.videoWidth,video.videoHeight);
+  var x=rect[0].x,y=rect[0].y,sw=rect[1].x-rect[0].x,sh=rect[3].y-rect[0].y;
+  ctx.drawImage(video,x,y,sw,sh,0,0,w,h);
+  var data=ctx.getImageData(0,0,w,h).data, gray=new Uint8Array(w*h), edges=0, idx=0;
+  for(var yy=0;yy<h;yy++){
+    for(var xx=0;xx<w;xx++){
+      var p=(yy*w+xx)*4,g=(data[p]*.299+data[p+1]*.587+data[p+2]*.114)|0;
+      gray[idx++]=g;
+      if(xx>0&&Math.abs(g-gray[idx-2])>34)edges++;
+      if(yy>0&&Math.abs(g-gray[idx-1-w])>34)edges++;
+    }
+  }
+  var sum=0,sumSq=0;
+  for(var gi=0;gi<gray.length;gi++){sum+=gray[gi];sumSq+=gray[gi]*gray[gi]}
+  var mean=sum/gray.length, variance=Math.max(0,(sumSq/gray.length)-(mean*mean));
+  return {gray:gray,edgeRatio:edges/(w*h*2),contrast:Math.sqrt(variance)};
+}
+function runFallbackStability(){
+  if(autoCaptureBusy||activeCV)return;
+  var state=el("cameraState");
+  if(state)state.textContent="AUTO DETECTION LOADING";
+}
+function cropCardFromVideoBasic(){
+  return new Promise(function(resolve,reject){
+    try{
+      var video=el("scanVideo");
+      if(!video||video.readyState<2||!video.videoWidth||!video.videoHeight){
+        reject(new Error("Camera frame is not ready"));
+        return;
+      }
+
+      var rect=defaultCardRect(video.videoWidth,video.videoHeight);
+      var x=Math.max(0,Math.round(rect[0].x));
+      var y=Math.max(0,Math.round(rect[0].y));
+      var sw=Math.min(video.videoWidth-x,Math.round(rect[1].x-rect[0].x));
+      var sh=Math.min(video.videoHeight-y,Math.round(rect[3].y-rect[0].y));
+      if(sw<20||sh<20){
+        reject(new Error("Card guide crop is invalid"));
+        return;
+      }
+
+      var out=document.createElement("canvas");
+      out.width=900;out.height=1260;
+      var ctx=out.getContext("2d",{alpha:false});
+      if(!ctx){reject(new Error("Canvas is unavailable"));return}
+
+      ctx.drawImage(video,x,y,sw,sh,0,0,out.width,out.height);
+
+      // Show the captured frame immediately so the user knows the shutter worked,
+      // even before OCR/network lookup starts.
+      try{
+        var preview=el("scanPreview");
+        if(preview){
+          preview.src=out.toDataURL("image/jpeg",.88);
+          preview.className="";
+        }
+      }catch(previewErr){}
+
+      function finishBlob(blob){
+        if(!blob){reject(new Error("Phone could not create the photo"));return}
+        resolve(blob);
+      }
+
+      if(typeof out.toBlob==="function"){
+        out.toBlob(finishBlob,"image/jpeg",.92);
+      }else{
+        // Older/mobile fallback.
+        try{
+          var data=out.toDataURL("image/jpeg",.92);
+          fetch(data).then(function(r){return r.blob()}).then(finishBlob).catch(reject);
+        }catch(e){reject(e)}
+      }
+    }catch(e){
+      reject(e);
+    }
+  });
+}
+function captureBasicCard(){
+  var state=el("cameraState"), status=el("scanStatus"), btn=el("manualCapture");
+  if(state)state.textContent="CAPTURING";
+  if(status)status.textContent="Taking photo…";
+  if(btn)btn.disabled=true;
+
+  // Give the browser one fresh painted video frame before copying it to canvas.
+  var waitForFrame=new Promise(function(resolve){
+    var video=el("scanVideo");
+    if(video&&typeof video.requestVideoFrameCallback==="function"){
+      var done=false;
+      var timer=setTimeout(function(){if(!done){done=true;resolve()}},350);
+      video.requestVideoFrameCallback(function(){
+        if(done)return;
+        done=true;clearTimeout(timer);resolve();
+      });
+    }else{
+      requestAnimationFrame(function(){requestAnimationFrame(resolve)});
+    }
+  });
+
+  waitForFrame.then(cropCardFromVideoBasic).then(function(blob){
+    stopCardCamera();
+    el("scanPanel").className="cardToolPanel scanPanel";
+    el("scanStatus").textContent="Photo taken. Reading the card title…";
+    return scanImageFile(blob,{alreadyCropped:true});
+  }).catch(function(err){
+    autoCaptureBusy=false;fallbackStableFrames=0;
+    if(btn)btn.disabled=false;
+    if(state)state.textContent="READY";
+    if(status)status.textContent="The live-camera shutter failed. Tap Phone Camera instead.";
+    setDeckStatus((err&&err.message?err.message+". ":"")+"Use Phone Camera to take the picture with your phone's native camera.",true);
+  });
+}
+function startCardCamera(){
+  closeDeckTools();
+  el("scanPanel").className="cardToolPanel scanPanel";
+  el("liveScanner").className="liveScanner";
+  el("scanStatus").textContent="Opening camera…";
+  el("cameraState").textContent="CENTER CARD";
+  activeCV=null;
+  autoCaptureBusy=false;
+  stopFallbackDetector();
+  var shutter=el("manualCapture");if(shutter)shutter.disabled=false;
+
+  // Warm OCR while the camera opens. The phone scanner now uses the fixed
+  // card guide instead of depending on fragile browser edge detection.
+  warmOCRWorker().catch(function(){});
+
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    el("liveScanner").className="hidden liveScanner";
+    el("scanStatus").textContent="Live camera isn't available here. Use a photo instead.";
+    el("cardScanInput").click();
+    return;
+  }
+
+  navigator.mediaDevices.getUserMedia({
+    video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}},
+    audio:false
+  }).then(function(stream){
+    cardCameraStream=stream;
+    var video=el("scanVideo");
+    video.srcObject=stream;
+    video.onloadedmetadata=function(){
+      video.play().then(function(){
+        var stage=el("cameraStage");
+        if(stage)stage.style.aspectRatio=video.videoWidth+" / "+video.videoHeight;
+        var overlay=el("scanOverlay");
+        overlay.width=360;
+        overlay.height=Math.max(1,Math.round(video.videoHeight*(360/video.videoWidth)));
+        drawCardOverlay(null,false,0);
+        el("cameraState").textContent="READY";
+        el("scanStatus").textContent="Fill the guide with the whole card, then tap Scan This Card.";
+      }).catch(function(){
+        el("scanStatus").textContent="Camera opened but could not start video. Try Use Photo.";
+      });
+    };
+  }).catch(function(){
+    stopCardCamera();
+    el("scanPanel").className="cardToolPanel scanPanel";
+    el("scanStatus").textContent="Camera permission wasn't available. Use a photo instead.";
+    el("cardScanInput").click();
+  });
+}
+function normalizeCardText(s){
+  return String(s||"").toLowerCase().replace(/[^a-z0-9]+/g," ").replace(/\s+/g," ").trim();
+}
+function editDistance(a,b){
+  a=normalizeCardText(a);b=normalizeCardText(b);
+  var m=a.length,n=b.length,prev=new Array(n+1),cur=new Array(n+1);
+  for(var j=0;j<=n;j++)prev[j]=j;
+  for(var i=1;i<=m;i++){
+    cur[0]=i;
+    for(var k=1;k<=n;k++){
+      var cost=a[i-1]===b[k-1]?0:1;
+      cur[k]=Math.min(cur[k-1]+1,prev[k]+1,prev[k-1]+cost);
+    }
+    var tmp=prev;prev=cur;cur=tmp;
+  }
+  return prev[n];
+}
+function nameSimilarity(a,b){
+  a=normalizeCardText(a);b=normalizeCardText(b);
+  if(!a||!b)return 0;
+  if(a===b)return 1;
+  var maxLen=Math.max(a.length,b.length);
+  return Math.max(0,1-editDistance(a,b)/maxLen);
+}
+function showScanChoices(cards,status,resolve){
+  var unique=[],seen={};
+  for(var i=0;i<cards.length;i++){
+    var card=cards[i];
+    if(!card||!card.id||seen[card.id])continue;
+    seen[card.id]=true;unique.push(card);
+  }
+  if(!unique.length)throw new Error("No reliable card match");
+
+  el("cardSearchPanel").className="cardToolPanel";
+  renderCardSearchResults(unique.slice(0,12),"scan");
+  var results=el("cardSearchResults");
+  status.textContent="I found a few possible matches. Tap the correct card.";
+  setDeckStatus("Scanner wasn't certain enough to choose for you.");
+  if(resolve)resolve(unique);
+}
+function scanImageFile(file,options){
+  options=options||{};
+  var preview=el("scanPreview"), panel=el("scanPanel"), status=el("scanStatus");
+  panel.className="cardToolPanel scanPanel";
+  status.textContent="Reading card title…";
+  var url=URL.createObjectURL(file);
+  preview.src=url;preview.className="";
+
+  return new Promise(function(resolve,reject){
+    var img=new Image();
+    img.onload=function(){
+      try{
+        var maxSide=1500, scale=Math.min(1,maxSide/Math.max(img.naturalWidth,img.naturalHeight));
+        var full=document.createElement("canvas");
+        full.width=Math.max(1,Math.round(img.naturalWidth*scale));
+        full.height=Math.max(1,Math.round(img.naturalHeight*scale));
+        full.getContext("2d").drawImage(img,0,0,full.width,full.height);
+
+        var imageRatio=full.width/Math.max(1,full.height);
+        var looksAlreadyCardShaped=imageRatio>.60&&imageRatio<.82;
+        var gx,gy,gw,gh;
+        if(options.alreadyCropped||looksAlreadyCardShaped){
+          gx=0;gy=0;gw=full.width;gh=full.height;
+        }else{
+          var guide=defaultCardRect(full.width,full.height);
+          gx=guide[0].x;gy=guide[0].y;gw=guide[1].x-guide[0].x;gh=guide[3].y-guide[0].y;
+        }
+
+        function makeTitleCanvas(yPct,hPct){
+          var sx=gx+gw*.015, sy=gy+gh*yPct, sw=gw*.97, sh=gh*hPct;
+          var out=document.createElement("canvas");
+          out.width=Math.max(1,Math.round(sw*2.2));
+          out.height=Math.max(1,Math.round(sh*2.2));
+          var ctx=out.getContext("2d");
+          ctx.filter="grayscale(1) contrast(1.75) brightness(1.08)";
+          ctx.drawImage(full,sx,sy,sw,sh,0,0,out.width,out.height);
+          ctx.filter="none";
+          return out;
+        }
+
+        var passes=[
+          makeTitleCanvas(.008,.15),
+          makeTitleCanvas(0,.24),
+          makeTitleCanvas(0,.34)
+        ];
+
+        var candidates=[];
+        function addCandidate(txt,confidence){
+          txt=String(txt||"").replace(/[^A-Za-z0-9'’,:\- ]+/g," ").replace(/\s+/g," ").trim();
+          if(txt.length<3||txt.length>60)return;
+          var low=txt.toLowerCase();
+          if(/^(target|when|whenever|until|creature|instant|sorcery|enchantment|artifact|land|planeswalker|tap|add|draw|you|your|each|the|a|an)\b/.test(low))return;
+          if(!candidates.some(function(x){return x.text.toLowerCase()===low})){
+            candidates.push({text:txt,confidence:confidence||0});
+          }
+        }
+        function collectOCR(data){
+          if(!data)return;
+          if(Array.isArray(data.lines)){
+            data.lines.sort(function(a,b){return (b.confidence||0)-(a.confidence||0)}).forEach(function(line){
+              addCandidate(line.text,line.confidence);
+            });
+          }
+          String(data.text||"").split(/\r?\n/).forEach(function(line){addCandidate(line,0)});
+        }
+
+        wolfOCRStatusTarget=status;
+        warmOCRWorker().then(function(worker){
+          var pass=0;
+          function nextPass(){
+            if(pass>=passes.length||candidates.length>=2)return Promise.resolve();
+            var current=passes[pass++];
+            status.textContent="Reading title… "+Math.min(90,pass*30)+"%";
+            var prep=worker.setParameters?worker.setParameters({tessedit_pageseg_mode:"7"}):Promise.resolve();
+            return Promise.resolve(prep).then(function(){return worker.recognize(current)})
+              .then(function(result){collectOCR(result&&result.data);return nextPass()})
+              .catch(function(){return nextPass()});
+          }
+          return nextPass();
+        }).then(function(){
+          candidates=candidates.slice(0,8);
+          if(!candidates.length)throw new Error("Could not read the title");
+          status.textContent="Checking card name…";
+
+          var jobs=candidates.map(function(candidate){
+            return fetch("https://api.scryfall.com/cards/named?fuzzy="+encodeURIComponent(candidate.text))
+              .then(function(r){if(!r.ok)throw new Error("No match");return r.json()})
+              .then(function(card){
+                return {card:card,ocr:candidate.text,similarity:nameSimilarity(candidate.text,card.name),confidence:candidate.confidence||0};
+              })
+              .catch(function(){return null});
+          });
+          return Promise.all(jobs);
+        }).then(function(matches){
+          matches=(matches||[]).filter(Boolean);
+          if(!matches.length)throw new Error("No card match");
+
+          matches.sort(function(a,b){
+            var as=a.similarity+(a.confidence/100)*.10;
+            var bs=b.similarity+(b.confidence/100)*.10;
+            return bs-as;
+          });
+
+          var best=matches[0];
+          if(best.similarity>=.68){
+            showCardResult(best.card,"SCANNED CARD");
+            status.textContent="Card identified — confirm below.";
+            setDeckStatus("Check the card image and printing before adding it.");
+            resolve(best.card);
+            return;
+          }
+
+          showScanChoices(matches.map(function(x){return x.card}),status,resolve);
+        }).catch(function(err){
+          status.textContent="I couldn't read that title clearly.";
+          el("cardSearchPanel").className="cardToolPanel";
+          el("cardSearchInput").value="";
+          setDeckStatus("Try Scan This Card again with the full card inside the guide, or search by name.",true);
+          reject(err);
+        }).finally(function(){setTimeout(function(){URL.revokeObjectURL(url)},3000)});
+      }catch(err){
+        setTimeout(function(){URL.revokeObjectURL(url)},3000);
+        reject(err);
+      }
+    };
+    img.onerror=function(){setTimeout(function(){URL.revokeObjectURL(url)},3000);reject(new Error("Could not open image"))};
+    img.src=url;
+  });
+}
+function startReliableCardScan(){
+  stopCardCamera();
+  closeDeckTools();
+  el("scanPanel").className="cardToolPanel scanPanel";
+  el("liveScanner").className="hidden liveScanner";
+  el("scanStatus").textContent="Take a clear photo with the whole card filling most of the frame.";
+  var input=el("cardScanInput");
+  if(input){input.value="";input.click();}
+}
+el("scanCardBtn").onclick=startReliableCardScan;
+el("manualCapture").onclick=function(){
+  if(autoCaptureBusy)return;
+  autoCaptureBusy=true;
+  captureBasicCard();
+};
+el("photoFallback").onclick=function(){stopCardCamera();el("cardScanInput").click()};
+el("cancelScanner").onclick=function(){stopCardCamera();closeDeckTools()};
+el("cardScanInput").onchange=function(){
+  var file=this.files&&this.files[0]; if(!file)return;
+  stopCardCamera();
+  el("scanPanel").className="cardToolPanel scanPanel";
+  scanImageFile(file).catch(function(){});
+  this.value="";
+};
+document.addEventListener("visibilitychange",function(){if(document.hidden)stopCardCamera()});
 loadDecks();
 loadGame();
 load();render();
 renderDecks();
 renderGame();
+})();
+</script>
+<script>
+(function(){
+  function showTracker(){
+    document.getElementById('gameView').className='hidden';
+    document.getElementById('trackerView').className='';
+    window.scrollTo(0,0);
+  }
+  function showGame(){
+    document.getElementById('trackerView').className='hidden';
+    document.getElementById('decksView').className='hidden';
+    document.getElementById('gameView').className='';
+    if(typeof renderGame==='function') renderGame();
+    window.scrollTo(0,0);
+  }
+  function showDecks(){
+    document.getElementById('trackerView').className='hidden';
+    document.getElementById('gameView').className='hidden';
+    document.getElementById('decksView').className='';
+    if(typeof renderDecks==='function') renderDecks();
+    window.scrollTo(0,0);
+  }
+  var back=document.getElementById('backHome');
+  var backGame=document.getElementById('backGameHome');
+  var backDecks=document.getElementById('backDecksHome');
+  var toGame=document.getElementById('quickGameMode');
+  if(back)back.onclick=function(){location.href='./preview-home.html?preview=6';};
+  if(backGame)backGame.onclick=function(){location.href='./preview-home.html?preview=6';};
+  if(backDecks)backDecks.onclick=function(){location.href='./preview-home.html?preview=6';};
+  if(toGame)toGame.onclick=showGame;
+  var params=new URLSearchParams(location.search);
+  if(params.get('mode')==='game') showGame();
+  else if(params.get('mode')==='decks') showDecks();
+  else showTracker();
 })();
 </script>
 </body>
