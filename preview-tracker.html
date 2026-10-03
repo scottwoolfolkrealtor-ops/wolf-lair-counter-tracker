@@ -1544,6 +1544,14 @@ body.trackerPreview #trackerView .trackerNavigation #quickGameMode:active{
 }
 body.trackerPreview #trackerView header.trackerTitle{padding-right:14px}
 
+
+/* One persistent sound preference shared by the table and creature screen. */
+body.trackerPreview #gameView .gameNavigation{display:flex;flex:none;gap:6px;align-items:stretch}
+body.trackerPreview #gameView .gameNavigation #backGameHome{flex:1;margin:0}
+body.trackerPreview .soundToggle{flex:0 0 82px;min-height:36px;padding:5px 7px;font-size:11px;touch-action:manipulation;border-radius:10px}
+body.trackerPreview .soundToggle[aria-pressed="false"]{opacity:.7}
+body.trackerPreview #trackerView .trackerNavigation .soundToggle{min-height:48px}
+
 </style>
 </head>
 <body class="trackerPreview">
@@ -1767,7 +1775,7 @@ body.trackerPreview #trackerView header.trackerTitle{padding-right:14px}
 <div class="playerTrackerSurface">
 <main>
 <div class="trackerNavigation"><button id="backHome" class="backHome" type="button">‹ Wolf Lair Home</button>
-<button id="quickGameMode" class="quickSwitch" type="button">GAME MODE ›</button></div>
+<button id="quickGameMode" class="quickSwitch" type="button">GAME MODE ›</button><button class="soundToggle" type="button" aria-label="Mute sound effects" aria-pressed="true">Sound on</button></div>
 <header class="trackerTitle">
   <div id="activePlayerLabel" class="trackerBrand">PLAYER 1 • THE WOLF LAIR</div>
   <h1>BATTLEFIELD COMMAND</h1>
@@ -1789,7 +1797,7 @@ body.trackerPreview #trackerView header.trackerTitle{padding-right:14px}
 
 <section id="gameView" class="hidden">
   <main>
-    <button id="backGameHome" class="backHome" type="button">‹ Wolf Lair Home</button>
+    <div class="gameNavigation"><button id="backGameHome" class="backHome" type="button">‹ Wolf Lair Home</button><button class="soundToggle" type="button" aria-label="Mute sound effects" aria-pressed="true">Sound on</button></div>
     <header class="gameTitle tableCommandTitle">
   <div class="trackerBrand">THE WOLF LAIR</div>
   <h1>BATTLEFIELD COMMAND</h1>
@@ -2200,8 +2208,8 @@ function renderGame(){
         card.querySelector('.poisonChip').classList.toggle('danger',player.poison>=10);
         saveGame();
       }
-      card.querySelector('.lifeDown').onclick=function(){player.life--;updatePlayerCounters();};
-      card.querySelector('.lifeUp').onclick=function(){player.life++;updatePlayerCounters();};
+      card.querySelector('.lifeDown').onclick=function(){player.life--;updatePlayerCounters();window.WolfAudio.play('lifeLoss');};
+      card.querySelector('.lifeUp').onclick=function(){player.life++;updatePlayerCounters();window.WolfAudio.play('lifeGain');};
       card.querySelector('.editLife').onclick=function(){
         var numberButton=this, panel=card.querySelector('.lifePanel');
         var input=document.createElement('input');
@@ -2218,9 +2226,11 @@ function renderGame(){
           if(finished)return;
           finished=true;
           var n=parseInt(input.value,10);
+          var previousLife=player.life;
           if(commit&&!isNaN(n))player.life=Math.max(-999,Math.min(999,n));
           panel.replaceChild(numberButton,input);
           updatePlayerCounters();
+          if(player.life!==previousLife)window.WolfAudio.play(player.life>previousLife?'lifeGain':'lifeLoss');
         }
         input.oninput=sizeInput;
         input.onblur=function(){finishLifeEdit(true);};
@@ -2232,9 +2242,9 @@ function renderGame(){
         input.select();
       };
       card.querySelector('.cmdDown').onclick=function(){player.commander=Math.max(0,player.commander-1);updatePlayerCounters();};
-      card.querySelector('.cmdUp').onclick=function(){player.commander++;updatePlayerCounters();};
+      card.querySelector('.cmdUp').onclick=function(){player.commander++;updatePlayerCounters();window.WolfAudio.play('commander');};
       card.querySelector('.poisonDown').onclick=function(){player.poison=Math.max(0,player.poison-1);updatePlayerCounters();};
-      card.querySelector('.poisonUp').onclick=function(){player.poison++;updatePlayerCounters();};
+      card.querySelector('.poisonUp').onclick=function(){player.poison++;updatePlayerCounters();window.WolfAudio.play('poison');};
       card.querySelector('.rotateSeat').onclick=function(){player.rotation=((Number(player.rotation)||0)+180)%360;saveGame();renderGame();};
       card.querySelector('.resetPlayer').onclick=function(){player.life=40;player.commander=0;player.poison=0;player.roll=null;saveGame();renderGame();};
       card.querySelector('.editPlayerName').onclick=function(){
@@ -3473,6 +3483,99 @@ renderGame();
   else showTracker();
 })();
 </script>
+<script>
+(function(){
+  var enabled=true,context=null,master=null,noiseBuffer=null,voices=[];
+  try{enabled=localStorage.getItem('wolfLairSoundEnabled')!=='false';}catch(e){}
+  function syncButtons(){
+    document.querySelectorAll('.soundToggle').forEach(function(button){
+      button.textContent=enabled?'Sound on':'Sound off';
+      button.setAttribute('aria-pressed',String(enabled));
+      button.setAttribute('aria-label',enabled?'Mute sound effects':'Unmute sound effects');
+      button.title=enabled?'Mute sound effects':'Unmute sound effects';
+    });
+  }
+  function stopVoice(voice){
+    clearTimeout(voice.timer);
+    voice.sources.forEach(function(source){try{source.stop();source.disconnect();}catch(e){}});
+    voice.nodes.forEach(function(node){try{node.disconnect();}catch(e){}});
+    voices=voices.filter(function(v){return v!==voice;});
+  }
+  function setEnabled(value){
+    enabled=!!value;
+    try{localStorage.setItem('wolfLairSoundEnabled',String(enabled));}catch(e){}
+    if(master)master.gain.value=enabled?0.35:0;
+    if(!enabled)voices.slice().forEach(stopVoice);
+    syncButtons();
+  }
+  function init(){
+    if(context)return true;
+    var Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)return false;
+    context=new Audio();master=context.createGain();master.gain.value=enabled?0.35:0;
+    var limiter=context.createDynamicsCompressor();limiter.threshold.value=-15;limiter.knee.value=15;limiter.ratio.value=8;
+    master.connect(limiter);limiter.connect(context.destination);
+    noiseBuffer=context.createBuffer(1,context.sampleRate,context.sampleRate);
+    var data=noiseBuffer.getChannelData(0);for(var i=0;i<data.length;i++)data[i]=Math.random()*2-1;
+    return true;
+  }
+  function synth(kind){
+    if(!enabled)return;
+    while(voices.length>=4)stopVoice(voices[0]);
+    var now=context.currentTime,voice={sources:[],nodes:[],timer:null};voices.push(voice);
+    function envelope(start,duration,level){
+      var gain=context.createGain();voice.nodes.push(gain);gain.connect(master);
+      gain.gain.setValueAtTime(0.0001,start);
+      gain.gain.exponentialRampToValueAtTime(level,start+0.008);
+      gain.gain.exponentialRampToValueAtTime(0.0001,start+duration);
+      return gain;
+    }
+    function tone(type,from,to,offset,duration,level){
+      var start=now+offset,source=context.createOscillator();voice.sources.push(source);
+      source.type=type;source.frequency.setValueAtTime(from,start);
+      source.frequency.exponentialRampToValueAtTime(to,start+duration);
+      source.connect(envelope(start,duration,level));source.start(start);source.stop(start+duration+0.01);
+    }
+    function noise(type,from,to,offset,duration,level){
+      var start=now+offset,source=context.createBufferSource(),filter=context.createBiquadFilter();
+      voice.sources.push(source);voice.nodes.push(filter);source.buffer=noiseBuffer;
+      filter.type=type;filter.Q.value=1.4;filter.frequency.setValueAtTime(from,start);
+      filter.frequency.exponentialRampToValueAtTime(to,start+duration);
+      source.connect(filter);filter.connect(envelope(start,duration,level));source.start(start);source.stop(start+duration+0.01);
+    }
+    if(kind==='lifeLoss'){
+      noise('bandpass',6500,700,0,0.16,0.34);
+      tone('triangle',260,95,0.02,0.12,0.12);
+    }else if(kind==='lifeGain'){
+      tone('sine',523,660,0,0.16,0.22);
+      tone('sine',784,1047,0.075,0.22,0.18);
+    }else if(kind==='poison'){
+      noise('lowpass',650,120,0,0.25,0.25);
+      [0,0.065,0.14].forEach(function(offset,i){tone('sine',150+i*50,65+i*20,offset,0.09,0.3);});
+    }else if(kind==='commander'){
+      noise('bandpass',7500,500,0,0.2,0.45);
+      tone('triangle',160,45,0.025,0.28,0.38);
+      tone('sine',920,650,0.035,0.15,0.12);
+    }
+    voice.timer=setTimeout(function(){stopVoice(voice);},600);
+  }
+  function play(kind){
+    if(!enabled)return;
+    try{
+      if(!init())return;
+      if(context.state!=='running'){
+        var requested=Date.now();
+        context.resume().then(function(){if(enabled&&Date.now()-requested<500){try{synth(kind);}catch(e){}}}).catch(function(){});
+      }else synth(kind);
+    }catch(e){} // Audio must never prevent a life/counter change.
+  }
+  window.WolfAudio={play:play,setEnabled:setEnabled};
+  document.querySelectorAll('.soundToggle').forEach(function(button){button.addEventListener('click',function(){setEnabled(!enabled);});});
+  document.addEventListener('visibilitychange',function(){if(document.hidden)voices.slice().forEach(stopVoice);});
+  syncButtons();
+})();
+</script>
+
 </body>
 </html>
+
 
