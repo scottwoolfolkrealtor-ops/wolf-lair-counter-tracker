@@ -1682,6 +1682,18 @@ body.trackerPreview #trackerView .trackerNavigation #quickGameMode{
 }
 body.trackerPreview #trackerView .trackerNavigation #quickGameMode:active{background:#62171c;transform:none;}
 body.trackerPreview #trackerView .trackerNavigation #quickGameMode:focus-visible{outline:3px solid #fff0b8;outline-offset:2px;}
+
+/* Compact red entry to each player's creatures. */
+body.trackerPreview #gameView #gameBoard .playerQuickRow .playerCreatures{
+  width:auto;max-width:100%;justify-self:end;justify-content:center;
+  padding:6px 10px;gap:7px;white-space:nowrap;
+  background:linear-gradient(180deg,#ad302e,#781c21);
+  border:2px solid #f18b76;color:#fff7e8;
+  box-shadow:0 0 8px rgba(220,65,48,.2);
+}
+body.trackerPreview #gameView #gameBoard .playerCreatures span{color:#fff7e8;}
+body.trackerPreview #gameView #gameBoard .playerCreatures::after{margin-left:0;color:#fff0b8;}
+body.trackerPreview #gameView #gameBoard .playerCreatures:active{background:#62171c;}
 </style>
 </head>
 <body class="trackerPreview">
@@ -2403,7 +2415,7 @@ function renderGame(){
         </div>\
         <div class="playerQuickRow">\
           <button class="turnDie '+(player.roll===20?'critical':(player.roll===1?'fumble':''))+'" type="button" aria-label="Roll a twenty-sided die"><span class="dieIcon">D20</span><strong>'+(player.roll||'—')+'</strong></button>\
-          <button class="playerCreatures" type="button"><span class="battlefieldLabel">BATTLEFIELD</span><span>'+creatureCount+' CREATURE'+(creatureCount===1?'':'S')+'</span></button>\
+          <button class="playerCreatures" type="button"><span class="battlefieldLabel">CREATURES</span><span>'+creatureCount+'</span></button>\
         </div>\
         </div>';
       // Keep counter controls mounted so repeated taps preserve focus and position.
@@ -3843,6 +3855,7 @@ renderGame();
 
 </body>
 </html>
+
 
 
 
