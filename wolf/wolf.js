@@ -1,5 +1,13 @@
-(function(){
+(function bootWolf(){
 "use strict";
+if(!window.WolfPrivateAccess){
+ var accessScript=document.createElement("script");accessScript.src="./wolf/private-access.js?v=10";
+ accessScript.onload=bootWolf;accessScript.onerror=function(){
+  var nav=document.querySelector(".gameNavigation")||document.querySelector(".trackerNavigation");
+  if(nav){var notice=document.createElement("p");notice.className="wolfWakeStatus";notice.setAttribute("role","status");notice.textContent="Wolf access could not load. Refresh this page to try again.";nav.insertAdjacentElement("afterend",notice);}
+ };
+ document.head.appendChild(accessScript);return;
+}
 var messages=[],extraNotes="",busy=false,lastTrigger=null;
 var voiceFromBattlefield=false,voicePlayerIndex=null,voiceSessionSerial=0;
 window.WOLF_API_ENDPOINT="https://wolf-ai-backend.scott-woolfolkrealtor.workers.dev/ask";
@@ -7,7 +15,7 @@ var dialog=document.createElement("dialog");dialog.id="wolfDialog";
 dialog.innerHTML='<form method="dialog" class="wolfHead"><div><strong>Wolf</strong><small>Live game help</small></div><button aria-label="Close Wolf">Close</button></form>'+
 '<p class="wolfHint">Tell me the play. I can use tracked creatures and counters; tell me about anything missing.</p>'+
 '<div class="wolfActions"><button id="wolfDictate" type="button">Speak question</button><button id="wolfRead" type="button">Read answer</button><button id="wolfStop" type="button">Stop voice</button></div><label><input id="wolfAutoRead" type="checkbox"> Read answers aloud</label><label><input id="wolfAutoSend" type="checkbox" checked> Send spoken questions after a pause</label><p id="wolfVoiceStatus" role="status"></p>'+
-'<details id="wolfAccessSettings" open><summary>Private test access</summary><label>Access code <input id="wolfAccess" type="password" autocomplete="off" maxlength="480" placeholder="Your WOLF_TEST_TOKEN"></label><label><input id="wolfRemember" type="checkbox" checked> Remember on this device</label><small>Save your private test code in this browser. Never enter your OpenAI API key.</small><button id="wolfForget" type="button">Forget saved code</button></details>'+
+'<details id="wolfAccessSettings" open><summary>Private test access</summary><label>Access code <input id="wolfAccess" type="password" autocomplete="off" maxlength="480" placeholder="Your WOLF_TEST_TOKEN"></label><label><input id="wolfRemember" type="checkbox" checked> Remember on this device</label><small>Save your private test code in this browser. Never enter your OpenAI API key.</small><p id="wolfAccessSaveStatus" role="status"></p><button id="wolfForget" type="button">Forget saved code</button></details>'+
 '<label>Player asking <select id="wolfPlayer"></select></label>'+
 '<details><summary>What Wolf knows</summary><div id="wolfContext"></div></details>'+
 '<label>Other cards or effects <textarea id="wolfNotes" maxlength="4000" rows="2" placeholder="Kyle has Vorinclex. I have Doubling Season."></textarea></label>'+
@@ -25,45 +33,49 @@ accessDialog.innerHTML='<form id="wolfVoiceAccessForm"><strong>Enable Wolf voice
 '<p id="wolfVoiceAccessStatus" role="status"></p><div class="wolfActions"><button id="wolfVoiceAccessCancel" type="button">Cancel</button><button type="submit">Save and listen</button></div></form>';
 document.body.appendChild(accessDialog);
 
-var ACCESS_STORAGE="wolfLairPrivateAccess1";
+var privateAccess=window.WolfPrivateAccess,accessNotices=[],accessNoticeTimer=null,restoringAccess=false,renderedAccess="";
 function loadAccess(){
- try{
-  var saved=localStorage.getItem(ACCESS_STORAGE);
-  if(saved&&saved.length<=480){
-   node("wolfAccess").value=saved;node("wolfRemember").checked=true;node("wolfAccessSettings").open=false;
-  }
- }catch(e){}
+ var saved=privateAccess.get();
+ if(saved){node("wolfAccess").value=saved;node("wolfRemember").checked=privateAccess.state().remember;node("wolfAccessSettings").open=false;renderedAccess=saved;}
 }
 function saveAccess(access){
- if(!node("wolfRemember").checked)return true;
- try{
-  localStorage.setItem(ACCESS_STORAGE,access);
-   node("wolfAccessSettings").open=false;
-  return true;
- }catch(e){node("wolfStatus").textContent="This browser could not remember your code. It is available for this visit.";return false;}
+ privateAccess.set(access,node("wolfRemember").checked);node("wolfAccessSettings").open=false;
+ return privateAccess.state().status!=="visit"||!node("wolfRemember").checked;
 }
 function accessCode(){
- if(!node("wolfAccess").value.trim()&&node("wolfRemember").checked)loadAccess();
- return node("wolfAccess").value.trim();
+ var entered=node("wolfAccess").value.trim(),saved=privateAccess.get();
+ if(entered&&entered!==saved){saveAccess(entered);return entered;}
+ return saved;
 }
-function forgetAccess(){
- try{localStorage.removeItem(ACCESS_STORAGE);}catch(e){}
+function accessSaveStatus(state){
+ var text=state.status==="saved"?"Private access saved in this browser.":state.status==="saving"?"Saving private access…":state.status==="visit"?(state.remember?"This browser could not remember your code. It is available for this visit. Open Wolf in Safari to keep it between visits.":"Private access is available for this visit only."):"";
+ node("wolfAccessSaveStatus").textContent=text;
+ accessNotices.forEach(function(notice){notice.textContent=text;notice.hidden=!text;});
+ if(accessNoticeTimer!==null){clearTimeout(accessNoticeTimer);accessNoticeTimer=null;}
+ if(state.status==="saved")accessNoticeTimer=setTimeout(function(){accessNoticeTimer=null;accessNotices.forEach(function(notice){notice.hidden=true;});},6000);
+ if(state.status==="visit"&&state.remember)node("wolfStatus").textContent=text;
+ var current=privateAccess.get(),field=node("wolfAccess");
+ if(current&&(!field.value||field.value.trim()===renderedAccess))loadAccess();
+ else if(!current&&field.value.trim()===renderedAccess)field.value="";
+ renderedAccess=current;
 }
-node("wolfAccess").addEventListener("change",function(){var access=this.value.trim();if(access)saveAccess(access);else forgetAccess();});
-node("wolfRemember").onchange=function(){if(!this.checked)forgetAccess();else if(node("wolfAccess").value.trim())saveAccess(node("wolfAccess").value.trim());};
+function forgetAccess(){privateAccess.forget();}
+// A browser can clear a password field. Only the explicit Forget control removes access.
+node("wolfAccess").addEventListener("change",function(){var access=this.value.trim();if(access)saveAccess(access);});
+node("wolfRemember").onchange=function(){var access=accessCode();if(access)saveAccess(access);else forgetAccess();};
 node("wolfForget").onclick=function(){
  forgetAccess();node("wolfAccess").value="";node("wolfRemember").checked=false;node("wolfAccessSettings").open=true;
  stopVoice();
  node("wolfStatus").textContent="Saved access code removed from this browser.";
 };
 loadAccess();
+privateAccess.subscribe(accessSaveStatus);
 node("wolfVoiceAccessCancel").onclick=function(){accessDialog.close();};
 accessDialog.addEventListener("close",function(){node("wolfVoiceAccessCode").value="";});
 node("wolfVoiceAccessForm").onsubmit=function(event){
  event.preventDefault();var access=node("wolfVoiceAccessCode").value.trim();
  if(!access){node("wolfVoiceAccessStatus").textContent="Enter your private Wolf access code.";node("wolfVoiceAccessCode").focus();return;}
  node("wolfAccess").value=access;node("wolfRemember").checked=node("wolfVoiceRemember").checked;
- if(!node("wolfRemember").checked)forgetAccess();
  saveAccess(access);node("wolfAccessSettings").open=false;accessDialog.close();beginWake();
 };
 
@@ -171,9 +183,12 @@ var wakeTracker=createWolfButton();var trackerNav=document.querySelector(".track
 var wakeStatuses=[];
 [navigation,trackerNav].forEach(function(nav){
  if(!nav)return;
+ var accessNotice=document.createElement("p");accessNotice.className="wolfWakeStatus wolfAccessNotice";accessNotice.hidden=true;accessNotice.setAttribute("role","status");
+ nav.insertAdjacentElement("afterend",accessNotice);accessNotices.push(accessNotice);
  var status=document.createElement("p");status.className="wolfWakeStatus";status.setAttribute("role","status");
  nav.insertAdjacentElement("afterend",status);wakeStatuses.push(status);
 });
+accessSaveStatus(privateAccess.state());
 function voiceStatus(text,state){
  node("wolfVoiceStatus").textContent=text;
  wakeStatuses.forEach(function(status){status.textContent=text;});
@@ -333,12 +348,23 @@ function startVoice(mode){
  };
  try{current.start();}catch(e){stopVoice();voiceStatus("Could not start listening. Tap Enable Hey Wolf to retry in Safari.");}
 }
-function beginWake(){
- if(!accessCode()){
+function showVoiceAccessSetup(){
   voiceStatus("Save your private access code once to enable Wolf voice.","error");
-  node("wolfVoiceAccessCode").value="";node("wolfVoiceRemember").checked=node("wolfRemember").checked;
+  node("wolfVoiceAccessCode").value="";node("wolfVoiceRemember").checked=true;
   node("wolfVoiceAccessStatus").textContent="";
   if(!accessDialog.open)accessDialog.showModal();
+}
+function beginWake(){
+ if(!accessCode()){
+  if(privateAccess.state().loading){
+   if(restoringAccess)return;
+   restoringAccess=true;var serial=voiceSessionSerial;
+   voiceStatus("Restoring saved private access…","ready");
+   privateAccess.ready.then(function(){
+    restoringAccess=false;if(serial!==voiceSessionSerial||document.hidden)return;
+    if(accessCode())voiceStatus("Saved access restored. Tap Wolf to listen.","off");else showVoiceAccessSetup();
+   });
+  }else showVoiceAccessSetup();
   return;
  }
  saveAccess(accessCode());
