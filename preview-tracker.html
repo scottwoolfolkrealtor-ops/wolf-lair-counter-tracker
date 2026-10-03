@@ -2286,6 +2286,12 @@ function loadGame(){
     gameState={players:[{name:'Player 1', life:40, commander:0, poison:0}], phases:['Beginning','Precombat','Combat','Postcombat','Ending'], phaseIndex:0};
   }
   if(!gameState.phases||!gameState.phases.length){gameState.phases=['Beginning','Precombat','Combat','Postcombat','Ending'];}
+  /* One-time migration: clear rotation overrides from the previous seat layout. */
+  if(gameState.seatLayoutVersion!==2){
+    for(var r=0;r<gameState.players.length;r++)gameState.players[r].rotation=0;
+    gameState.seatLayoutVersion=2;
+    try{localStorage.setItem(GAME_KEY,JSON.stringify(gameState))}catch(e){}
+  }
   if(typeof playerCreatures!=='undefined')ensurePlayerCreatureSlots();
 }
 function saveGame(){
@@ -2309,9 +2315,10 @@ function renderGame(){
         seatOrder=index===0?3:index;
         baseRotation=index===0?0:180;
       }else if(playerCount===4){
-        var seatMap=[3,1,2,4];
+        /* Far side: Player 3 + Player 4. Near side: Player 1 + Player 2. */
+        var seatMap=[3,4,1,2];
         seatOrder=seatMap[index]||index+1;
-        baseRotation=(index===1||index===2)?180:0;
+        baseRotation=index>=2?180:0;
       }
       card.style.order=String(seatOrder);
       var finalRotation=((baseRotation+(Number(player.rotation)||0))%360+360)%360;
