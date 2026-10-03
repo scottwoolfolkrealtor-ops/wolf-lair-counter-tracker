@@ -1524,6 +1524,26 @@ body.trackerPreview #trackerView[data-sideways="true"] .keyboardTabs button,
 body.trackerPreview #trackerView[data-sideways="true"] .keyboardPreview button{min-height:24px}
 body.trackerPreview #trackerView[data-sideways="true"] .keyboardValue{line-height:24px}
 
+
+/* Keep the return-to-table target large and stationary during text entry. */
+body.trackerPreview #trackerView .trackerNavigation{
+  position:sticky;top:0;z-index:10;display:flex;align-items:stretch;
+  gap:8px;padding:4px 0 8px;background:#08110d;
+}
+body.trackerPreview #trackerView .trackerNavigation #backHome{
+  flex:1;min-width:0;min-height:48px;margin:0;padding:8px;
+  display:flex;align-items:center;justify-content:center;
+}
+body.trackerPreview #trackerView .trackerNavigation #quickGameMode{
+  position:static;flex:1;min-width:0;min-height:48px;margin:0;
+  padding:10px 14px;transform:none;transition:none;
+  font-size:13px;touch-action:manipulation;user-select:none;-webkit-user-select:none;
+}
+body.trackerPreview #trackerView .trackerNavigation #quickGameMode:active{
+  transform:none;background:#375331;
+}
+body.trackerPreview #trackerView header.trackerTitle{padding-right:14px}
+
 </style>
 </head>
 <body class="trackerPreview">
@@ -1746,12 +1766,13 @@ body.trackerPreview #trackerView[data-sideways="true"] .keyboardValue{line-heigh
 <section id="trackerView" class="hidden">
 <div class="playerTrackerSurface">
 <main>
-<button id="backHome" class="backHome" type="button">‹ Wolf Lair Home</button>
+<div class="trackerNavigation"><button id="backHome" class="backHome" type="button">‹ Wolf Lair Home</button>
+<button id="quickGameMode" class="quickSwitch" type="button">GAME MODE ›</button></div>
 <header class="trackerTitle">
   <div id="activePlayerLabel" class="trackerBrand">PLAYER 1 • THE WOLF LAIR</div>
   <h1>BATTLEFIELD COMMAND</h1>
   <small>CREATURE &amp; COUNTER CONTROL</small>
-  <button id="quickGameMode" class="quickSwitch" type="button">GAME MODE ›</button>
+  
 </header>
 <div id="form" class="hidden">
 <input id="nm" placeholder="Creature name">
@@ -3428,7 +3449,24 @@ renderGame();
   if(back)back.onclick=function(){location.href='./preview-home.html?preview=6';};
   if(backGame)backGame.onclick=function(){location.href='./preview-home.html?preview=6';};
   if(backDecks)backDecks.onclick=function(){location.href='./preview-home.html?preview=6';};
-  if(toGame)toGame.onclick=showGame;
+  if(toGame){
+    toGame.onclick=showGame;
+    // Resolve touch taps before input blur or layout movement can swallow click.
+    var gameTap=null;
+    toGame.addEventListener('pointerdown',function(e){
+      if(e.pointerType!=='touch'&&e.pointerType!=='pen')return;
+      gameTap={id:e.pointerId,x:e.clientX,y:e.clientY};
+      e.preventDefault();
+    });
+    toGame.addEventListener('pointerup',function(e){
+      if(!gameTap||e.pointerId!==gameTap.id)return;
+      var tap=gameTap;gameTap=null;
+      if(Math.abs(e.clientX-tap.x)>12||Math.abs(e.clientY-tap.y)>12)return;
+      e.preventDefault();
+      toGame.click();
+    });
+    toGame.addEventListener('pointercancel',function(){gameTap=null;});
+  }
   var params=new URLSearchParams(location.search);
   if(params.get('mode')==='game') showGame();
   else if(params.get('mode')==='decks') showDecks();
