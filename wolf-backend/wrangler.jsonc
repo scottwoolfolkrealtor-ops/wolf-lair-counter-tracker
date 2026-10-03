@@ -5,7 +5,7 @@
   "workers_dev": true,
   "preview_urls": false,
   "vars": {
-    "WOLF_ENABLED": "false",
+    "WOLF_ENABLED": "true",
     "ALLOWED_ORIGIN": "https://scottwoolfolkrealtor-ops.github.io"
   },
   "durable_objects": {
