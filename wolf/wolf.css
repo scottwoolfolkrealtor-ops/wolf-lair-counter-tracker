@@ -11,3 +11,7 @@
 
 #wolfDialog input{display:block;box-sizing:border-box;width:100%;font:16px system-ui;background:#07120b;color:#fff3d5;border:1px solid #668060;padding:10px;border-radius:10px;margin-top:5px}
 #wolfDialog a{color:#bce4ad}
+
+#wolfDialog .wolfActions{flex-wrap:wrap}
+#wolfDialog input[type="checkbox"]{display:inline-block;width:auto;margin:0 8px 0 0;accent-color:#92ba7f}
+#wolfVoiceStatus{color:#c3cbb9;font-size:14px}
