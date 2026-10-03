@@ -1975,14 +1975,14 @@ body.trackerPreview #gameView .playerFace{
 }
 
 
-/* Left-side seated players: life total faces the player */
-@media(max-width:640px){
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"]
-  .playerCard[data-seat-index="0"] .lifeTotal.editLife,
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"]
-  .playerCard[data-seat-index="2"] .lifeTotal.editLife{
-    transform:rotate(180deg) !important;
-  }
+/* Life number orientation is independent from viewport and panel transforms */
+body.trackerPreview #gameView .lifeValueFace{
+  display:inline-block;
+  transform:rotate(0deg);
+  transform-origin:center center;
+}
+body.trackerPreview #gameView .lifeValueFace.invertLife{
+  transform:rotate(180deg) !important;
 }
 
 </style>
@@ -2457,7 +2457,7 @@ function renderGame(){
         <div class="playerHeader"><div class="playerIdentity"><span class="playerName">'+escapeHTML(player.name)+'</span><button class="editPlayerName" type="button" aria-label="Edit player name">EDIT</button></div><button class="rotateSeat" type="button" aria-label="Rotate player panel">↻</button><button class="resetPlayer" type="button">RESET</button></div>\
         <div class="lifePanel">\
           <button class="lifeDown lifeNudge" type="button" aria-label="Lose 1 life">−</button>\
-          <button class="lifeTotal editLife" type="button" aria-label="Edit life total">'+player.life+'</button>\
+          <button class="lifeTotal editLife" type="button" aria-label="Edit life total"><span class="lifeValueFace '+((playerCount===4&&(index===0||index===2))?'invertLife':'')+'">'+player.life+'</span></button>\
           <button class="lifeUp lifeNudge" type="button" aria-label="Gain 1 life">＋</button>\
         </div>\
         <div class="counterStrip">\
