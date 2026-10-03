@@ -3577,7 +3577,7 @@ function scanImageFile(file,options){
         if(!options.alreadyCropped)passes.unshift({image:full,mode:"11"});
         else passes.push({image:full,mode:"11"});
 
-        var candidates=[];
+        var candidates=[], exactMatch=null, exactTried={}, lookupSucceeded=false, lookupFailed=false;
         function addCandidate(txt,confidence){
           txt=String(txt||"").replace(/[^A-Za-z0-9'’,:\- ]+/g," ").replace(/\s+/g," ").trim();
           if(txt.length<3||txt.length>60||!/[A-Za-z]{3}/.test(txt))return;
@@ -3587,30 +3587,51 @@ function scanImageFile(file,options){
           if(existing)existing.confidence=Math.max(existing.confidence,confidence||0);
           else candidates.push({text:txt,confidence:confidence||0});
         }
-        function collectOCR(data){
+        function collectOCR(data,current){
           if(!data)return;
-          if(Array.isArray(data.lines)){
-            data.lines.sort(function(a,b){return (b.confidence||0)-(a.confidence||0)}).forEach(function(line){
+          var lines=data.lines;
+          if(!Array.isArray(lines)&&Array.isArray(data.blocks)){
+            lines=[];data.blocks.forEach(function(block){(block.paragraphs||[]).forEach(function(p){lines=lines.concat(p.lines||[]);});});
+          }
+          if(Array.isArray(lines)&&lines.length){
+            lines.forEach(function(line){
+              // On a full photograph, prioritize upper text rather than rules/stats.
+              if(current.image===full&&line.bbox&&line.bbox.y0>full.height*.5)return;
               addCandidate(line.text,line.confidence);
             });
+          }else String(data.text||"").split(/\r?\n/).forEach(function(line){addCandidate(line,data.confidence||0)});
+        }
+        function checkExactTitle(){
+          var promising=candidates.filter(function(c){return c.confidence>=60&&c.text.replace(/[^A-Za-z]/g,"").length>=6&&!exactTried[c.text];})
+            .sort(function(a,b){return b.confidence-a.confidence;}).slice(0,2);
+          var index=0;
+          function next(){
+            if(exactMatch||index>=promising.length)return Promise.resolve();
+            var c=promising[index++];exactTried[c.text]=true;
+            return fetch("https://api.scryfall.com/cards/named?exact="+encodeURIComponent(c.text))
+              .then(function(r){if(r.status===404){lookupSucceeded=true;return null;}if(!r.ok)throw new Error("Card search unavailable");lookupSucceeded=true;return r.json();})
+              .then(function(card){if(card&&nameSimilarity(c.text,card.name)===1)exactMatch={card:card,ocr:c.text,similarity:1,confidence:c.confidence};})
+              .catch(function(){lookupFailed=true;})
+              .then(function(){return new Promise(function(done){setTimeout(done,120);});}).then(next);
           }
-          String(data.text||"").split(/\r?\n/).forEach(function(line){addCandidate(line,data.confidence||0)});
+          return next();
         }
 
         wolfOCRStatusTarget=status;
         warmOCRWorker().then(function(worker){
           var pass=0;
           function nextPass(){
-            if(pass>=passes.length)return Promise.resolve();
+            if(exactMatch||pass>=passes.length)return Promise.resolve();
             var current=passes[pass++];
             status.textContent="Reading title… "+Math.round(pass/passes.length*90)+"%";
             var prep=worker.setParameters?worker.setParameters({tessedit_pageseg_mode:current.mode}):Promise.resolve();
             return Promise.resolve(prep).then(function(){return worker.recognize(current.image)})
-              .then(function(result){collectOCR(result&&result.data);return nextPass()})
+              .then(function(result){collectOCR(result&&result.data,current);return checkExactTitle().then(nextPass)})
               .catch(function(){return nextPass()});
           }
           return nextPass();
         }).then(function(){
+          if(exactMatch)return [exactMatch];
           candidates.sort(function(a,b){return b.confidence-a.confidence;});
           candidates=candidates.slice(0,12);
           if(!candidates.length)throw new Error("Could not read the title");
@@ -3622,11 +3643,12 @@ function scanImageFile(file,options){
             if(index>=candidates.length)return Promise.resolve(matches);
             var candidate=candidates[index++];
             return fetch("https://api.scryfall.com/cards/named?fuzzy="+encodeURIComponent(candidate.text))
-              .then(function(r){if(!r.ok)throw new Error("No match");return r.json()})
+              .then(function(r){if(r.status===404){lookupSucceeded=true;return null;}if(!r.ok)throw new Error("Card search unavailable");lookupSucceeded=true;return r.json()})
               .then(function(card){
+                if(!card)return;
                 var similarity=nameSimilarity(candidate.text,card.name);
                 if(similarity>=.78)matches.push({card:card,ocr:candidate.text,similarity:similarity,confidence:candidate.confidence||0});
-              }).catch(function(){})
+              }).catch(function(){lookupFailed=true;})
               .then(function(){return new Promise(function(done){setTimeout(done,120);});})
               .then(lookupNext);
           }
@@ -3652,7 +3674,7 @@ function scanImageFile(file,options){
 
           showScanChoices(matches.map(function(x){return x.card}),status,resolve);
         }).catch(function(err){
-          status.textContent="No confident match. Check the card name below or take a closer photo.";
+          status.textContent=lookupFailed&&!lookupSucceeded?"Card search could not connect. Your detected name is saved below; tap Search to retry.":"No confident match. Check the detected name below or take a closer photo.";
           el("cardSearchPanel").className="cardToolPanel";
           el("cardSearchInput").value=candidates.length?candidates[0].text:"";
           setDeckStatus("Correct the name and tap Search. For another scan, keep the card upright and fill the photo with it.",true);
@@ -3899,6 +3921,7 @@ renderGame();
 
 </body>
 </html>
+
 
 
 
