@@ -5,6 +5,7 @@ window.WOLF_API_ENDPOINT="https://wolf-ai-backend.scott-woolfolkrealtor.workers.
 var dialog=document.createElement("dialog");dialog.id="wolfDialog";
 dialog.innerHTML='<form method="dialog" class="wolfHead"><div><strong>Wolf</strong><small>Live game help</small></div><button aria-label="Close Wolf">Close</button></form>'+
 '<p class="wolfHint">Tell me the play. I can use tracked creatures and counters; tell me about anything missing.</p>'+
+'<div class="wolfActions"><button id="wolfDictate" type="button">Speak question</button><button id="wolfRead" type="button">Read answer</button><button id="wolfStop" type="button">Stop voice</button></div><label><input id="wolfAutoRead" type="checkbox"> Read answers aloud</label><p id="wolfVoiceStatus" role="status"></p>'+
 '<label>Private test access code <input id="wolfAccess" type="password" autocomplete="off" maxlength="480" placeholder="Your WOLF_TEST_TOKEN"></label><small>Private testing only. Enter your access code, never your OpenAI API key.</small>'+
 '<label>Player asking <select id="wolfPlayer"></select></label>'+
 '<details><summary>What Wolf knows</summary><div id="wolfContext"></div></details>'+
@@ -33,6 +34,7 @@ function addMessage(role,text,sources){
  text=String(text).replace(/\[([^\]]+)\]\(https:\/\/[^\s)]+\)/g,"$1");
  p.textContent=(role==="user"?"You: ":"Wolf: ")+text;
  node("wolfMessages").appendChild(p);
+ if(role==="assistant"){lastAnswer=text;if(node("wolfAutoRead").checked)speakAnswer();}
  if(role==="assistant"&&Array.isArray(sources)){
   var list=document.createElement("ul"),seen=new Set();
   sources.forEach(function(source){
@@ -58,7 +60,7 @@ function openWolf(event){
 document.querySelectorAll(".askWolf").forEach(function(button){button.addEventListener("click",openWolf);});
 node("wolfPlayer").onchange=function(){messages=[];node("wolfMessages").replaceChildren();showContext();};
 node("wolfClear").onclick=function(){messages=[];extraNotes="";node("wolfNotes").value="";node("wolfQuestion").value="";node("wolfMessages").replaceChildren();};
-dialog.addEventListener("close",function(){if(lastTrigger)lastTrigger.focus({preventScroll:true});});
+dialog.addEventListener("close",function(){stopVoice();if(lastTrigger)lastTrigger.focus({preventScroll:true});});
 node("wolfQuestionForm").onsubmit=async function(event){
  event.preventDefault();if(busy||!endpoint())return;
  var question=node("wolfQuestion").value.trim();if(!question)return;
@@ -67,7 +69,7 @@ node("wolfQuestionForm").onsubmit=async function(event){
  if(currentNotes!==extraNotes){messages=[];node("wolfMessages").replaceChildren();extraNotes=currentNotes;}
  var payload=JSON.stringify({question:question,context:getContext(),untrackedNotes:extraNotes,messages:messages.slice(-8)});
  if(new TextEncoder().encode(payload).length>16000){node("wolfStatus").textContent="This battlefield and conversation exceed the test limit. Start a new question or shorten the notes.";return;}
- busy=true;node("wolfSend").disabled=true;node("wolfPlayer").disabled=true;node("wolfClear").disabled=true;
+ stopVoice();busy=true;node("wolfSend").disabled=true;node("wolfPlayer").disabled=true;node("wolfClear").disabled=true;
  node("wolfStatus").textContent="Wolf is checking the play…";
  var controller=new AbortController(),timer=setTimeout(function(){controller.abort();},45000);
  try{
@@ -82,4 +84,56 @@ node("wolfQuestionForm").onsubmit=async function(event){
  }catch(error){node("wolfStatus").textContent=error.name==="AbortError"?"Wolf took too long. Your question is still here.":error.message;}
  finally{clearTimeout(timer);busy=false;node("wolfSend").disabled=!endpoint();node("wolfPlayer").disabled=false;node("wolfClear").disabled=false;}
 };
+var recognition=null,voiceMode="",lastAnswer="",voiceRunning=false;
+var Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+var wakeButton=document.createElement("button");wakeButton.type="button";wakeButton.textContent="Enable Hey Wolf";wakeButton.className="askWolf";
+var navigation=document.querySelector(".gameNavigation");if(navigation)navigation.appendChild(wakeButton);
+var wakeTracker=wakeButton.cloneNode(true);var trackerNav=document.querySelector(".trackerNavigation");if(trackerNav)trackerNav.appendChild(wakeTracker);
+function voiceStatus(text){node("wolfVoiceStatus").textContent=text;wakeButton.textContent=voiceRunning?"Stop listening":"Enable Hey Wolf";wakeTracker.textContent=wakeButton.textContent;}
+function stopVoice(){
+ voiceMode="";voiceRunning=false;
+ if(recognition){recognition.onend=null;recognition.onerror=null;recognition.onresult=null;try{recognition.abort();}catch(e){}recognition=null;}
+ if(window.speechSynthesis)window.speechSynthesis.cancel();
+ voiceStatus("Voice stopped.");
+}
+function speakAnswer(){
+ if(!lastAnswer){voiceStatus("Ask a question first.");return;}
+ if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){voiceStatus("This browser does not support answer playback.");return;}
+ stopVoice();
+ var utterance=new SpeechSynthesisUtterance(lastAnswer.replace(/\(magic\.wizards\.com\)/g,""));
+ utterance.lang="en-US";utterance.rate=1;
+ utterance.onend=function(){voiceStatus("Playback finished. Tap Enable Hey Wolf to listen again.");};
+ utterance.onerror=function(){voiceStatus("Playback could not start. Tap Read answer to try again.");};
+ window.speechSynthesis.speak(utterance);voiceStatus("Reading Wolf's answer…");
+}
+function startVoice(mode){
+ stopVoice();
+ if(!Recognition){voiceStatus("Voice recognition is unavailable here. Open this app in Safari, or use your keyboard's dictation microphone.");if(!dialog.open)openWolf({currentTarget:wakeButton});return;}
+ voiceMode=mode;recognition=new Recognition();recognition.lang="en-US";recognition.continuous=true;recognition.interimResults=false;
+ recognition.onstart=function(){voiceRunning=true;voiceStatus(mode==="wake"?"Listening for Hey Wolf while this page is open.":"Listening for your question…");};
+ recognition.onresult=function(event){
+  for(var i=event.resultIndex;i<event.results.length;i++){
+   if(!event.results[i].isFinal)continue;
+   var words=event.results[i][0].transcript.trim();
+   if(voiceMode==="wake"){
+    var match=/\bhey[ ,]+wolf\b[ ,.!?:-]*(.*)/i.exec(words);if(!match)continue;
+    if(!dialog.open)openWolf({currentTarget:wakeButton});
+    voiceMode="question";voiceStatus("Wolf is listening. Say your question.");
+    if(match[1])node("wolfQuestion").value=match[1].slice(0,2000);
+   }else if(voiceMode==="question"){
+    node("wolfQuestion").value=(node("wolfQuestion").value+" "+words).trim().slice(0,2000);
+    voiceStatus("Question captured. Review it, then tap Ask Wolf.");
+   }
+  }
+ };
+ recognition.onerror=function(event){voiceMode="";voiceRunning=false;voiceStatus(event.error==="not-allowed"?"Microphone access was denied. Allow microphone access in Safari to use voice.":"Voice recognition stopped. Try Safari or keyboard dictation.");};
+ recognition.onend=function(){voiceRunning=false;voiceMode="";voiceStatus("Listening ended. Tap Enable Hey Wolf or Speak question to resume.");};
+ try{recognition.start();}catch(e){voiceMode="";voiceStatus("Could not start listening. Try Safari or keyboard dictation.");}
+}
+wakeButton.onclick=wakeTracker.onclick=function(){if(voiceRunning)stopVoice();else startVoice("wake");};
+node("wolfDictate").onclick=function(){startVoice("question");};
+node("wolfRead").onclick=speakAnswer;node("wolfStop").onclick=stopVoice;
+node("wolfAutoRead").onchange=function(){if(!this.checked&&window.speechSynthesis)window.speechSynthesis.cancel();};
+document.addEventListener("visibilitychange",function(){if(document.hidden)stopVoice();});
+
 })();
