@@ -1607,6 +1607,89 @@ body.trackerPreview #decksView .deckSavedValue{
   body.trackerPreview #gameView .lifeEditRow button{min-height:26px;padding:3px;font-size:8px}
 }
 
+
+/* Wolf Lair Battlefield Command refresh — artwork-forward tabletop layout */
+body.trackerPreview #gameView .playerQuickRow{
+  display:grid;grid-template-columns:minmax(72px,.72fr) minmax(0,1.28fr);gap:6px;margin-top:6px;
+}
+body.trackerPreview #gameView .turnDie{
+  min-height:48px;display:flex;align-items:center;justify-content:center;gap:7px;padding:7px 8px;
+  border-color:rgba(190,136,73,.64);
+  background:radial-gradient(circle at 35% 28%,rgba(116,160,79,.16),transparent 48%),linear-gradient(160deg,rgba(44,35,25,.96),rgba(12,16,12,.98));
+  color:#ead7b7;box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+}
+body.trackerPreview #gameView .turnDie .dieIcon{
+  width:29px;height:29px;display:grid;place-items:center;
+  clip-path:polygon(50% 0,90% 22%,100% 68%,72% 100%,28% 100%,0 68%,10% 22%);
+  background:linear-gradient(145deg,#5f7d46,#24351f 68%,#151b13);
+  box-shadow:inset 0 0 0 1px rgba(220,186,126,.62);
+  color:#f1dfbc;font:900 9px/1 system-ui,-apple-system,sans-serif;
+}
+body.trackerPreview #gameView .turnDie strong{min-width:24px;color:#f5e8cf;font:900 20px/1 Georgia,'Times New Roman',serif}
+body.trackerPreview #gameView .turnDie.critical strong{color:#9ce38f}
+body.trackerPreview #gameView .turnDie.fumble strong{color:#e6a58f}
+body.trackerPreview #gameView .playerQuickRow .playerCreatures{margin:0;min-height:48px}
+
+@media(max-width:640px){
+  body.trackerPreview #gameView{
+    background:linear-gradient(180deg,rgba(2,5,4,.16),rgba(2,5,4,.46)),var(--lair-scene),#030605;
+    background-size:cover;background-position:center;
+  }
+  body.trackerPreview #gameView main{
+    height:100svh;min-height:100svh;max-height:100svh;overflow:hidden;
+    padding:4px 4px calc(4px + env(safe-area-inset-bottom));
+  }
+  body.trackerPreview #gameView .backHome{min-height:25px;margin-bottom:2px;padding:3px 7px;font-size:8px;background:rgba(8,12,9,.82)}
+  body.trackerPreview #gameView header.tableCommandTitle{
+    flex:0 0 auto;margin-bottom:3px;padding:4px 8px 5px;border-radius:9px;
+    background:linear-gradient(135deg,rgba(17,21,17,.84),rgba(7,10,8,.88));
+  }
+  body.trackerPreview #gameView header.tableCommandTitle .trackerBrand{margin-bottom:0;font-size:5.5px;letter-spacing:1.8px}
+  body.trackerPreview #gameView header.tableCommandTitle h1{font-size:14px;line-height:1}
+  body.trackerPreview #gameView header.tableCommandTitle small{margin-top:1px;font-size:5.5px;letter-spacing:.9px}
+  body.trackerPreview #gameView .gameShell{flex:1 1 auto;min-height:0;gap:3px}
+  body.trackerPreview #gameView .gameBoard{flex:1 1 auto;min-height:0;gap:4px}
+  body.trackerPreview #gameView .playerCard{
+    min-height:0;padding:6px;border-radius:11px;
+    background:linear-gradient(160deg,rgba(18,24,18,.84),rgba(5,10,7,.90)),radial-gradient(circle at 75% 20%,rgba(85,130,70,.13),transparent 45%);
+    border-color:rgba(191,139,76,.54);box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 5px 14px rgba(0,0,0,.28);
+  }
+  body.trackerPreview #gameView .playerFace{height:100%;justify-content:center}
+  body.trackerPreview #gameView .playerHeader{margin-bottom:3px}
+  body.trackerPreview #gameView .playerName{font-size:12px}
+  body.trackerPreview #gameView .editPlayerName,body.trackerPreview #gameView .resetPlayer{min-height:23px;padding:3px 5px;font-size:6.5px}
+  body.trackerPreview #gameView .lifePanel{grid-template-columns:38px minmax(0,1fr) 38px;gap:4px;margin:1px 0 2px}
+  body.trackerPreview #gameView .lifeTotal.editLife{min-height:58px;font-size:54px;text-shadow:0 2px 10px rgba(0,0,0,.55)}
+  body.trackerPreview #gameView .lifeNudge{min-height:43px;font-size:23px}
+  body.trackerPreview #gameView .counterStrip{gap:5px;margin-top:3px}
+  body.trackerPreview #gameView .counterChip{
+    min-height:34px;grid-template-columns:18px 26px minmax(22px,1fr) 26px;gap:2px;padding:3px;background:rgba(4,8,6,.70);
+  }
+  body.trackerPreview #gameView .counterValue{font-size:17px}
+  body.trackerPreview #gameView .miniStep{min-height:27px;font-size:15px}
+  body.trackerPreview #gameView .playerQuickRow{gap:4px;margin-top:4px;grid-template-columns:minmax(66px,.68fr) minmax(0,1.32fr)}
+  body.trackerPreview #gameView .turnDie,body.trackerPreview #gameView .playerQuickRow .playerCreatures{min-height:39px}
+  body.trackerPreview #gameView .turnDie{gap:5px;padding:4px 5px}
+  body.trackerPreview #gameView .turnDie .dieIcon{width:25px;height:25px;font-size:8px}
+  body.trackerPreview #gameView .turnDie strong{font-size:18px}
+  body.trackerPreview #gameView .playerQuickRow .playerCreatures{padding:4px 5px;font-size:8px}
+  body.trackerPreview #gameView .playerQuickRow .playerCreatures span{font-size:7px}
+  body.trackerPreview #gameView .playerRosterTools{flex:0 0 auto;grid-template-columns:1fr 1fr;gap:4px;margin:0}
+  body.trackerPreview #gameView .playerRosterTools button{min-height:28px;padding:3px 5px;font-size:7.5px;border-radius:8px;background:rgba(11,18,12,.84)}
+  body.trackerPreview #gameView .playerLimitMsg{min-height:8px;margin:0;font-size:6.5px;line-height:1}
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"]{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    grid-template-rows:repeat(2,minmax(0,1fr)) !important;
+    min-height:0;
+  }
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .playerCard{width:100%;height:100%}
+}
+@media(max-width:380px){
+  body.trackerPreview #gameView .lifeTotal.editLife{font-size:48px}
+  body.trackerPreview #gameView .lifePanel{grid-template-columns:34px minmax(0,1fr) 34px}
+  body.trackerPreview #gameView .turnDie strong{font-size:16px}
+}
+
 </style>
 </head>
 <body class="trackerPreview">
@@ -1726,8 +1809,8 @@ body.trackerPreview #decksView .deckSavedValue{
           <text x="24" y="20" text-anchor="middle" font-size="7" font-weight="900" fill="#a8f178" font-family="system-ui,sans-serif">20</text>
         </svg>
       </span>
-      <strong>Game Mode</strong>
-      <small>Life totals, commander damage, poison and turn flow for the table.</small>
+      <strong>Battlefield Command</strong>
+      <small>Tabletop life, commander damage, poison, D20 rolls and battlefield access.</small>
     </button>
     <button class="appTile" id="openPro" type="button">
       <span class="ico" aria-hidden="true">
@@ -2017,7 +2100,7 @@ el("bill").onclick=function(){
 var GAME_KEY='wolfLairGame2';
 var gameState={
   players:[
-    {name:'Player 1', life:20, commander:0, poison:0}
+    {name:'Player 1', life:40, commander:0, poison:0}
   ],
   phases:['Beginning','Precombat','Combat','Postcombat','Ending'],
   phaseIndex:0
@@ -2033,7 +2116,7 @@ function loadGame(){
     }
   }catch(e){}
   if(!gameState.players||gameState.players.length<1||gameState.players.length>6){
-    gameState={players:[{name:'Player 1', life:20, commander:0, poison:0}], phases:['Beginning','Precombat','Combat','Postcombat','Ending'], phaseIndex:0};
+    gameState={players:[{name:'Player 1', life:40, commander:0, poison:0}], phases:['Beginning','Precombat','Combat','Postcombat','Ending'], phaseIndex:0};
   }
   if(!gameState.phases||!gameState.phases.length){gameState.phases=['Beginning','Precombat','Combat','Postcombat','Ending'];}
   if(typeof playerCreatures!=='undefined')ensurePlayerCreatureSlots();
@@ -2072,7 +2155,10 @@ function renderGame(){
             <button class="poisonUp miniStep" type="button" aria-label="Add 1 poison counter">＋</button>\
           </div>\
         </div>\
-        <button class="playerCreatures" type="button"><span class="battlefieldLabel">BATTLEFIELD</span><span>'+creatureCount+' CREATURE'+(creatureCount===1?'':'S')+'</span></button>\
+        <div class="playerQuickRow">\
+          <button class="turnDie '+(player.roll===20?'critical':(player.roll===1?'fumble':''))+'" type="button" aria-label="Roll a twenty-sided die"><span class="dieIcon">D20</span><strong>'+(player.roll||'—')+'</strong></button>\
+          <button class="playerCreatures" type="button"><span class="battlefieldLabel">BATTLEFIELD</span><span>'+creatureCount+' CREATURE'+(creatureCount===1?'':'S')+'</span></button>\
+        </div>\
         </div>';
       card.querySelector('.lifeDown').onclick=function(){player.life--;saveGame();renderGame();};
       card.querySelector('.lifeUp').onclick=function(){player.life++;saveGame();renderGame();};
@@ -2101,7 +2187,7 @@ function renderGame(){
       card.querySelector('.cmdUp').onclick=function(){player.commander++;saveGame();renderGame();};
       card.querySelector('.poisonDown').onclick=function(){player.poison=Math.max(0,player.poison-1);saveGame();renderGame();};
       card.querySelector('.poisonUp').onclick=function(){player.poison++;saveGame();renderGame();};
-      card.querySelector('.resetPlayer').onclick=function(){player.life=20;player.commander=0;player.poison=0;saveGame();renderGame();};
+      card.querySelector('.resetPlayer').onclick=function(){player.life=40;player.commander=0;player.poison=0;saveGame();renderGame();};
       card.querySelector('.editPlayerName').onclick=function(){
         var identity=card.querySelector('.playerIdentity');
         if(!identity)return;
@@ -2126,6 +2212,10 @@ function renderGame(){
         };
         input.focus();
         input.select();
+      };
+      card.querySelector('.turnDie').onclick=function(){
+        player.roll=1+Math.floor(Math.random()*20);
+        saveGame();renderGame();
       };
       card.querySelector('.playerCreatures').onclick=function(){
         setActivePlayer(index);
@@ -2157,7 +2247,7 @@ function renderGame(){
 el('addPlayer').onclick=function(){
   if(gameState.players.length>=6)return;
   var n=gameState.players.length+1;
-  gameState.players.push({name:'Player '+n, life:20, commander:0, poison:0});
+  gameState.players.push({name:'Player '+n, life:40, commander:0, poison:0, roll:null});
   ensurePlayerCreatureSlots();
   saveGame();
   save();
@@ -2642,13 +2732,22 @@ function loadTesseract(){
   if(window.Tesseract)return Promise.resolve(window.Tesseract);
   if(window.__wolfTesseractPromise)return window.__wolfTesseractPromise;
   window.__wolfTesseractPromise=new Promise(function(resolve,reject){
-    var s=document.createElement("script");
-    s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
-    s.async=true;
-    s.onload=function(){window.Tesseract?resolve(window.Tesseract):reject(new Error("Scanner failed to load"))};
-    s.onerror=function(){reject(new Error("Scanner failed to load"))};
-    document.head.appendChild(s);
-  });
+    var urls=[
+      "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js",
+      "https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"
+    ];
+    var attempt=0;
+    function tryNext(){
+      if(window.Tesseract){resolve(window.Tesseract);return}
+      if(attempt>=urls.length){reject(new Error("Scanner OCR failed to load"));return}
+      var sc=document.createElement("script");
+      sc.src=urls[attempt++];sc.async=true;sc.crossOrigin="anonymous";
+      sc.onload=function(){window.Tesseract?resolve(window.Tesseract):tryNext()};
+      sc.onerror=tryNext;
+      document.head.appendChild(sc);
+    }
+    tryNext();
+  }).catch(function(err){window.__wolfTesseractPromise=null;throw err});
   return window.__wolfTesseractPromise;
 }
 var wolfOCRWorker=null, wolfOCRWorkerPromise=null, wolfOCRStatusTarget=null;
@@ -3252,7 +3351,16 @@ function scanImageFile(file,options){
     img.src=url;
   });
 }
-el("scanCardBtn").onclick=startCardCamera;
+function startReliableCardScan(){
+  stopCardCamera();
+  closeDeckTools();
+  el("scanPanel").className="cardToolPanel scanPanel";
+  el("liveScanner").className="hidden liveScanner";
+  el("scanStatus").textContent="Take a clear photo with the whole card filling most of the frame.";
+  var input=el("cardScanInput");
+  if(input){input.value="";input.click();}
+}
+el("scanCardBtn").onclick=startReliableCardScan;
 el("manualCapture").onclick=function(){
   if(autoCaptureBusy)return;
   autoCaptureBusy=true;
