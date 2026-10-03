@@ -1666,6 +1666,13 @@ body.trackerPreview #trackerView .playerTrackerSurface .creatureKeyboard{
 }
 body.trackerPreview #trackerView[data-keyboard-open] .playerTrackerSurface main{padding-bottom:6px}
 
+
+/* Direct creature navigation shares the existing hint space. */
+#trackerView #creatureSwipeHint{display:flex;flex:0 0 38px;height:38px;min-height:38px;gap:5px;overflow-x:auto;overflow-y:hidden;align-items:stretch;scrollbar-width:none;touch-action:pan-x;overscroll-behavior:contain;}
+#trackerView #creatureSwipeHint::-webkit-scrollbar{display:none;}
+#trackerView #creatureSwipeHint button{flex:0 0 auto;min-height:36px;padding:5px 12px;font-size:13px;line-height:1.1;white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis;touch-action:manipulation;}
+#trackerView #creatureSwipeHint button[aria-current="true"]{background:#254e2b;border-color:#9cce82;color:#fff4d5;box-shadow:inset 0 0 0 1px #9cce82;}
+#trackerView #creatureSwipeHint button:active{transform:none;}
 </style>
 </head>
 <body class="trackerPreview">
@@ -1902,7 +1909,7 @@ body.trackerPreview #trackerView[data-keyboard-open] .playerTrackerSurface main{
 <button id="add" type="button">+ Add Creature</button><div id="msg" class="msg"></div>
 </div>
 <div id="empty" class="empty">Tap + Add to start tracking creatures.</div>
-<div id="creatureSwipeHint" class="creatureSwipeHint hidden">Swipe sideways to browse creatures ↔</div>
+<div id="creatureSwipeHint" class="creatureSwipeHint hidden" role="navigation" aria-label="Jump to creature"></div>
 <div id="field" tabindex="0" role="region" aria-label="Creature cards; swipe sideways to browse"></div>
 </main>
 <div id="creatureKeyboard" class="creatureKeyboard hidden" role="group" aria-label="Creature keyboard"></div>
@@ -2035,6 +2042,34 @@ function finish(){save();render();renderGame()}
 function escapeHTML(v){var d=document.createElement("div");d.textContent=String(v);return d.innerHTML}
 function find(id){for(var i=0;i<creatures.length;i++)if(creatures[i].id===id)return creatures[i];return null}
 function adjust(id,n){var c=find(id);if(!c)return;snapshot();c.c=Math.max(0,c.c+n);finish()}
+function syncCreatureJump(){
+  var rail=el("field"), menu=el("creatureSwipeHint");
+  if(!rail.children.length)return;
+  var first=rail.children[0].offsetLeft, closest=0, distance=Infinity;
+  Array.prototype.forEach.call(rail.children,function(card,index){
+    var delta=Math.abs(card.offsetLeft-first-rail.scrollLeft);
+    if(delta<distance){distance=delta;closest=index;}
+  });
+  Array.prototype.forEach.call(menu.children,function(button,index){
+    button.setAttribute("aria-current",index===closest?"true":"false");
+  });
+}
+function renderCreatureJump(){
+  var menu=el("creatureSwipeHint"), signature=JSON.stringify(creatures.map(function(c){return [c.id,c.name];}));
+  menu.classList.toggle("hidden",creatures.length<2);
+  if(menu.getAttribute("data-creatures")!==signature){
+    menu.setAttribute("data-creatures",signature);menu.innerHTML="";
+    creatures.forEach(function(c,index){
+      var button=document.createElement("button");button.type="button";
+      button.textContent=(index+1)+". "+c.name;button.title=c.name;
+      button.onclick=function(){
+        var rail=el("field"), card=Array.prototype.find.call(rail.children,function(item){return item._creatureRef.id===c.id;});
+        if(card){rail.scrollLeft=card.offsetLeft-rail.children[0].offsetLeft;syncCreatureJump();}
+      };
+      menu.appendChild(button);
+    });
+  }
+}
 function render(){
   var f=el("field"), trackerMain=el("trackerView").querySelector("main");
   var savedScroll={x:window.scrollX,y:window.scrollY,
@@ -2048,7 +2083,7 @@ function render(){
   cards.forEach(function(card){
     if(card.offsetLeft<=savedScroll.railLeft+1)anchor={id:card._creatureRef.id,offset:savedScroll.railLeft-card.offsetLeft};
   });
-  el("creatureSwipeHint").classList.toggle("hidden",creatures.length<2);
+  renderCreatureJump();
   var sameCards=cards.length===creatures.length&&cards.every(function(card,index){
     var c=creatures[index];normalize(c);
     return card._creatureRef===c&&card.getAttribute('data-creature-shape')===creatureShape(c);
@@ -2063,6 +2098,7 @@ function render(){
       });
     });
     el("undo").disabled=(undoState===null);
+    syncCreatureJump();
     return;
   }
   f.innerHTML="";el("empty").className=creatures.length?"empty hidden":"empty";
@@ -2117,9 +2153,14 @@ function render(){
   var anchorCard=anchor&&Array.prototype.find.call(f.children,function(card){return card._creatureRef.id===anchor.id;});
   f.scrollLeft=anchorCard?anchorCard.offsetLeft+anchor.offset:savedScroll.railLeft;
   f.scrollTop=savedScroll.railTop;
+  syncCreatureJump();
   if(trackerMain){trackerMain.scrollTop=savedScroll.top;trackerMain.scrollLeft=savedScroll.left;}
   if(window.scrollX!==savedScroll.x||window.scrollY!==savedScroll.y)window.scrollTo(savedScroll.x,savedScroll.y);
 }
+el("field").addEventListener("scroll",syncCreatureJump,{passive:true});
+el("creatureSwipeHint").addEventListener("pointerdown",function(event){
+  if((event.pointerType==="touch"||event.pointerType==="pen")&&event.target.closest("button"))event.preventDefault();
+});
 // Touching a creature action must not focus-scroll the rotated container.
 el("field").addEventListener("pointerdown",function(event){
   if((event.pointerType==="touch"||event.pointerType==="pen")&&event.target.closest("button"))event.preventDefault();
@@ -3765,5 +3806,6 @@ renderGame();
 
 </body>
 </html>
+
 
 
