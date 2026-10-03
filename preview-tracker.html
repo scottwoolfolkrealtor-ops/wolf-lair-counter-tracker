@@ -1703,6 +1703,10 @@ body.trackerPreview #gameView #gameBoard .playerQuickRow{grid-template-columns:m
 body.trackerPreview #gameView #gameBoard .playerQuickRow .turnDie{width:auto;justify-self:start;}
 
 body.trackerPreview #gameView .poisonUp:disabled{opacity:.35;cursor:default;box-shadow:none;}
+
+body.trackerPreview #decksView #liveScanner{scroll-margin-top:12px;}
+body.trackerPreview #decksView #cameraLight{width:auto;min-height:40px;margin:0 0 8px;padding:8px 16px;}
+body.trackerPreview #decksView #cameraLight[aria-pressed="true"]{background:#71551c;border-color:#f4cc70;color:#fff6d9;}
 </style>
 </head>
 <body class="trackerPreview">
@@ -1882,6 +1886,7 @@ body.trackerPreview #gameView .poisonUp:disabled{opacity:.35;cursor:default;box-
 
    <div id="scanPanel" class="hidden cardToolPanel scanPanel">
     <div id="liveScanner" class="hidden liveScanner">
+     <button id="cameraLight" type="button" aria-pressed="false" disabled>Light unavailable</button>
      <div id="cameraStage" class="cameraStage">
       <video id="scanVideo" autoplay playsinline muted></video>
       <canvas id="scanOverlay" aria-hidden="true"></canvas>
@@ -3105,6 +3110,31 @@ function loadOpenCV(){
   window.__wolfOpenCVPromise=pending.catch(function(err){window.__wolfOpenCVPromise=null;throw err;});
   return window.__wolfOpenCVPromise;
 }
+var cameraTorchOn=false;
+function syncCameraLight(){
+  var button=el("cameraLight"), track=cardCameraStream&&cardCameraStream.getVideoTracks()[0], supported=false;
+  try{var caps=track&&track.getCapabilities?track.getCapabilities():{};supported=caps.torch===true||(Array.isArray(caps.torch)&&caps.torch.indexOf(true)>=0);}catch(e){}
+  button.disabled=!supported;
+  button.textContent=supported?(cameraTorchOn?"Light: On":"Light: Off"):"Light unavailable";
+  button.setAttribute("aria-pressed",String(cameraTorchOn));
+  button.title=supported?"Toggle camera light":"This browser does not provide camera-light control";
+}
+async function toggleCameraLight(){
+  var track=cardCameraStream&&cardCameraStream.getVideoTracks()[0], button=el("cameraLight");
+  if(!track||button.disabled)return;
+  button.disabled=true;
+  try{
+    var desired=!cameraTorchOn;
+    await track.applyConstraints({advanced:[{torch:desired}]});
+    if(!cardCameraStream||cardCameraStream.getVideoTracks()[0]!==track)return;
+    var settings=track.getSettings?track.getSettings():{};
+    cameraTorchOn=typeof settings.torch==="boolean"?settings.torch:desired;
+    syncCameraLight();
+    stableCardFrames=0;lastDetectedCard=null;
+  }catch(e){
+    if(cardCameraStream&&cardCameraStream.getVideoTracks()[0]===track){button.disabled=true;button.textContent="Light unavailable";}
+  }
+}
 function stopCardCamera(){
   cameraSession++;
   if(cardDetectTimer){clearInterval(cardDetectTimer);cardDetectTimer=null}
@@ -3117,6 +3147,7 @@ function stopCardCamera(){
   lastDetectedCard=null;stableCardFrames=0;missedCardFrames=0;autoCaptureBusy=false;
   stopFallbackDetector();
   activeCV=null;
+  cameraTorchOn=false;syncCameraLight();
   var live=el("liveScanner");if(live)live.className="hidden liveScanner";
 }
 function orderCardPoints(points){
@@ -3162,9 +3193,15 @@ function drawCardOverlay(points,found,progress){
   }
 }
 function cardOutlineSteady(previous,points,size){
-  return !!previous&&points.every(function(p,i){
-    var q=previous.points[i];return Math.hypot(p.x-q.x,p.y-q.y)/size<.018;
+  if(!previous||size<=0)return false;
+  var anchor=previous.anchorPoints||previous.points, dx=0,dy=0,sum=0,max=0;
+  points.forEach(function(p,i){
+    var x=p.x-anchor[i].x,y=p.y-anchor[i].y,d=Math.hypot(x,y)/size;
+    dx+=x;dy+=y;sum+=d*d;max=Math.max(max,d);
   });
+  // Border estimates may wobble independently while the card stays centered.
+  // Compare with the lock's original outline so slow drift cannot accumulate.
+  return Math.hypot(dx/4,dy/4)/size<.035&&Math.sqrt(sum/4)<.055&&max<.09;
 }
 function cardFocusScore(data,width,height){
   var gray=new Float32Array(width*height),sum=0,sumSq=0,n=0;
@@ -3242,7 +3279,7 @@ function detectCardFrame(cv){
       fc.drawImage(video,tx/dw*video.videoWidth,ty/dh*video.videoHeight,
         best.width/dw*video.videoWidth,best.height*.14/dh*video.videoHeight,0,0,240,40);
       var sharp=cardFocusScore(fc.getImageData(0,0,240,40).data,240,40)>=70;
-      lastDetectedCard={points:best.points,norm:now,detectW:dw,detectH:dh};
+      lastDetectedCard={points:best.points,anchorPoints:steady?(previous.anchorPoints||previous.points):best.points,norm:now,detectW:dw,detectH:dh};
       stableCardFrames=steady&&sharp?Math.min(AUTO_CAPTURE_FRAMES,stableCardFrames+1):0;
       drawCardOverlay(best.points,true,stableCardFrames);
       if(!sharp)el("cameraState").textContent="WAITING FOR FOCUS";
@@ -3254,8 +3291,11 @@ function detectCardFrame(cv){
     }else{
       missedCardFrames++;
 
-      stableCardFrames=0;lastDetectedCard=null;
-      drawCardOverlay(null,false,0);
+      // One missed edge should not erase a nearly-complete lock.
+      if(missedCardFrames<=1&&lastDetectedCard){
+        stableCardFrames=Math.max(0,stableCardFrames-1);
+        drawCardOverlay(lastDetectedCard.points,false,stableCardFrames);
+      }else{stableCardFrames=0;lastDetectedCard=null;drawCardOverlay(null,false,0);}
     }
   }catch(e){
     drawCardOverlay(null,false,0);
@@ -3450,6 +3490,7 @@ function startCardCamera(){
   var session=++cameraSession;
   el("scanPanel").className="cardToolPanel scanPanel";
   el("liveScanner").className="liveScanner";
+  requestAnimationFrame(function(){if(session===cameraSession)el("liveScanner").scrollIntoView({behavior:"smooth",block:"start"});});
   el("scanStatus").textContent="Opening camera…";
   el("cameraState").textContent="CENTER CARD";
   activeCV=null;
@@ -3474,6 +3515,7 @@ function startCardCamera(){
   }).then(function(stream){
     if(session!==cameraSession){stream.getTracks().forEach(function(t){t.stop();});return;}
     cardCameraStream=stream;
+    syncCameraLight();
     var video=el("scanVideo");
     video.srcObject=stream;
     video.onloadedmetadata=function(){
@@ -3728,6 +3770,7 @@ function startReliableCardScan(){
 }
 el("scanCardBtn").onclick=startReliableCardScan;
 el("autoScanCardBtn").onclick=startCardCamera;
+el("cameraLight").onclick=toggleCameraLight;
 el("manualCapture").onclick=function(){
   if(autoCaptureBusy)return;
   autoCaptureBusy=true;
