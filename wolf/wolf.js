@@ -18,6 +18,13 @@ dialog.innerHTML='<form method="dialog" class="wolfHead"><div><strong>Wolf</stro
 document.body.appendChild(dialog);
 function node(id){return document.getElementById(id);}
 
+var accessDialog=document.createElement("dialog");accessDialog.id="wolfVoiceAccessDialog";
+accessDialog.innerHTML='<form id="wolfVoiceAccessForm"><strong>Enable Wolf voice</strong><p>Enter your private Wolf code once for this browser. On iPhone, use Safari to keep it between visits.</p>'+
+'<label>Private access code<input id="wolfVoiceAccessCode" type="password" required autocomplete="off" maxlength="480" placeholder="Your WOLF_TEST_TOKEN"></label>'+
+'<label><input id="wolfVoiceRemember" type="checkbox" checked> Remember on this device</label><small>Use your Wolf access code, never your OpenAI API key.</small>'+
+'<p id="wolfVoiceAccessStatus" role="status"></p><div class="wolfActions"><button id="wolfVoiceAccessCancel" type="button">Cancel</button><button type="submit">Save and listen</button></div></form>';
+document.body.appendChild(accessDialog);
+
 var ACCESS_STORAGE="wolfLairPrivateAccess1";
 function loadAccess(){
  try{
@@ -28,21 +35,37 @@ function loadAccess(){
  }catch(e){}
 }
 function saveAccess(access){
- if(!node("wolfRemember").checked)return;
+ if(!node("wolfRemember").checked)return true;
  try{
   localStorage.setItem(ACCESS_STORAGE,access);
-  node("wolfAccessSettings").open=false;
- }catch(e){node("wolfStatus").textContent="Answer received. This browser could not remember your code.";}
+   node("wolfAccessSettings").open=false;
+  return true;
+ }catch(e){node("wolfStatus").textContent="This browser could not remember your code. It is available for this visit.";return false;}
+}
+function accessCode(){
+ if(!node("wolfAccess").value.trim()&&node("wolfRemember").checked)loadAccess();
+ return node("wolfAccess").value.trim();
 }
 function forgetAccess(){
  try{localStorage.removeItem(ACCESS_STORAGE);}catch(e){}
 }
-node("wolfRemember").onchange=function(){if(!this.checked)forgetAccess();};
+node("wolfAccess").addEventListener("change",function(){var access=this.value.trim();if(access)saveAccess(access);else forgetAccess();});
+node("wolfRemember").onchange=function(){if(!this.checked)forgetAccess();else if(node("wolfAccess").value.trim())saveAccess(node("wolfAccess").value.trim());};
 node("wolfForget").onclick=function(){
  forgetAccess();node("wolfAccess").value="";node("wolfRemember").checked=false;node("wolfAccessSettings").open=true;
+ stopVoice();
  node("wolfStatus").textContent="Saved access code removed from this browser.";
 };
 loadAccess();
+node("wolfVoiceAccessCancel").onclick=function(){accessDialog.close();};
+accessDialog.addEventListener("close",function(){node("wolfVoiceAccessCode").value="";});
+node("wolfVoiceAccessForm").onsubmit=function(event){
+ event.preventDefault();var access=node("wolfVoiceAccessCode").value.trim();
+ if(!access){node("wolfVoiceAccessStatus").textContent="Enter your private Wolf access code.";node("wolfVoiceAccessCode").focus();return;}
+ node("wolfAccess").value=access;node("wolfRemember").checked=node("wolfVoiceRemember").checked;
+ if(!node("wolfRemember").checked)forgetAccess();
+ saveAccess(access);node("wolfAccessSettings").open=false;accessDialog.close();beginWake();
+};
 
 var READ_STORAGE="wolfLairVoiceRead1";
 try{var readPreference=localStorage.getItem(READ_STORAGE);node("wolfAutoRead").checked=readPreference===null||readPreference==="true";}catch(e){node("wolfAutoRead").checked=true;}
@@ -107,7 +130,7 @@ node("wolfQuestionForm").onsubmit=async function(event){
  event.preventDefault();if(busy||!endpoint())return;
  var question=node("wolfQuestion").value.trim();if(!question)return;
  var backgroundRequest=voiceFromBattlefield,requestVoiceSerial=voiceSessionSerial;
- var access=node("wolfAccess").value.trim();if(!access){node("wolfAccessSettings").open=true;requestStatus("Enter your private test access code first.");if(dialog.open)node("wolfAccess").focus();else voiceStatus("Add your saved access code with Ask Wolf.","error");return;}
+ var access=accessCode();if(!access){node("wolfAccessSettings").open=true;requestStatus("Enter your private test access code first.");if(dialog.open)node("wolfAccess").focus();else{stopVoice();voiceStatus("Tap Wolf to save your private access code before listening.","error");}return;}
  var currentNotes=node("wolfNotes").value.trim();
  if(currentNotes!==extraNotes){messages=[];node("wolfMessages").replaceChildren();extraNotes=currentNotes;}
  var payload=JSON.stringify({question:question,context:getContext(),untrackedNotes:extraNotes,messages:messages.slice(-8)});
@@ -120,7 +143,7 @@ node("wolfQuestionForm").onsubmit=async function(event){
    signal:controller.signal,body:payload});
   var data=await response.json();
   if(!response.ok){
-   if(response.status===401){forgetAccess();node("wolfAccessSettings").open=true;}
+   if(response.status===401){forgetAccess();node("wolfAccess").value="";node("wolfAccessSettings").open=true;wakeEnabled=false;}
    throw new Error(data.error||"Wolf could not answer right now. Your question is still here.");
   }
   if(typeof data.answer!=="string"||!data.answer.trim())throw new Error("Wolf returned no answer. Try again.");
@@ -167,9 +190,9 @@ function scheduleSpokenQuestion(){
  var question=node("wolfQuestion").value.trim();
  if(!question||busy)return;
  if(!node("wolfAutoSend").checked){voiceStatus("Question captured. Tap Ask Wolf to send it.");return;}
- if(!node("wolfAccess").value.trim()){
+ if(!accessCode()){
   node("wolfAccessSettings").open=true;requestStatus("Enter your private access code, then tap Ask Wolf to send this question.");
-  voiceStatus("Question captured. Your private access code is required.");return;
+  stopVoice();voiceStatus("Question captured. Tap Wolf to save your private access code.","error");return;
  }
  voiceStatus("Question captured. Sending after a short pause…");
  voiceSubmitTimer=setTimeout(function(){
@@ -269,11 +292,22 @@ function startVoice(mode){
  };
  try{current.start();}catch(e){stopVoice();voiceStatus("Could not start listening. Tap Enable Hey Wolf to retry in Safari.");}
 }
-wakeButton.onclick=wakeTracker.onclick=function(){
- if(wakeEnabled){stopVoice();return;}
+function beginWake(){
+ if(!accessCode()){
+  voiceStatus("Save your private access code once to enable Wolf voice.","error");
+  node("wolfVoiceAccessCode").value="";node("wolfVoiceRemember").checked=node("wolfRemember").checked;
+  node("wolfVoiceAccessStatus").textContent="";
+  if(!accessDialog.open)accessDialog.showModal();
+  return;
+ }
+ saveAccess(accessCode());
  shortStarts=0;wakeEnabled=true;voiceSessionSerial++;
  if(busy||voicePlayback){voiceStatus("Hey Wolf enabled. Listening will resume after this answer.");return;}
  startVoice("wake");
+}
+wakeButton.onclick=wakeTracker.onclick=function(){
+ if(wakeEnabled){stopVoice();return;}
+ beginWake();
 };
 node("wolfDictate").onclick=function(){voiceFromBattlefield=false;voicePlayerIndex=null;startVoice("question");};
 node("wolfRead").onclick=speakAnswer;node("wolfStop").onclick=stopVoice;
