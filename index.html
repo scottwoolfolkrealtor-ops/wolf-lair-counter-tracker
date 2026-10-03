@@ -1458,6 +1458,37 @@ body.trackerPreview #gameView #gameBoard .lifeNumberInput::-webkit-outer-spin-bu
   }
 }
 
+
+/* The battlefield form and controls follow the player who opened them. */
+body.trackerPreview #trackerView[data-seat-aligned]{
+  position:fixed;top:env(safe-area-inset-top,0px);right:env(safe-area-inset-right,0px);
+  bottom:env(safe-area-inset-bottom,0px);left:env(safe-area-inset-left,0px);
+  min-height:0;width:auto;height:auto;overflow:hidden;container-type:size;
+}
+body.trackerPreview #trackerView[data-seat-aligned]::before,
+body.trackerPreview #trackerView[data-seat-aligned]::after{position:absolute}
+body.trackerPreview #trackerView[data-seat-aligned] .playerTrackerSurface{
+  position:absolute;z-index:2;left:50%;top:50%;
+  width:100cqw;height:100cqh;
+  display:flex;flex-direction:column;overflow:hidden;
+  transform:translate(-50%,-50%) rotate(var(--tracker-rotation,0deg));
+  transform-origin:center;
+}
+body.trackerPreview #trackerView[data-seat-aligned][data-sideways="true"] .playerTrackerSurface{
+  width:100cqh;height:100cqw;
+}
+body.trackerPreview #trackerView[data-seat-aligned] main{
+  flex:1;min-height:0;width:100%;max-width:none;overflow:auto;
+  overscroll-behavior:contain;padding:8px 12px 16px;
+}
+body.trackerPreview #trackerView[data-seat-aligned] nav{
+  position:relative;flex:none;left:auto;right:auto;bottom:auto;
+  padding:6px 10px;touch-action:manipulation;
+}
+body.trackerPreview #trackerView[data-seat-aligned] .backHome{margin:0 0 5px;padding:5px 10px}
+body.trackerPreview #trackerView[data-seat-aligned] header.trackerTitle{padding-top:8px;padding-bottom:8px}
+body.trackerPreview #trackerView[data-seat-aligned] button{touch-action:manipulation}
+
 </style>
 </head>
 <body class="trackerPreview">
@@ -1678,6 +1709,7 @@ body.trackerPreview #gameView #gameBoard .lifeNumberInput::-webkit-outer-spin-bu
 </section>
 
 <section id="trackerView" class="hidden">
+<div class="playerTrackerSurface">
 <main>
 <button id="backHome" class="backHome" type="button">‹ Wolf Lair Home</button>
 <header class="trackerTitle">
@@ -1695,6 +1727,7 @@ body.trackerPreview #gameView #gameBoard .lifeNumberInput::-webkit-outer-spin-bu
 <div id="field"></div>
 </main>
 <nav><button id="show" type="button">＋ Add</button><button id="undo" type="button" disabled>↶ Undo</button><button id="bill" type="button">×2 Double All</button></nav>
+</div>
 </section>
 
 <section id="gameView" class="hidden">
@@ -1756,10 +1789,33 @@ function ensurePlayerCreatureSlots(){
   while(playerCreatures.length<count)playerCreatures.push([]);
   if(playerCreatures.length>count)playerCreatures.length=count;
 }
+function playerPanelRotation(index){
+  var count=gameState.players.length;
+  if(count===1)return 0;
+  var base=0;
+  if(count===2)base=index===0?0:180;
+  else if(count===3)base=index===0?0:(index===1?90:270);
+  else base=index%2===0?90:270;
+  return ((base+(Number(gameState.players[index].rotation)||0))%360+360)%360;
+}
+function orientPlayerTracker(){
+  var view=el('trackerView');
+  if(gameState.players.length===1){
+    view.removeAttribute('data-seat-aligned');
+    view.removeAttribute('data-sideways');
+    view.style.removeProperty('--tracker-rotation');
+    return;
+  }
+  var angle=playerPanelRotation(activePlayerIndex);
+  view.setAttribute('data-seat-aligned','true');
+  view.setAttribute('data-sideways',String(angle===90||angle===270));
+  view.style.setProperty('--tracker-rotation',angle+'deg');
+}
 function setActivePlayer(index){
   ensurePlayerCreatureSlots();
   activePlayerIndex=Math.max(0,Math.min(index,playerCreatures.length-1));
   creatures=playerCreatures[activePlayerIndex];
+  orientPlayerTracker();
   undoState=null;
   updateBattlefieldPlayerLabel();
   render();
@@ -1848,7 +1904,12 @@ function render(){
   }
   el("undo").disabled=(undoState===null);
 }
-el("show").onclick=function(){el("form").className="";el("nm").focus();window.scrollTo(0,0)};
+el("show").onclick=function(){
+  el("form").className="";
+  if(el("trackerView").hasAttribute("data-seat-aligned"))el("trackerView").querySelector("main").scrollTo(0,0);
+  else window.scrollTo(0,0);
+  el("nm").focus({preventScroll:true});
+};
 el("add").onclick=function(){
   el("msg").textContent="";
   var name=el("nm").value.trim(), p=parseInt(el("pw").value,10), t=parseInt(el("th").value,10);
@@ -1899,6 +1960,7 @@ function saveGame(){
   try{localStorage.setItem(GAME_KEY,JSON.stringify(gameState))}catch(e){}
 }
 function renderGame(){
+  if(el('trackerView').hasAttribute('data-seat-aligned'))orientPlayerTracker();
   var board=el('gameBoard');
   board.innerHTML='';
   board.setAttribute('data-player-count',String(gameState.players.length));
@@ -1924,7 +1986,7 @@ function renderGame(){
       }
       card.style.order=String(seatOrder);
       card.dataset.sideways=String(baseRotation===90||baseRotation===270);
-      var finalRotation=((baseRotation+(Number(player.rotation)||0))%360+360)%360;
+      var finalRotation=playerPanelRotation(index);
       var creatureCount=(playerCreatures[index]||[]).length;
       card.innerHTML='\
         <div class="playerFace" style="--player-rotation:'+finalRotation+'deg">\
