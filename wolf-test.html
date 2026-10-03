@@ -3,23 +3,30 @@
 <style>body{margin:0;background:#0c1711;color:#f4ead6;font:16px/1.5 system-ui}main{max-width:580px;margin:auto;padding:24px}h1{margin-bottom:0}label{display:block;margin:18px 0}input,textarea,button{box-sizing:border-box;width:100%;font:inherit;padding:12px;border:1px solid #668060;border-radius:10px;background:#16291c;color:inherit}input[type="checkbox"]{width:auto;accent-color:#92ba7f;margin-right:8px}button{background:#365b36;font-weight:700;cursor:pointer}button:disabled{opacity:.5}a{color:#bce4ad}#answer{white-space:pre-wrap;overflow-wrap:anywhere}#status{color:#c3cbb9}.hint{font-size:14px;color:#c3cbb9}</style></head>
 <body><main><h1>Wolf</h1><p>Private AI connection test</p><p class="hint">Your battlefield is unknown here. Describe all relevant cards and effects. Wolf will not change game totals.</p>
 <form id="test"><label>Private test access code<input id="code" type="password" autocomplete="off" required maxlength="480"></label><label><input id="remember" type="checkbox" checked> Remember on this device</label><p class="hint">Use your WOLF_TEST_TOKEN, never your OpenAI API key. Remembering it also enables Wolf voice on the battlefield in this browser.</p>
-<label>Other cards or effects<textarea id="notes" maxlength="4000" rows="2"></textarea></label>
+<button id="forget" type="button">Forget saved code</button><label>Other cards or effects<textarea id="notes" maxlength="4000" rows="2"></textarea></label>
 <label>Your Magic question<textarea id="question" maxlength="2000" rows="3" required placeholder="Does Railway Brawler trigger when a creature token enters?"></textarea></label><button id="send">Ask Wolf</button></form>
-<p id="status" role="status"></p><section aria-live="polite"><p id="answer"></p><ul id="sources"></ul></section>
+<p id="accessStatus" role="status" class="hint"></p><p id="status" role="status"></p><section aria-live="polite"><p id="answer"></p><ul id="sources"></ul></section>
 <p><a href="./">Return to Wolf Lair</a></p></main>
-<script>
+<script src="./wolf/private-access.js?v=10"></script><script>
 "use strict";
 const el=id=>document.getElementById(id);
-const accessStorage="wolfLairPrivateAccess1";
-try{const saved=localStorage.getItem(accessStorage);if(saved&&saved.length<=480)el("code").value=saved;}catch{}
-el("remember").onchange=function(){if(!this.checked){try{localStorage.removeItem(accessStorage);}catch{}}};
+const privateAccess=window.WolfPrivateAccess;
+let renderedCode="";
+function restoreAccess(){const saved=privateAccess.get(),field=el("code");if(saved&&(!field.value||field.value.trim()===renderedCode)){field.value=saved;el("remember").checked=privateAccess.state().remember;}else if(!saved&&field.value.trim()===renderedCode)field.value="";renderedCode=saved;}
+function saveAccess(){const code=el("code").value.trim()||privateAccess.get();if(code)privateAccess.set(code,el("remember").checked);else privateAccess.forget();}
+restoreAccess();privateAccess.ready.then(restoreAccess);
+privateAccess.subscribe(state=>{restoreAccess();el("accessStatus").textContent=state.status==="saved"?"Private access saved in this browser.":state.status==="saving"?"Saving private access…":state.status==="visit"?(state.remember?"This browser could not remember your code. It is available for this visit. Open Wolf in Safari to keep it between visits.":"Private access is available for this visit only."):"";});
+el("code").onchange=function(){if(this.value.trim())saveAccess();};
+el("remember").onchange=saveAccess;
+el("forget").onclick=()=>{privateAccess.forget();el("code").value="";el("remember").checked=false;};
 el("test").onsubmit=async event=>{
- event.preventDefault();const question=el("question").value.trim(),code=el("code").value.trim();if(!question||!code)return;
+ event.preventDefault();const question=el("question").value.trim(),code=el("code").value.trim()||privateAccess.get();if(!question||!code)return;
+ privateAccess.set(code,el("remember").checked);
  el("send").disabled=true;el("status").textContent="Wolf is checking the play…";el("answer").textContent="";el("sources").replaceChildren();
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),45000);
  try{
  const response=await fetch("https://wolf-ai-backend.scott-woolfolkrealtor.workers.dev/ask",{method:"POST",credentials:"omit",headers:{"Content-Type":"application/json","Authorization":"Bearer "+code},signal:controller.signal,body:JSON.stringify({question,untrackedNotes:el("notes").value.trim(),context:null,messages:[]})});
- const data=await response.json();if(!response.ok){if(response.status===401){try{localStorage.removeItem(accessStorage);}catch{}el("code").value="";}throw new Error(data.error||"Wolf could not answer right now.");}
+ const data=await response.json();if(!response.ok){if(response.status===401){privateAccess.forget();el("code").value="";}throw new Error(data.error||"Wolf could not answer right now.");}
  if(typeof data.answer!=="string"||!data.answer.trim())throw new Error("Wolf returned no answer.");
  el("answer").textContent=data.answer;
  const seen=new Set();
@@ -28,7 +35,6 @@ el("test").onsubmit=async event=>{
  const li=document.createElement("li"),link=document.createElement("a");link.href=url.href;link.textContent=source.title||url.hostname;link.target="_blank";link.rel="noopener noreferrer";li.append(link);el("sources").append(li);
  }
  el("status").textContent="Answer received. No game totals changed.";
- if(el("remember").checked){try{localStorage.setItem(accessStorage,code);}catch{el("status").textContent+=" This browser could not remember your code.";}}
  }catch(error){el("status").textContent=error.name==="AbortError"?"Wolf took too long. Your question is still here.":error instanceof TypeError?"Could not connect to Wolf. Check your connection and try again.":error.message;}
  finally{clearTimeout(timer);el("send").disabled=false;}
 };
