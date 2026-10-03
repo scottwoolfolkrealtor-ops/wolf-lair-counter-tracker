@@ -1348,6 +1348,9 @@ body.trackerPreview #gameView .lifeValueFace{
 body.trackerPreview #gameView .counterIcon svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 body.trackerPreview #gameView .counterStrip{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
 body.trackerPreview #gameView .lifePanel{display:grid;grid-template-columns:48px minmax(0,1fr) 48px}
+/* Rapid counter taps are actions; pinch zoom remains available. */
+body.trackerPreview #gameView button{touch-action:manipulation}
+
 /* Mobile table: one viewport, independently scrollable seats, reachable roster. */
 @media(max-width:640px){
   body.trackerPreview #gameView{min-height:0;background-attachment:scroll}
@@ -1914,8 +1917,17 @@ function renderGame(){
           <button class="playerCreatures" type="button"><span class="battlefieldLabel">BATTLEFIELD</span><span>'+creatureCount+' CREATURE'+(creatureCount===1?'':'S')+'</span></button>\
         </div>\
         </div>';
-      card.querySelector('.lifeDown').onclick=function(){player.life--;saveGame();renderGame();};
-      card.querySelector('.lifeUp').onclick=function(){player.life++;saveGame();renderGame();};
+      // Keep counter controls mounted so repeated taps preserve focus and position.
+      function updatePlayerCounters(){
+        card.querySelector('.lifeValueFace').textContent=String(player.life);
+        card.querySelector('.commanderChip .counterValue').textContent=String(player.commander);
+        card.querySelector('.poisonChip .counterValue').textContent=String(player.poison);
+        card.querySelector('.commanderChip').classList.toggle('danger',player.commander>=21);
+        card.querySelector('.poisonChip').classList.toggle('danger',player.poison>=10);
+        saveGame();
+      }
+      card.querySelector('.lifeDown').onclick=function(){player.life--;updatePlayerCounters();};
+      card.querySelector('.lifeUp').onclick=function(){player.life++;updatePlayerCounters();};
       card.querySelector('.editLife').onclick=function(){
         var panel=card.querySelector('.lifePanel');
         if(!panel)return;
@@ -1937,10 +1949,10 @@ function renderGame(){
         input.focus();
         input.select();
       };
-      card.querySelector('.cmdDown').onclick=function(){player.commander=Math.max(0,player.commander-1);saveGame();renderGame();};
-      card.querySelector('.cmdUp').onclick=function(){player.commander++;saveGame();renderGame();};
-      card.querySelector('.poisonDown').onclick=function(){player.poison=Math.max(0,player.poison-1);saveGame();renderGame();};
-      card.querySelector('.poisonUp').onclick=function(){player.poison++;saveGame();renderGame();};
+      card.querySelector('.cmdDown').onclick=function(){player.commander=Math.max(0,player.commander-1);updatePlayerCounters();};
+      card.querySelector('.cmdUp').onclick=function(){player.commander++;updatePlayerCounters();};
+      card.querySelector('.poisonDown').onclick=function(){player.poison=Math.max(0,player.poison-1);updatePlayerCounters();};
+      card.querySelector('.poisonUp').onclick=function(){player.poison++;updatePlayerCounters();};
       card.querySelector('.rotateSeat').onclick=function(){player.rotation=((Number(player.rotation)||0)+180)%360;saveGame();renderGame();};
       card.querySelector('.resetPlayer').onclick=function(){player.life=40;player.commander=0;player.poison=0;player.roll=null;saveGame();renderGame();};
       card.querySelector('.editPlayerName').onclick=function(){
