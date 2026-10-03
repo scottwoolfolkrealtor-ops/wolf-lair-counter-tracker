@@ -6,11 +6,12 @@ const source=readFileSync(new URL('./wolf.js',import.meta.url),'utf8');
 const accessSource=readFileSync(new URL('./private-access.js',import.meta.url),'utf8');
 const ACCESS='private-code-only-for-voice-unit-tests';
 const KEY='wolfLairPrivateAccess1';
-function setup({saved=new Map(),fetcher,storageBlocked=false,storageDropsWrites=false,indexedDB,legacyMarkup=false,helperLoadFails=false,requiresSpeechGesture=false}={}){
+function setup({saved=new Map(),fetcher,storageBlocked=false,storageDropsWrites=false,indexedDB,legacyMarkup=false,helperLoadFails=false,requiresSpeechGesture=false,audioStartDelayed=false,naturalAudio=false}={}){
  const nodes=new Map(),recognizers=[],timers=new Map(),spoken=[],greetings=[],calls=[],docEvents=new Map(),pageEvents=new Map();
  let gesture=false,unlocked=false;
  function userGesture(fn){gesture=true;try{return fn();}finally{gesture=false;}}
- let serial=0;const submissions=[],rowsByRecognition=new WeakMap();
+ let serial=0,now=Date.now();const submissions=[],rowsByRecognition=new WeakMap(),naturalSources=[],naturalContexts=[];
+ class Clock extends Date{static now(){return now;}}
  class Node{
   constructor(tag){this.tag=tag;this.children=[];this.handlers={};this.value='';this.checked=false;this.open=false;this.textContent='';this.attrs={};}
   set innerHTML(value){this.html=value;for(const m of value.matchAll(/id="([^"]+)"/g)){if(!nodes.has(m[1]))nodes.set(m[1],new Node(m[1]));}for(const m of value.matchAll(/<input\b[^>]*id="([^"]+)"[^>]*\bchecked\b[^>]*>/g))get(m[1]).checked=true;if(value.includes('id="wolfAccessSettings"'))get('wolfAccessSettings').open=true;}
@@ -33,8 +34,8 @@ function setup({saved=new Map(),fetcher,storageBlocked=false,storageDropsWrites=
   querySelectorAll:()=>[askGame,askTracker],addEventListener:(name,fn)=>docEvents.set(name,fn)
  };
  class Recognition{
-  constructor(){recognizers.push(this);this.started=false;}
-  start(){this.started=true;if(this.onstart)this.onstart();}
+  constructor(){recognizers.push(this);this.started=false;this.onaudiostart=null;}
+  start(){this.started=true;if(this.onstart)this.onstart();if(!audioStartDelayed&&this.onaudiostart)this.onaudiostart();}
   abort(){this.aborted=true;}
  }
  const speech={autoStart:true,autoEndGreeting:true,cancelCount:0,resumeCount:0,paused:false,cancel(){this.cancelCount++;},resume(){this.resumeCount++;this.paused=false;},getVoices:()=>[],speak(u){
@@ -50,27 +51,34 @@ function setup({saved=new Map(),fetcher,storageBlocked=false,storageDropsWrites=
   getWolfGameContext:()=>({selectedPlayerIndex:2,battlefieldComplete:false,players:[{index:0,name:'Scott',life:40,trackedCreatures:[]}]}),
   addEventListener:(name,fn)=>pageEvents.set(name,fn)
  };
+ class AudioContext{
+  constructor(){this.state='running';this.destination={};this.sources=naturalSources;naturalContexts.push(this);}
+  resume(){if(this.failResume)return Promise.reject(Error('blocked'));this.state='running';return Promise.resolve();}
+  createBuffer(channels,count,sampleRate){assert.equal(channels,1);const samples=new Float32Array(count);return {duration:count/sampleRate,getChannelData:()=>samples,samples};}
+  createBufferSource(){const source={connect(){},disconnect(){},start(){source.started=true;},stop(){source.stopped=true;}};naturalSources.push(source);return source;}
+ }
+ if(naturalAudio)window.AudioContext=AudioContext;
  const context={
   window,document,SpeechSynthesisUtterance:window.SpeechSynthesisUtterance,
   localStorage:{getItem:k=>{if(storageBlocked)throw Error('blocked');return saved.get(k)||null;},setItem:(k,v)=>{if(storageBlocked)throw Error('blocked');if(!storageDropsWrites)saved.set(k,v);},removeItem:k=>{if(storageBlocked)throw Error('blocked');saved.delete(k);}},
   fetch:async(url,init)=>{calls.push({url,init});return fetcher?fetcher(url,init):Response.json({answer:'A checked answer.',sources:[]});},
   setTimeout:(fn,delay)=>{let id=++serial;timers.set(id,{fn,delay});return id;},clearTimeout:id=>timers.delete(id),
-  AbortController,TextEncoder,URL,Set,Date,console
+  AbortController,TextEncoder,URL,Set,Date:Clock,console,atob
  };
  if(legacyMarkup){
   vm.runInNewContext(source,context);
   if(helperLoadFails)document.head.children[0].onerror();
   else{vm.runInNewContext(accessSource,context);document.head.children[0].onload();}
  }else{vm.runInNewContext(accessSource,context);vm.runInNewContext(source,context);}
- function runRestart(){for(const [id,t] of [...timers])if(t.delay===500){timers.delete(id);t.fn();}}
+ function runRestart(){for(const [id,t] of [...timers])if(t.delay===200){timers.delete(id);t.fn();}}
  const dialog=document.body.children[0];
  function result(words){const current=recognizers.at(-1),rows=rowsByRecognition.get(current)||[];const row=[{transcript:words}];row.isFinal=true;rows.push(row);rowsByRecognition.set(current,rows);current.onresult({resultIndex:rows.length-1,results:rows});}
  async function submit(){get('wolfQuestion').value='How do these counters work?';if(!get('wolfAccess').value)get('wolfAccess').value=ACCESS;return userGesture(()=>get('wolfQuestionForm').onsubmit({preventDefault(){}}));}
- function runAuto(){for(const [id,t] of [...timers])if(t.delay===1400){timers.delete(id);t.fn();}}
+ function runAuto(){for(const [id,t] of [...timers])if(t.delay===900){timers.delete(id);t.fn();}}
  const accessDialog=document.body.children[1];
  function saveVoice(code=ACCESS,remember=true){get('wolfVoiceAccessCode').value=code;get('wolfVoiceRemember').checked=remember;userGesture(()=>get('wolfVoiceAccessForm').onsubmit({preventDefault(){}}));}
  function runSpeechTimer(delay){for(const [id,t] of [...timers])if(t.delay===delay){timers.delete(id);t.fn();}}
- return {get,game,tracker,dialog,accessDialog,document,docEvents,pageEvents,askGame,recognizers,timers,speech,spoken,greetings,calls,result,submit,saveVoice,runRestart,runAuto,runSpeechTimer,submissions,wake:()=>userGesture(()=>game.children[0].onclick()),saved,access:window.WolfPrivateAccess};
+ return {get,game,tracker,dialog,accessDialog,document,docEvents,pageEvents,askGame,recognizers,timers,speech,spoken,greetings,calls,result,submit,saveVoice,runRestart,runAuto,runSpeechTimer,submissions,wake:()=>userGesture(()=>game.children[0].onclick()),saved,access:window.WolfPrivateAccess,naturalSources,naturalContexts,advance:ms=>{now+=ms;}};
 }
 test('valid code persists across visits, forget removes it and no listening starts by itself',async()=>{
  const x=setup();await x.submit();assert.equal(x.saved.get(KEY),ACCESS);
@@ -124,10 +132,11 @@ test('wake phrase without a question or without a code never sends',()=>{
  const x=setup({saved:new Map([[KEY,ACCESS]])});x.wake();x.result('Hey Wolf');x.runAuto();assert.equal(x.calls.length,0);
  const y=setup();y.wake();y.runAuto();assert.equal(y.calls.length,0);assert.equal(y.recognizers.length,0);assert.equal(y.accessDialog.open,true);
 });
-test('interim speech delays sending and final speech includes the continuation',async()=>{
+test('interim revisions replace the hypothesis and final speech includes the continuation once',async()=>{
  const x=setup({saved:new Map([[KEY,ACCESS]])});x.wake();x.result('Hey Wolf does this trigger');
  const rec=x.recognizers.at(-1);const interim=[{transcript:'when my token enters'}];interim.isFinal=false;
- rec.onresult({resultIndex:1,results:[[{transcript:'Hey Wolf does this trigger'}],interim]});x.runAuto();assert.equal(x.calls.length,0);
+ rec.onresult({resultIndex:1,results:[[{transcript:'Hey Wolf does this trigger'}],interim]});assert.equal(x.calls.length,0);
+ assert.equal(x.get('wolfQuestion').value,'does this trigger when my token enters');
  x.result('when my token enters');x.runAuto();await Promise.all(x.submissions);
  assert.equal(x.calls.length,1);assert.equal(JSON.parse(x.calls[0].init.body).question,'does this trigger when my token enters');
 });
@@ -393,4 +402,81 @@ test('test-page password clearing keeps saved access, and explicit forgetting re
  await page.access.ready;page.get('code').value='';page.get('code').onchange.call(page.get('code'));
  assert.equal(page.access.get(),ACCESS);assert.equal(saved.get(KEY),ACCESS);
  page.get('forget').onclick();await settleAccess();assert.equal(page.access.get(),'');assert.equal(saved.has(KEY),false);assert.equal(db.records.has(KEY),false);
+});
+
+test('a clarification reply needs no repeated wake phrase and keeps the same player and conversation',async()=>{
+ const x=setup({saved:new Map([[KEY,ACCESS]]),fetcher:()=>Response.json({answer:'Does the Hydra actually have six counters?',sources:[]})});
+ x.wake();x.result('Hey Wolf how many counters');x.runAuto();await Promise.all(x.submissions);
+ x.spoken[0].onend();x.runRestart();assert.match(x.game.status.textContent,/Reply directly/);
+ x.result('Yes six plus one plus one counters');x.runAuto();await Promise.all(x.submissions);
+ assert.equal(x.calls.length,2);const reply=JSON.parse(x.calls[1].init.body);
+ assert.equal(reply.question,'Yes six plus one plus one counters');assert.equal(reply.context.selectedPlayerIndex,2);
+ assert.equal(reply.messages.length,2);assert.match(reply.messages[1].content,/six counters/);assert.equal(x.dialog.open,false);
+});
+test('the reply window begins after speech ends and survives a recognition restart',async()=>{
+ const x=setup({saved:new Map([[KEY,ACCESS]])});x.wake();x.result('Hey Wolf check this play');x.runAuto();await Promise.all(x.submissions);
+ x.advance(25000);x.spoken[0].onend();x.runRestart();x.recognizers.at(-1).onend();x.runRestart();
+ x.advance(10000);x.result('And if I have Doubling Season');x.runAuto();await Promise.all(x.submissions);
+ assert.equal(x.calls.length,2);assert.equal(JSON.parse(x.calls[1].init.body).question,'And if I have Doubling Season');
+});
+test('after thirty seconds of silence a new question requires Hey Wolf',async()=>{
+ const x=setup({saved:new Map([[KEY,ACCESS]])});x.wake();x.result('Hey Wolf check this play');x.runAuto();await Promise.all(x.submissions);
+ x.spoken[0].onend();x.runRestart();x.advance(31000);x.runSpeechTimer(30000);x.result('Six counters');x.runAuto();assert.equal(x.calls.length,1);
+ x.result('Hey Wolf what happens next');x.runAuto();await Promise.all(x.submissions);assert.equal(x.calls.length,2);
+ assert.equal(JSON.parse(x.calls[1].init.body).question,'what happens next');
+});
+test('stable interim text is submitted after a pause without waiting for final recognition',async()=>{
+ const x=setup({saved:new Map([[KEY,ACCESS]])});x.wake();const rec=x.recognizers.at(-1);
+ const row=[{transcript:'Hey Wolf do these counters double'}];row.isFinal=false;
+ const resultHandler=rec.onresult;resultHandler({resultIndex:0,results:[row]});assert.equal(x.calls.length,0);
+ x.runAuto();await Promise.all(x.submissions);assert.equal(x.calls.length,1);assert.equal(JSON.parse(x.calls[0].init.body).question,'do these counters double');
+ row.isFinal=true;resultHandler({resultIndex:0,results:[row]});x.runAuto();assert.equal(x.calls.length,1);
+});
+test('revised interim words replace earlier guesses and an unchanged final does not reset the pause',async()=>{
+ const x=setup({saved:new Map([[KEY,ACCESS]])});x.wake();const rec=x.recognizers.at(-1);
+ const row=[{transcript:'Hey Wolf count my hydra'}];row.isFinal=false;rec.onresult({resultIndex:0,results:[row]});
+ row[0].transcript='Hey Wolf count my Hydra counters';rec.onresult({resultIndex:0,results:[row]});
+ const queued=[...x.timers.keys()];row.isFinal=true;rec.onresult({resultIndex:0,results:[row]});assert.deepEqual([...x.timers.keys()],queued);
+ x.runAuto();await Promise.all(x.submissions);assert.equal(JSON.parse(x.calls[0].init.body).question,'count my Hydra counters');
+});
+test('microphone status says Starting until audio capture begins, and stalled startup stops safely',()=>{
+ const x=setup({saved:new Map([[KEY,ACCESS]]),audioStartDelayed:true});x.wake();assert.equal(x.game.children[0].attrs['data-state'],'ready');
+ assert.match(x.game.status.textContent,/Starting microphone/);x.recognizers[0].onaudiostart();assert.equal(x.game.children[0].attrs['data-state'],'listening');
+ const y=setup({saved:new Map([[KEY,ACCESS]]),audioStartDelayed:true});y.wake();y.runSpeechTimer(12000);
+ assert.equal(y.game.children[0].attrs['aria-pressed'],'false');assert.match(y.game.status.textContent,/did not become ready/);assert.equal(y.calls.length,0);
+});
+test('a short clarification at the end of an older answer is read aloud',async()=>{
+ const x=setup({saved:new Map([[KEY,ACCESS]]),fetcher:()=>Response.json({answer:'It depends on the counters.\n\nDoes it have six counters?',sources:[]})});
+ x.wake();x.result('Hey Wolf check my Hydra');x.runAuto();await Promise.all(x.submissions);
+ assert.equal(x.spoken[0].text,'It depends on the counters. Does it have six counters?');assert.equal(x.spoken[0].rate,0.95);
+});
+
+const pcmAudio={format:'pcm',sampleRate:24000,data:btoa(String.fromCharCode(0,0,255,127,0,128))};
+test('a natural answer uses bounded PCM audio and listens for a direct follow-up after playback',async()=>{
+ const x=setup({saved:new Map([[KEY,ACCESS]]),naturalAudio:true,fetcher:()=>Response.json({answer:'Does it have six counters?',spokenAnswer:'Does it have six counters?',audio:pcmAudio,sources:[]})});
+ x.wake();x.result('Hey Wolf check my Hydra');x.runAuto();await Promise.all(x.submissions);
+ assert.equal(JSON.parse(x.calls[0].init.body).voice,true);assert.equal(x.spoken.length,0);assert.equal(x.naturalSources.length,1);
+ const clip=x.naturalSources[0];assert.equal(clip.started,true);assert.deepEqual([...clip.buffer.samples],[0,32767/32768,-1]);
+ assert.equal(x.game.children[0].attrs['data-state'],'speaking');assert.equal(x.dialog.open,false);
+ clip.onended();x.runRestart();assert.match(x.game.status.textContent,/Reply directly/);
+ x.result('Yes six counters');x.runAuto();await Promise.all(x.submissions);assert.equal(x.calls.length,2);assert.equal(x.naturalSources.length,2);
+});
+test('blocked natural audio can be replayed from a tap without another API request',async()=>{
+ let finish;const x=setup({saved:new Map([[KEY,ACCESS]]),naturalAudio:true,fetcher:()=>new Promise(resolve=>{finish=resolve;})});
+ x.wake();x.result('Hey Wolf check my Hydra');x.runAuto();x.naturalContexts[0].state='suspended';x.naturalContexts[0].failResume=true;
+ finish(Response.json({answer:'An answer.',spokenAnswer:'An answer.',audio:pcmAudio,sources:[]}));await Promise.all(x.submissions);await settleAccess();
+ assert.equal(x.game.children[0].attrs['data-state'],'answer');assert.equal(x.calls.length,1);
+ x.naturalContexts[0].failResume=false;x.wake();assert.equal(x.naturalSources.length,1);assert.equal(x.calls.length,1);assert.equal(x.naturalSources[0].started,true);
+});
+test('a missing natural playback completion offers replay and stopping cancels the audio and reply window',async()=>{
+ const x=setup({saved:new Map([[KEY,ACCESS]]),naturalAudio:true,fetcher:()=>Response.json({answer:'An answer.',audio:pcmAudio,sources:[]})});
+ x.wake();x.result('Hey Wolf check this play');x.runAuto();await Promise.all(x.submissions);x.runSpeechTimer(3000);
+ assert.equal(x.game.children[0].attrs['data-state'],'answer');assert.equal(x.naturalSources[0].stopped,true);
+ x.wake();assert.equal(x.calls.length,1);const oldEnd=x.naturalSources[1].onended;x.get('wolfStop').onclick();oldEnd();x.runRestart();
+ assert.equal(x.naturalSources[1].stopped,true);assert.equal(x.game.children[0].attrs['aria-pressed'],'false');assert.equal(x.calls.length,1);
+});
+test('unavailable natural voice preserves the answer and uses the slower device voice with a visible notice',async()=>{
+ const x=setup({saved:new Map([[KEY,ACCESS]]),naturalAudio:true,fetcher:()=>Response.json({answer:'An answer.',audio:null,sources:[]})});
+ x.wake();x.result('Hey Wolf check this play');x.runAuto();await Promise.all(x.submissions);
+ assert.equal(x.spoken[0].rate,0.95);assert.match(x.game.status.textContent,/device voice/);assert.equal(x.calls.length,1);assert.equal(x.dialog.open,false);
 });

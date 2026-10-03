@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {webcrypto} from 'node:crypto';
-import {handle, WolfLimits} from './worker.mjs';
+import {handle, WolfLimits, spokenAnswer} from './worker.mjs';
 globalThis.crypto ??= webcrypto;
 const TOKEN = 'a-private-test-code-used-only-in-unit-tests';
 const origin = 'https://scottwoolfolkrealtor-ops.github.io';
@@ -35,8 +35,8 @@ test('fixed model, source restriction, partial board and text/source response', 
     assert.equal(url, 'https://api.openai.com/v1/responses');
     const body = JSON.parse(init.body);
     assert.equal(body.model, 'gpt-6.1-sol'); assert.equal(body.max_tool_calls, 2);
-    assert.equal(body.max_output_tokens, 2000); assert.equal(body.store, false);
-    assert.equal(body.tool_choice, 'required');
+    assert.equal(body.max_output_tokens, 1200); assert.equal(body.store, false);
+    assert.equal(body.tool_choice, 'auto');assert.match(body.instructions,/Before giving a new card or rules ruling, verify/);assert.match(body.instructions,/Do not search just to ask a clarification/);
     const input = JSON.parse(body.input[0].content);
     assert.equal(input.battlefieldComplete, false); assert.equal(input.previousMessages[0].role, 'user');
     return Response.json({status: 'completed', output: [{type: 'message', content: [{type: 'output_text', text: 'A test answer.', annotations: [
@@ -81,4 +81,44 @@ test('daily and lifetime counts block, UTC day rollover preserves lifetime count
   assert.equal((await (await gate.fetch()).json()).allowed, true);
   assert.equal((await (await gate.fetch()).json()).allowed, false);
   assert.equal((await s.get('usage')).daily, 1);
+});
+
+function answerResponse(text='It adds six counters. Does that match your board?'){
+ return Response.json({status:'completed',output:[{type:'message',content:[{type:'output_text',text,annotations:[]}]}]});
+}
+test('natural speech accompanies one admitted answer with fixed voice, format, pace and bounded text',async()=>{
+ const calls=[],e=env();let reservations=0;e.WOLF_LIMITS.get=()=>({fetch:async()=>{reservations++;return Response.json({allowed:true});}});
+ const result=await handle(req({question:'Check the counters',voice:true,model:'other',voiceName:'other',voiceSpeed:4}),e,async(url,init)=>{
+  calls.push(url);const body=JSON.parse(init.body);
+  if(url.endsWith('/responses')){assert.equal(JSON.parse(body.input[0].content).wantAudio,undefined);return answerResponse();}
+  assert.equal(url,'https://api.openai.com/v1/audio/speech');assert.equal(body.model,'gpt-4o-mini-tts');assert.equal(body.voice,'cedar');
+  assert.equal(body.response_format,'pcm');assert.equal(body.speed,0.95);assert.match(body.instructions,/conversational/);assert.ok(body.input.length<=800);
+  assert.equal(init.headers.Authorization,'Bearer fake-unit-test-key');return new Response(new Uint8Array([0,0,255,127,0,128]));
+ });
+ const data=await result.json();assert.equal(result.status,200);assert.equal(reservations,1);assert.equal(calls.length,2);
+ assert.equal(data.audio.format,'pcm');assert.equal(data.audio.sampleRate,24000);assert.equal(atob(data.audio.data).length,6);
+ assert.ok(!JSON.stringify(data).includes(TOKEN));assert.ok(!JSON.stringify(data).includes(e.OPENAI_API_KEY));
+});
+test('speech failure returns the answer without retrying, and voice off makes no speech request',async()=>{
+ for(const failure of [()=>new Response('private diagnostic',{status:403}),()=>{throw Error('private diagnostic');},()=>new Response(new Uint8Array([1]))]){
+  let calls=0;const r=await handle(req({question:'Check this',voice:true}),env(),async url=>{calls++;return url.endsWith('/responses')?answerResponse():failure();});
+  const data=await r.json();assert.equal(r.status,200);assert.equal(calls,2);assert.equal(data.audio,null);assert.ok(!JSON.stringify(data).includes('private diagnostic'));
+ }
+ let calls=0;const r=await handle(req({question:'Check this',voice:false}),env(),async()=>{calls++;return answerResponse();});
+ assert.equal(calls,1);assert.equal((await r.json()).audio,undefined);
+});
+test('bad access, exhausted quota, and an invalid voice flag never reach speech generation',async()=>{
+ assert.equal((await handle(req({question:'Check',voice:true},{Authorization:'Bearer wrong'}),env(),noPaidCall)).status,401);
+ assert.equal((await handle(req({question:'Check',voice:'cedar'}),env(),noPaidCall)).status,400);
+ const e=env();e.WOLF_LIMITS.get=()=>({fetch:async()=>Response.json({allowed:false})});
+ assert.equal((await handle(req({question:'Check',voice:true}),e,noPaidCall)).status,429);
+});
+test('oversized speech output is discarded without losing the answer or making another request',async()=>{
+ let calls=0;const r=await handle(req({question:'Check',voice:true}),env(),async url=>{calls++;return url.endsWith('/responses')?answerResponse():new Response(new Uint8Array(4000002));});
+ assert.equal(r.status,200);assert.equal(calls,2);assert.equal((await r.json()).audio,null);
+});
+test('spoken text preserves a short clarification and counter notation without reading citation links',()=>{
+ const text=spokenAnswer('It gets six +1/+1 counters. ([Rules](https://magic.wizards.com/rules))\n\nDoes it already have six counters?');
+ assert.match(text,/six \+1\/\+1 counters/);assert.match(text,/Does it already have six counters\?/);assert.ok(!text.includes('https://'));assert.ok(!text.includes('magic.wizards.com'));
+ assert.ok(spokenAnswer('A '.repeat(900)).length<=800);assert.match(spokenAnswer('A creature with */* power.'),/\*\/\*/);
 });

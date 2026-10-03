@@ -14,7 +14,7 @@ window.WOLF_API_ENDPOINT="https://wolf-ai-backend.scott-woolfolkrealtor.workers.
 var dialog=document.createElement("dialog");dialog.id="wolfDialog";
 dialog.innerHTML='<form method="dialog" class="wolfHead"><div><strong>Wolf</strong><small>Live game help</small></div><button aria-label="Close Wolf">Close</button></form>'+
 '<p class="wolfHint">Tell me the play. I can use tracked creatures and counters; tell me about anything missing.</p>'+
-'<div class="wolfActions"><button id="wolfDictate" type="button">Speak question</button><button id="wolfRead" type="button">Read answer</button><button id="wolfStop" type="button">Stop voice</button></div><label><input id="wolfAutoRead" type="checkbox"> Read answers aloud</label><label><input id="wolfAutoSend" type="checkbox" checked> Send spoken questions after a pause</label><p id="wolfVoiceStatus" role="status"></p>'+
+'<div class="wolfActions"><button id="wolfDictate" type="button">Speak question</button><button id="wolfRead" type="button">Read answer</button><button id="wolfStop" type="button">Stop voice</button></div><label><input id="wolfAutoRead" type="checkbox"> Read answers aloud</label><small>Wolf uses an AI-generated voice when available.</small><label><input id="wolfAutoSend" type="checkbox" checked> Send spoken questions after a pause</label><p id="wolfVoiceStatus" role="status"></p>'+
 '<details id="wolfAccessSettings" open><summary>Private test access</summary><label>Access code <input id="wolfAccess" type="password" autocomplete="off" maxlength="480" placeholder="Your WOLF_TEST_TOKEN"></label><label><input id="wolfRemember" type="checkbox" checked> Remember on this device</label><small>Save your private test code in this browser. Never enter your OpenAI API key.</small><p id="wolfAccessSaveStatus" role="status"></p><button id="wolfForget" type="button">Forget saved code</button></details>'+
 '<label>Player asking <select id="wolfPlayer"></select></label>'+
 '<details><summary>What Wolf knows</summary><div id="wolfContext"></div></details>'+
@@ -99,12 +99,12 @@ function showContext(){
   host.appendChild(row);
  });
 }
-function addMessage(role,text,sources,readAllowed){
+function addMessage(role,text,sources,readAllowed,audio,spoken){
  var p=document.createElement("p");p.className="wolfMessage "+role;
  text=String(text).replace(/\[([^\]]+)\]\(https:\/\/[^\s)]+\)/g,"$1");
  p.textContent=(role==="user"?"You: ":"Wolf: ")+text;
  node("wolfMessages").appendChild(p);
- if(role==="assistant"){lastAnswer=text;if(readAllowed!==false&&node("wolfAutoRead").checked)speakAnswer();}
+ if(role==="assistant"){lastAnswer=text;lastAudio=audio||null;lastAudioUnavailable=audio===null;lastSpokenAnswer=spoken||"";if(readAllowed!==false&&node("wolfAutoRead").checked)speakAnswer();}
  if(role==="assistant"&&Array.isArray(sources)){
   var list=document.createElement("ul"),seen=new Set();
   sources.forEach(function(source){
@@ -145,10 +145,12 @@ node("wolfQuestionForm").onsubmit=async function(event){
  var access=accessCode();if(!access){node("wolfAccessSettings").open=true;requestStatus("Enter your private test access code first.");if(dialog.open)node("wolfAccess").focus();else{stopVoice();voiceStatus("Tap Wolf to save your private access code before listening.","error");}return;}
  var currentNotes=node("wolfNotes").value.trim();
  if(currentNotes!==extraNotes){messages=[];node("wolfMessages").replaceChildren();extraNotes=currentNotes;}
- var payload=JSON.stringify({question:question,context:getContext(),untrackedNotes:extraNotes,messages:messages.slice(-8)});
+ if(node("wolfAutoRead").checked)prepareNaturalAudio();
+ var requestContext=getContext();
+ var payload=JSON.stringify({question:question,context:requestContext,untrackedNotes:extraNotes,messages:messages.slice(-8),voice:node("wolfAutoRead").checked&&!!naturalContext&&naturalContext.state==="running"});
  if(new TextEncoder().encode(payload).length>16000){node("wolfStatus").textContent="This battlefield and conversation exceed the test limit. Start a new question or shorten the notes.";return;}
  if(node("wolfAutoRead").checked&&!speechPrepared&&!voicePlayback)playSpeech("Wolf is ready.",{welcome:true});
- questionUntil=0;pauseListening();busy=true;node("wolfSend").disabled=true;node("wolfPlayer").disabled=true;node("wolfClear").disabled=true;
+ questionUntil=0;endConversation();pauseListening();busy=true;node("wolfSend").disabled=true;node("wolfPlayer").disabled=true;node("wolfClear").disabled=true;
  addMessage("user",question);requestStatus("Wolf is checking the play…");voiceStatus("Question sent. Wolf is checking the play…");
  var controller=new AbortController(),timer=setTimeout(function(){controller.abort();},45000);
  try{
@@ -160,7 +162,8 @@ node("wolfQuestionForm").onsubmit=async function(event){
    throw new Error(data.error||"Wolf could not answer right now. Your question is still here.");
   }
   if(typeof data.answer!=="string"||!data.answer.trim())throw new Error("Wolf returned no answer. Try again.");
-  addMessage("assistant",data.answer,data.sources,!backgroundRequest||requestVoiceSerial===voiceSessionSerial);
+  if(requestVoiceSerial===voiceSessionSerial&&wakeEnabled){conversationPlayerIndex=requestContext.selectedPlayerIndex;armConversation();}
+  addMessage("assistant",data.answer,data.sources,!backgroundRequest||requestVoiceSerial===voiceSessionSerial,data.audio,data.spokenAnswer);
   messages.push({role:"user",content:question},{role:"assistant",content:data.answer});
   node("wolfQuestion").value="";requestStatus("Answer received. Wolf has not changed any game totals.");saveAccess(access);
  }catch(error){var message=error.name==="AbortError"?"Wolf took too long. Your question is still here.":error.message;requestStatus(message);voiceStatus(message,"error");if(backgroundRequest&&requestVoiceSerial===voiceSessionSerial&&node("wolfAutoRead").checked)playSpeech(message,{status:message});}
@@ -169,6 +172,8 @@ node("wolfQuestionForm").onsubmit=async function(event){
 var recognition=null,voiceMode="",lastAnswer="",voiceRunning=false;
 var wakeEnabled=false,voicePlayback=false,restartTimer=null,shortStarts=0,playbackSerial=0,voiceSubmitTimer=null,questionUntil=0;
 var voiceSpeaking=false,speechPrepared=false,activeUtterance=null,speechTimer=null,speechQueueTimer=null,pendingSpeech=null;
+var conversationUntil=0,conversationTimer=null,conversationPlayerIndex=null,recognitionReadyTimer=null;
+var naturalContext=null,naturalSource=null,lastAudio=null,lastSpokenAnswer="",lastAudioUnavailable=false;
 var Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
 function createWolfButton(){
  var button=document.createElement("button");button.type="button";button.className="wolfWakeButton";
@@ -218,32 +223,87 @@ function scheduleSpokenQuestion(){
   if(document.hidden||busy||!node("wolfAutoSend").checked)return;
   if(node("wolfQuestion").value.trim()!==question){voiceStatus("Question edited. Tap Ask Wolf when ready.");return;}
   node("wolfQuestionForm").requestSubmit();
- },1400);
+ },900);
 }
 node("wolfQuestion").addEventListener("input",cancelSpokenSubmission);
 node("wolfAutoSend").onchange=function(){if(!this.checked)cancelSpokenSubmission();};
 function pauseListening(){
  cancelSpokenSubmission();
+ if(recognitionReadyTimer!==null){clearTimeout(recognitionReadyTimer);recognitionReadyTimer=null;}
  if(restartTimer!==null){clearTimeout(restartTimer);restartTimer=null;}
  voiceMode="";voiceRunning=false;
- if(recognition){recognition.onend=null;recognition.onerror=null;recognition.onresult=null;recognition.onstart=null;try{recognition.abort();}catch(e){}recognition=null;}
+ if(recognition){recognition.onend=null;recognition.onerror=null;recognition.onresult=null;recognition.onstart=null;recognition.onaudiostart=null;recognition.onaudioend=null;try{recognition.abort();}catch(e){}recognition=null;}
 }
+function endConversation(){conversationUntil=0;if(conversationTimer!==null){clearTimeout(conversationTimer);conversationTimer=null;}}
+function armConversation(){
+ endConversation();if(!wakeEnabled||document.hidden)return;
+ conversationUntil=Date.now()+30000;
+ conversationTimer=setTimeout(function(){conversationTimer=null;conversationUntil=0;if(voiceMode==="conversation"){voiceMode="wake";voiceStatus("Listening for Hey Wolf on the battlefield.");}},30000);
+}
+function listeningMode(){return Date.now()<questionUntil?"question":Date.now()<conversationUntil?"conversation":"wake";}
 function stopVoice(){
- wakeEnabled=false;questionUntil=0;voiceFromBattlefield=false;voicePlayerIndex=null;voiceSessionSerial++;pauseListening();cancelPlayback();
+ wakeEnabled=false;questionUntil=0;endConversation();voiceFromBattlefield=false;voicePlayerIndex=null;voiceSessionSerial++;pauseListening();cancelPlayback();
  voiceStatus("Voice off. Tap Enable Hey Wolf to listen.");
 }
 function resumeWake(){
  if(!wakeEnabled||document.hidden||busy||voicePlayback||pendingSpeech||recognition||restartTimer!==null)return;
- voiceStatus("Hey Wolf enabled. Resuming listening…");
+ voiceStatus("Starting microphone…","ready");
  restartTimer=setTimeout(function(){restartTimer=null;
-  if(wakeEnabled&&!document.hidden&&!busy&&!voicePlayback&&!pendingSpeech&&!recognition)startVoice((dialog.open||voiceFromBattlefield)&&Date.now()<questionUntil?"question":"wake");
- },500);
+  if(wakeEnabled&&!document.hidden&&!busy&&!voicePlayback&&!pendingSpeech&&!recognition)startVoice(listeningMode());
+ },200);
 }
 function speakAnswer(){
  if(!lastAnswer){voiceStatus("Ask a question first.");return;}
- var spoken=lastAnswer.replace(/\([^)]*\.(?:com|org|net)[^)]*\)/g,"").trim().split(/\n\s*\n/)[0];
- if(spoken.length>600){var sentences=spoken.match(/[^.!?]+[.!?]+(?:\s|$)|[^.!?]+$/g)||[spoken];spoken=sentences.slice(0,3).join("").trim();}
- playSpeech(spoken);
+ var cleaned=lastAnswer.replace(/\([^)]*\.(?:com|org|net)[^)]*\)/g,"").trim(),spoken=lastSpokenAnswer||cleaned.split(/\n\s*\n/)[0];
+ if(!lastSpokenAnswer&&spoken.length>600){var sentences=spoken.match(/[^.!?]+[.!?]+(?:\s|$)|[^.!?]+$/g)||[spoken];spoken=sentences.slice(0,3).join("").trim();}
+ if(!lastSpokenAnswer){var followUp=(cleaned.split(/\n\s*\n/).slice(1).join(" ").match(/[^.!?\n]*\?/g)||[]).find(function(q){return q.trim().length<180&&!spoken.includes(q.trim());});if(followUp)spoken+=" "+followUp.trim();}
+ var options={conversation:true,status:lastAudioUnavailable?"Using your device voice for this answer.":""};
+ if(lastAudio&&playNaturalAudio(lastAudio,spoken,options))return;
+ playSpeech(spoken,options);
+}
+function prepareNaturalAudio(){
+ var Context=window.AudioContext||window.webkitAudioContext;if(!Context)return;
+ try{
+  if(!naturalContext||naturalContext.state==="closed")naturalContext=new Context();
+  if(naturalContext.state!=="running"){var resumed=naturalContext.resume();if(resumed&&resumed.catch)resumed.catch(function(){});}
+ }catch(e){naturalContext=null;}
+}
+function playNaturalAudio(audio,spoken,options){
+ if(!naturalContext||!audio||audio.format!=="pcm"||audio.sampleRate!==24000||typeof audio.data!=="string"||audio.data.length>5400000)return false;
+ options=options||{};
+ var buffer;
+ try{
+  var binary=atob(audio.data);if(!binary.length||binary.length%2||binary.length>4000000)return false;
+  buffer=naturalContext.createBuffer(1,binary.length/2,24000);var samples=buffer.getChannelData(0);
+  for(var i=0;i<samples.length;i++){var n=binary.charCodeAt(i*2)|(binary.charCodeAt(i*2+1)<<8);samples[i]=(n>=32768?n-65536:n)/32768;}
+ }catch(e){return false;}
+ pauseListening();cancelPlayback();
+ var serial=++playbackSerial;voicePlayback=true;pendingSpeech=null;
+ function failed(){
+  if(serial!==playbackSerial)return;
+  cancelPlayback();pendingSpeech={text:spoken,audio:audio,conversation:!!options.conversation};
+  voiceStatus("Your answer is ready. Tap Wolf to hear it.","answer");
+ }
+ function start(){
+  if(serial!==playbackSerial||document.hidden)return;
+  if(naturalContext.state!=="running"){failed();return;}
+  clearSpeechTimers();
+  try{
+   var source=naturalContext.createBufferSource();naturalSource=source;source.buffer=buffer;source.connect(naturalContext.destination);
+   source.onended=function(){
+    if(serial!==playbackSerial)return;
+    clearSpeechTimers();source.onended=null;try{source.disconnect();}catch(e){}naturalSource=null;voicePlayback=false;voiceSpeaking=false;pendingSpeech=null;
+    if(options.conversation)armConversation();voiceStatus("Answer finished.");resumeWake();
+   };
+   source.start();voiceSpeaking=true;
+   voiceStatus("Wolf is speaking…","speaking");
+   speechTimer=setTimeout(failed,Math.min(90000,Math.max(3000,buffer.duration*1000+2000)));
+  }catch(e){failed();}
+ }
+ voiceStatus("Starting Wolf's voice…","queued");speechTimer=setTimeout(failed,4500);
+ if(naturalContext.state==="running")start();
+ else{try{Promise.resolve(naturalContext.resume()).then(start,failed);}catch(e){failed();}}
+ return true;
 }
 function clearSpeechTimers(){
  if(speechTimer!==null){clearTimeout(speechTimer);speechTimer=null;}
@@ -251,6 +311,7 @@ function clearSpeechTimers(){
 }
 function cancelPlayback(){
  playbackSerial++;clearSpeechTimers();
+ if(naturalSource){naturalSource.onended=null;try{naturalSource.stop();naturalSource.disconnect();}catch(e){}naturalSource=null;}
  if(activeUtterance){activeUtterance.onstart=activeUtterance.onend=activeUtterance.onerror=activeUtterance.onpause=null;activeUtterance=null;}
  voicePlayback=false;voiceSpeaking=false;pendingSpeech=null;
  if(window.speechSynthesis){try{window.speechSynthesis.cancel();}catch(e){}}
@@ -268,14 +329,14 @@ function playSpeech(spoken,options){
  activeUtterance=utterance;
  var voices=[];try{voices=synth.getVoices().filter(function(v){return /^en[-_]/i.test(v.lang);});}catch(e){}
  voices.sort(function(a,b){
-  function score(v){return (/enhanced|premium|natural/i.test(v.name)?10:0)+(v.lang==="en-US"?3:0)+(v.default?1:0);}
+  function score(v){return (/enhanced|premium|natural|siri/i.test(v.name)?10:0)+(v.lang==="en-US"?3:0)+(v.default?1:0);}
   return score(b)-score(a);
  });
  if(voices.length)utterance.voice=voices[0];
- utterance.lang=utterance.voice?utterance.voice.lang:"en-US";utterance.rate=1.12;utterance.pitch=1;utterance.volume=1;
+ utterance.lang=utterance.voice?utterance.voice.lang:"en-US";utterance.rate=0.95;utterance.pitch=1;utterance.volume=1;
  function failed(){
   if(serial!==playbackSerial)return;
-  cancelPlayback();pendingSpeech={text:spoken,welcome:!!options.welcome,afterMode:options.afterMode||"",status:options.status||""};
+  cancelPlayback();pendingSpeech={text:spoken,welcome:!!options.welcome,afterMode:options.afterMode||"",status:options.status||"",conversation:!!options.conversation};
   voiceStatus(options.status?options.status+" Tap Wolf to hear this message.":options.welcome?"Tap Wolf to turn on spoken answers.":"Your answer is ready. Tap Wolf to hear it.","answer");
  }
  utterance.onstart=function(){
@@ -288,6 +349,7 @@ function playSpeech(spoken,options){
   if(serial!==playbackSerial)return;
   if(!started){failed();return;}
   clearSpeechTimers();activeUtterance=null;voicePlayback=false;voiceSpeaking=false;pendingSpeech=null;
+  if(options.conversation)armConversation();
   voiceStatus(options.status||"Playback finished.");
   if(options.afterMode&&(!options.welcome||speechPrepared)){
    if(options.afterMode!=="wake"||wakeEnabled)startVoice(options.afterMode);
@@ -309,27 +371,37 @@ function startVoice(mode){
  if(!Recognition){wakeEnabled=false;voiceStatus("Voice recognition is unavailable here. Open this app in Safari, or use keyboard dictation.","error");return;}
  voiceMode=mode;var current=new Recognition();recognition=current;
  current.lang="en-US";current.continuous=true;current.interimResults=true;
- var processedResults=new Set();
- var startedAt=Date.now();
- current.onstart=function(){if(recognition!==current)return;voiceRunning=true;voiceStatus(voiceMode==="wake"?"Listening for Hey Wolf on the battlefield.":"Listening for your question…");};
+ var baseQuestion=mode==="question"?node("wolfQuestion").value.trim():"",lastQuestion=baseQuestion;
+ var startedAt=Date.now(),audioReady=false,supportsAudioStart="onaudiostart" in current;
+ function listening(){
+  if(recognition!==current)return;audioReady=true;voiceRunning=true;
+  if(recognitionReadyTimer!==null){clearTimeout(recognitionReadyTimer);recognitionReadyTimer=null;}
+  voiceStatus(voiceMode==="wake"?"Listening for Hey Wolf on the battlefield.":voiceMode==="conversation"?"Your turn. Reply directly—no Hey Wolf needed.":"Listening for your question…","listening");
+ }
+ current.onstart=function(){if(recognition!==current)return;if(!supportsAudioStart)listening();else if(!audioReady)voiceStatus("Starting microphone…","ready");};
+ current.onaudiostart=listening;
+ current.onaudioend=function(){if(recognition!==current)return;voiceRunning=false;voiceStatus("Microphone paused. Finishing your question…","ready");};
  current.onresult=function(event){
   if(recognition!==current)return;
-  shortStarts=0;
-  for(var i=event.resultIndex;i<event.results.length;i++){
-   if(!event.results[i].isFinal){cancelSpokenSubmission();continue;}
-   if(processedResults.has(i))continue;processedResults.add(i);
-   var words=event.results[i][0].transcript.trim();
-   if(voiceMode==="wake"){
-    var match=/\bhey[ ,]+wolf\b[ ,.!?:-]*(.*)/i.exec(words);if(!match)continue;
-    voiceFromBattlefield=true;voicePlayerIndex=window.getWolfGameContext().selectedPlayerIndex;
-    voiceMode="question";questionUntil=Date.now()+15000;voiceStatus("Wolf is listening. Say your question.");
-    node("wolfQuestion").value=match[1].slice(0,2000);scheduleSpokenQuestion();
-   }else if(voiceMode==="question"){
-    questionUntil=Date.now()+15000;
-    node("wolfQuestion").value=(node("wolfQuestion").value+" "+words).trim().slice(0,2000);
-    scheduleSpokenQuestion();
-   }
+  shortStarts=0;if(!audioReady)listening();
+  var parts=[];for(var i=0;i<event.results.length;i++)parts.push(event.results[i][0].transcript.trim());
+  var transcript=parts.join(" ").trim();
+  if(voiceMode==="conversation"&&Date.now()>=conversationUntil){voiceMode="wake";baseQuestion="";}
+  var pattern=/\bhey[ ,]+wolf\b[ ,.!?:-]*/ig,match,wakeEnd=-1;
+  while((match=pattern.exec(transcript)))wakeEnd=pattern.lastIndex;
+  if(voiceMode==="wake"){
+   if(wakeEnd<0)return;
+   voiceFromBattlefield=true;voicePlayerIndex=window.getWolfGameContext().selectedPlayerIndex;baseQuestion="";
+   voiceMode="question";questionUntil=Date.now()+15000;voiceStatus("Wolf is listening. Say your question.");
+  }else if(voiceMode==="conversation"){
+   voiceFromBattlefield=true;voicePlayerIndex=conversationPlayerIndex===null?window.getWolfGameContext().selectedPlayerIndex:conversationPlayerIndex;
+   voiceMode="question";baseQuestion="";
   }
+  if(voiceMode!=="question")return;
+  var question=(wakeEnd>=0?transcript.slice(wakeEnd):(baseQuestion+" "+transcript).trim()).slice(0,2000);
+  questionUntil=Date.now()+15000;
+  if(question===lastQuestion)return;
+  lastQuestion=question;node("wolfQuestion").value=question;scheduleSpokenQuestion();
  };
  current.onerror=function(event){
   if(recognition!==current)return;
@@ -339,6 +411,7 @@ function startVoice(mode){
  };
  current.onend=function(){
   if(recognition!==current)return;
+  if(recognitionReadyTimer!==null){clearTimeout(recognitionReadyTimer);recognitionReadyTimer=null;}
   recognition=null;voiceRunning=false;voiceMode="";
   if(voiceSubmitTimer!==null)return;
   shortStarts=Date.now()-startedAt<1500?shortStarts+1:0;
@@ -346,6 +419,8 @@ function startVoice(mode){
   if(wakeEnabled)resumeWake();
   else voiceStatus("Listening ended. Tap Speak question to resume.");
  };
+ voiceStatus("Starting microphone…","ready");
+ recognitionReadyTimer=setTimeout(function(){recognitionReadyTimer=null;if(recognition===current&&!audioReady){stopVoice();voiceStatus("The microphone did not become ready. Tap Wolf to retry in Safari.","error");}},12000);
  try{current.start();}catch(e){stopVoice();voiceStatus("Could not start listening. Tap Enable Hey Wolf to retry in Safari.");}
 }
 function showVoiceAccessSetup(){
@@ -368,6 +443,7 @@ function beginWake(){
   return;
  }
  saveAccess(accessCode());
+ prepareNaturalAudio();
  shortStarts=0;wakeEnabled=true;voiceSessionSerial++;
  if(busy||voicePlayback){voiceStatus("Hey Wolf enabled. Listening will resume after this answer.");return;}
  // Call speech directly from this tap so iPhone can enable subsequent spoken replies.
@@ -376,13 +452,13 @@ function beginWake(){
 wakeButton.onclick=wakeTracker.onclick=function(){
  if(pendingSpeech){
   if(!accessCode()){cancelPlayback();beginWake();return;}
-  var retry=pendingSpeech;playSpeech(retry.text,retry);return;
+  prepareNaturalAudio();var retry=pendingSpeech;if(retry.audio&&playNaturalAudio(retry.audio,retry.text,retry))return;playSpeech(retry.text,retry);return;
  }
  if(wakeEnabled){stopVoice();return;}
  beginWake();
 };
-node("wolfDictate").onclick=function(){voiceFromBattlefield=false;voicePlayerIndex=null;if(node("wolfAutoRead").checked&&!speechPrepared)playSpeech("Wolf is ready.",{welcome:true,afterMode:"question"});else startVoice("question");};
-node("wolfRead").onclick=speakAnswer;node("wolfStop").onclick=stopVoice;
+node("wolfDictate").onclick=function(){prepareNaturalAudio();voiceFromBattlefield=false;voicePlayerIndex=null;if(node("wolfAutoRead").checked&&!speechPrepared)playSpeech("Wolf is ready.",{welcome:true,afterMode:"question"});else startVoice("question");};
+node("wolfRead").onclick=function(){prepareNaturalAudio();speakAnswer();};node("wolfStop").onclick=stopVoice;
 node("wolfAutoRead").onchange=function(){
  try{localStorage.setItem(READ_STORAGE,String(this.checked));}catch(e){}
  if(!this.checked&&window.speechSynthesis){cancelPlayback();resumeWake();}
