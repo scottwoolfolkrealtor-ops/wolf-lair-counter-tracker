@@ -1575,6 +1575,97 @@ body.trackerPreview #trackerView .creatureSwipeHint{
   padding:4px 2px 8px;color:#c6b587;font-size:12px;letter-spacing:.3px;
 }
 
+
+/* Each creature uses one screen; only a long target list scrolls internally. */
+body.trackerPreview #trackerView{
+  position:fixed;top:env(safe-area-inset-top,0px);right:env(safe-area-inset-right,0px);
+  bottom:env(safe-area-inset-bottom,0px);left:env(safe-area-inset-left,0px);
+  min-height:0;width:auto;height:auto;overflow:hidden;container-type:size;
+}
+body.trackerPreview #trackerView::before,
+body.trackerPreview #trackerView::after{position:absolute}
+body.trackerPreview #trackerView .playerTrackerSurface{
+  position:absolute;z-index:2;left:50%;top:50%;width:100cqw;height:100cqh;
+  display:flex;flex-direction:column;overflow:hidden;
+  transform:translate(-50%,-50%) rotate(var(--tracker-rotation,0deg));
+  container:creatureSurface / size;
+}
+body.trackerPreview #trackerView .playerTrackerSurface main{
+  flex:1;min-height:0;width:100%;max-width:none;display:flex;flex-direction:column;
+  gap:4px;overflow:hidden;padding:6px;
+}
+body.trackerPreview #trackerView .trackerNavigation{flex:none;gap:5px;padding:0}
+body.trackerPreview #trackerView .trackerNavigation #backHome,
+body.trackerPreview #trackerView .trackerNavigation #quickGameMode,
+body.trackerPreview #trackerView .trackerNavigation .soundToggle{
+  min-height:40px;height:40px;padding:5px 8px;font-size:11px;
+}
+body.trackerPreview #trackerView .playerTrackerSurface header.trackerTitle{
+  flex:none;min-height:0;margin:0;padding:5px 8px;border-radius:8px;
+}
+body.trackerPreview #trackerView .playerTrackerSurface header.trackerTitle h1,
+body.trackerPreview #trackerView .playerTrackerSurface header.trackerTitle small{display:none}
+body.trackerPreview #trackerView .playerTrackerSurface #activePlayerLabel{
+  margin:0;font-size:10px;line-height:1.2;letter-spacing:1px;
+}
+body.trackerPreview #trackerView .playerTrackerSurface nav{
+  position:relative;flex:none;left:auto;right:auto;bottom:auto;gap:5px;padding:5px 6px;
+}
+body.trackerPreview #trackerView .playerTrackerSurface nav button{min-height:38px;padding:5px;font-size:12px}
+body.trackerPreview #trackerView .creatureSwipeHint{flex:none;padding:0 3px;font-size:10px;line-height:14px}
+body.trackerPreview #trackerView #field{
+  flex:1;min-height:0;gap:8px;align-items:stretch;padding:0 0 4px;
+  scroll-snap-type:x mandatory;
+}
+body.trackerPreview #trackerView #field>.card,
+body.trackerPreview #trackerView #field>.card:only-child{
+  flex:0 0 100%;height:100%;min-height:0;padding:9px;gap:5px;
+  display:grid;grid-template-columns:minmax(0,1fr);
+  grid-template-areas:"head" "count" "controls" "custom" "links" "remove";
+  grid-template-rows:auto auto auto auto minmax(0,1fr) 30px;
+  overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,240,215,.045);
+}
+body.trackerPreview #trackerView #field .head{grid-area:head;min-width:0;align-items:center}
+body.trackerPreview #trackerView #field .name{font-size:18px;line-height:1.1;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+body.trackerPreview #trackerView #field .base{font-size:10px;margin-top:2px}
+body.trackerPreview #trackerView #field .power{font-size:40px;line-height:1;min-width:0;white-space:nowrap}
+body.trackerPreview #trackerView #field .count{grid-area:count;margin:0;padding:4px 8px;font-size:11px;align-items:center}
+body.trackerPreview #trackerView #field .count strong{font-size:23px;line-height:1}
+body.trackerPreview #trackerView #field .controls{grid-area:controls;gap:4px}
+body.trackerPreview #trackerView #field .controls button{min-height:32px;padding:4px;font-size:11px;line-height:1.15}
+body.trackerPreview #trackerView #field .custom{grid-area:custom;display:flex;gap:4px;margin:0}
+body.trackerPreview #trackerView #field .custom input{min-width:0;width:100%;height:32px;padding:4px 8px;font-size:16px}
+body.trackerPreview #trackerView #field .custom button{min-height:32px;padding:4px 12px}
+body.trackerPreview #trackerView #field .links{
+  grid-area:links;min-height:0;min-width:0;display:grid;
+  grid-template-rows:auto minmax(24px,1fr) auto auto;gap:4px;margin:0;padding:6px;
+}
+body.trackerPreview #trackerView #field .links b{font-size:11px;line-height:14px}
+body.trackerPreview #trackerView #field .linkTargets{min-height:0;overflow-y:auto;overscroll-behavior:contain;font-size:12px}
+body.trackerPreview #trackerView #field .linkrow{min-height:28px;padding:3px 0}
+body.trackerPreview #trackerView #field .links button{min-height:30px;padding:4px;font-size:11px;margin:0;line-height:1.15}
+body.trackerPreview #trackerView #field .remove{grid-area:remove;margin:0;min-height:30px;padding:4px;font-size:11px}
+@container creatureSurface (min-width:560px){
+  body.trackerPreview #trackerView #field>.card,
+  body.trackerPreview #trackerView #field>.card:only-child{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    grid-template-areas:"head links" "count links" "controls links" "custom remove";
+    grid-template-rows:auto auto minmax(0,1fr) 32px;
+    padding:7px;column-gap:10px;row-gap:4px;
+  }
+  body.trackerPreview #trackerView #field .power{font-size:36px}
+  body.trackerPreview #trackerView #field .name{font-size:17px}
+}
+body.trackerPreview #trackerView .playerTrackerSurface main:has(#form:not(.hidden)){overflow-y:auto}
+body.trackerPreview #trackerView main:has(#form:not(.hidden)) #field,
+body.trackerPreview #trackerView main:has(#form:not(.hidden)) #creatureSwipeHint,
+body.trackerPreview #trackerView main:has(#form:not(.hidden)) #empty{display:none}
+body.trackerPreview #trackerView #form{flex:none;margin:0}
+body.trackerPreview #trackerView .playerTrackerSurface .creatureKeyboard{
+  position:relative;flex:none;left:auto;right:auto;bottom:auto;padding:5px 8px;
+}
+body.trackerPreview #trackerView[data-keyboard-open] .playerTrackerSurface main{padding-bottom:6px}
+
 </style>
 </head>
 <body class="trackerPreview">
@@ -1991,7 +2082,7 @@ function render(){
      '<div class="count"><span>+1/+1 Counters</span><strong>'+c.c+'</strong></div>'+ 
      '<div class="controls"><button class="minus">−1</button><button class="plus">+1</button><button class="current">+ Current Power</button><button class="reset">Reset to Base</button></div>'+
      '<div class="custom"><input class="amt" inputmode="numeric" placeholder="Custom"><button class="addx">+X</button></div>'+ 
-     '<div class="links"><b>Target / Link to:</b>'+targets+
+     '<div class="links"><b>Target / Link to:</b><div class="linkTargets">'+targets+'</div>'+
      '<button class="wide linked">+ Current Power to Me + Linked</button>'+ 
      '<button class="wide counters">+ My Counters to Target(s)</button></div>'+ 
      '<button class="remove">Remove Creature</button>';
