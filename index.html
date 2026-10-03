@@ -1973,7 +1973,7 @@ body.trackerPreview #gameView .playerCreatures{border-color:rgba(var(--seat-rgb)
         <svg viewBox="0 0 48 48">
           <path class="line" d="M24 6l14 8 4 15-10 12H16L6 29l4-15 14-8z"/>
           <path class="glow" d="M10 14l14 8 14-8M24 22v19M6 29l18-7 18 7M16 41l8-19 8 19"/>
-          <text x="24" y="20" text-anchor="middle" font-size="7" font-weight="900" fill="#a8f178" font-family="system-ui,sans-serif">20</text>
+          <text x="24" y="20" text-anchor="middle" font-size="7" font-weight="900" fill="#a8f178" font-family="system-ui,sans-serif">40</text>
         </svg>
       </span>
       <strong>Battlefield Command</strong>
@@ -2101,8 +2101,8 @@ body.trackerPreview #gameView .playerCreatures{border-color:rgba(var(--seat-rgb)
     <button id="backGameHome" class="backHome" type="button">‹ Wolf Lair Home</button>
     <header class="gameTitle tableCommandTitle">
   <div class="trackerBrand">THE WOLF LAIR</div>
-  <h1>TABLE COMMAND</h1>
-  <small>LIFE • COMMANDER • POISON</small>
+  <h1>BATTLEFIELD COMMAND</h1>
+  <small>LIFE • COMMANDER • POISON • D20</small>
 </header>
     <div class="gameShell">
       <div id="gameBoard" class="gameBoard"></div>
@@ -2371,7 +2371,7 @@ function renderGame(){
       card.querySelector('.poisonDown').onclick=function(){player.poison=Math.max(0,player.poison-1);saveGame();renderGame();};
       card.querySelector('.poisonUp').onclick=function(){player.poison++;saveGame();renderGame();};
       card.querySelector('.rotateSeat').onclick=function(){player.rotation=((Number(player.rotation)||0)+180)%360;saveGame();renderGame();};
-      card.querySelector('.resetPlayer').onclick=function(){player.life=40;player.commander=0;player.poison=0;saveGame();renderGame();};
+      card.querySelector('.resetPlayer').onclick=function(){player.life=40;player.commander=0;player.poison=0;player.roll=null;saveGame();renderGame();};
       card.querySelector('.editPlayerName').onclick=function(){
         var identity=card.querySelector('.playerIdentity');
         if(!identity)return;
@@ -2409,17 +2409,6 @@ function renderGame(){
       };
       board.appendChild(card);
     })(gameState.players[i],i);
-  }
-  if(gameState.players.length===3){
-    var openSeat=document.createElement('button');
-    openSeat.type='button';
-    openSeat.className='openTableSeat';
-    openSeat.innerHTML='<strong>OPEN SEAT</strong><span>＋ Add Player</span>';
-    openSeat.onclick=function(){
-      var add=el('addPlayer');
-      if(add&&!add.disabled)add.click();
-    };
-    board.appendChild(openSeat);
   }
   var addBtn=el('addPlayer'), removeBtn=el('removePlayer'), limitMsg=el('playerLimitMsg');
   if(addBtn)addBtn.disabled=gameState.players.length>=6;
