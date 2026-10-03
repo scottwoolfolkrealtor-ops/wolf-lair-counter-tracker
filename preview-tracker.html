@@ -1707,6 +1707,8 @@ body.trackerPreview #gameView .poisonUp:disabled{opacity:.35;cursor:default;box-
 body.trackerPreview #decksView #liveScanner{scroll-margin-top:12px;}
 body.trackerPreview #decksView #cameraLight{width:auto;min-height:40px;margin:0 0 8px;padding:8px 16px;}
 body.trackerPreview #decksView #cameraLight[aria-pressed="true"]{background:#71551c;border-color:#f4cc70;color:#fff6d9;}
+
+#scanTiming{margin:8px 0;padding:8px 12px;font-size:12px;color:#c9c9b8;}#scanTiming summary{cursor:pointer;}#scanTimingText{padding-top:6px;line-height:1.5;}
 </style>
 </head>
 <body class="trackerPreview">
@@ -1904,6 +1906,7 @@ body.trackerPreview #decksView #cameraLight[aria-pressed="true"]{background:#715
     </div>
    </div>
 
+   <details id="scanTiming" class="hidden"><summary>Scan timing</summary><div id="scanTimingText"></div></details>
    <div id="cardLookupResult" class="hidden cardLookupResult"></div>
    <div id="deckToolStatus" class="deckToolStatus" aria-live="polite"></div>
 
@@ -3597,6 +3600,32 @@ function showScanChoices(cards,status,resolve){
 var scanExactCache=new Map();
 function scanImageFile(file,options){
   options=options||{};
+  var timing={started:Date.now(),startup:0,reading:0,lookup:0,passes:0,requests:0};
+  el("scanTiming").className="hidden";el("scanTiming").open=false;
+  function measureScan(key,operation){
+    var start=Date.now();
+    return Promise.resolve().then(operation).finally(function(){timing[key]+=Date.now()-start;});
+  }
+  function scanFetch(url){
+    timing.requests++;
+    return measureScan("lookup",function(){
+      return fetch(url).then(function(response){
+        return response.json().then(function(body){
+          return {ok:response.ok,status:response.status,json:function(){return Promise.resolve(body);}};
+        });
+      });
+    });
+  }
+  function finishScanTiming(){
+    var total=Date.now()-timing.started;
+    var other=Math.max(0,total-timing.startup-timing.reading-timing.lookup);
+    function seconds(ms){return (ms/1000).toFixed(1)+"s";}
+    el("scanTimingText").textContent="Processing: "+seconds(total)+
+      " · Reader startup: "+seconds(timing.startup)+" · Reading: "+seconds(timing.reading)+
+      " · Card lookup: "+seconds(timing.lookup)+" · Other: "+seconds(other)+
+      " · Reading passes: "+timing.passes+" · Requests: "+timing.requests;
+    el("scanTiming").className="";
+  }
   var preview=el("scanPreview"), panel=el("scanPanel"), status=el("scanStatus");
   panel.className="cardToolPanel scanPanel";
   status.textContent="Reading card title…";
@@ -3684,7 +3713,7 @@ function scanImageFile(file,options){
               exactMatch={card:cached.card,ocr:c.text,similarity:1,confidence:c.confidence};
               return Promise.resolve();
             }
-            return fetch("https://api.scryfall.com/cards/named?exact="+encodeURIComponent(c.text))
+            return scanFetch("https://api.scryfall.com/cards/named?exact="+encodeURIComponent(c.text))
               .then(function(r){if(r.status===404){lookupSucceeded=true;return null;}if(!r.ok)throw new Error("Card search unavailable");lookupSucceeded=true;return r.json();})
               .then(function(card){if(card&&nameSimilarity(c.text,card.name)===1){
                 exactMatch={card:card,ocr:c.text,similarity:1,confidence:c.confidence};
@@ -3698,14 +3727,14 @@ function scanImageFile(file,options){
         }
 
         wolfOCRStatusTarget=status;
-        warmOCRWorker().then(function(worker){
+        measureScan("startup",warmOCRWorker).then(function(worker){
           var pass=0;
           function nextPass(){
             if(exactMatch||pass>=passes.length)return Promise.resolve();
             var current=passes[pass++];
             status.textContent="Reading title… "+Math.round(pass/passes.length*90)+"%";
             var prep=worker.setParameters?worker.setParameters({tessedit_pageseg_mode:current.mode}):Promise.resolve();
-            return Promise.resolve(prep).then(function(){return worker.recognize(current.image)})
+            return Promise.resolve(prep).then(function(){timing.passes++;return measureScan("reading",function(){return worker.recognize(current.image);})})
               .then(function(result){collectOCR(result&&result.data,current);return checkExactTitle().then(nextPass)})
               .catch(function(){return nextPass()});
           }
@@ -3722,7 +3751,7 @@ function scanImageFile(file,options){
           function lookupNext(){
             if(index>=candidates.length)return Promise.resolve(matches);
             var candidate=candidates[index++];
-            return fetch("https://api.scryfall.com/cards/named?fuzzy="+encodeURIComponent(candidate.text))
+            return scanFetch("https://api.scryfall.com/cards/named?fuzzy="+encodeURIComponent(candidate.text))
               .then(function(r){if(r.status===404){lookupSucceeded=true;return null;}if(!r.ok)throw new Error("Card search unavailable");lookupSucceeded=true;return r.json()})
               .then(function(card){
                 if(!card)return;
@@ -3759,7 +3788,7 @@ function scanImageFile(file,options){
           el("cardSearchInput").value=candidates.length?candidates[0].text:"";
           setDeckStatus("Correct the name and tap Search. For another scan, keep the card upright and fill the photo with it.",true);
           reject(err);
-        }).finally(function(){setTimeout(function(){URL.revokeObjectURL(url)},3000)});
+        }).finally(function(){finishScanTiming();setTimeout(function(){URL.revokeObjectURL(url)},3000)});
       }catch(err){
         setTimeout(function(){URL.revokeObjectURL(url)},3000);
         reject(err);
