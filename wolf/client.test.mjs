@@ -36,7 +36,7 @@ function setup({saved=new Map(),fetcher,storageBlocked=false}={}){
  const speech={cancel(){},getVoices:()=>[],speak:u=>spoken.push(u)};
  const window={
   SpeechRecognition:Recognition,speechSynthesis:speech,SpeechSynthesisUtterance:class{constructor(text){this.text=text;}},
-  getWolfGameContext:()=>({selectedPlayerIndex:0,battlefieldComplete:false,players:[{index:0,name:'Scott',life:40,trackedCreatures:[]}]}),
+  getWolfGameContext:()=>({selectedPlayerIndex:2,battlefieldComplete:false,players:[{index:0,name:'Scott',life:40,trackedCreatures:[]}]}),
   addEventListener:(name,fn)=>pageEvents.set(name,fn)
  };
  const context={
@@ -62,27 +62,27 @@ test('valid code persists across visits, forget removes it and no listening star
 test('unchecking remember removes a saved code and does not save the next successful request',async()=>{
  const x=setup({saved:new Map([[KEY,ACCESS]])});x.get('wolfRemember').checked=false;x.get('wolfRemember').onchange.call(x.get('wolfRemember'));await x.submit();assert.equal(x.saved.has(KEY),false);
 });
-test('wake phrase opens chat from battlefield and survives close without a saved code',()=>{
+test('wake phrase keeps battlefield visible and warns about missing access',()=>{
  const x=setup();assert.equal(x.dialog.open,false);x.wake();assert.equal(x.dialog.open,false);
  x.recognizers[0].onend();x.runRestart();assert.equal(x.recognizers.length,2);
- x.result('Hey Wolf how does landfall work');assert.equal(x.dialog.open,true);assert.equal(x.get('wolfQuestion').value,'how does landfall work');
+ x.result('Hey Wolf how does landfall work');assert.equal(x.dialog.open,false);assert.equal(x.get('wolfQuestion').value,'how does landfall work');
  x.dialog.open=false;x.dialog.handlers.close();assert.equal(x.recognizers.at(-1).aborted,undefined);
- x.result('hey wolf another question');assert.equal(x.dialog.open,true);assert.equal(x.get('wolfQuestion').value,'another question');assert.equal(x.calls.length,0);
+ x.result('hey wolf another question');assert.equal(x.dialog.open,false);assert.equal(x.get('wolfQuestion').value,'another question');assert.equal(x.calls.length,0);
 });
 test('paid request and playback pause microphone, then listening resumes after playback',async()=>{
  let finish;const x=setup({fetcher:()=>new Promise(resolve=>{finish=resolve;})});x.wake();x.result('Hey Wolf check my counters');
- x.get('wolfAutoRead').checked=true;const pending=x.submit();assert.equal(x.recognizers[0].aborted,true);assert.equal(x.game.children[0].textContent,'Disable Hey Wolf');
+ x.get('wolfAutoRead').checked=true;const pending=x.submit();assert.equal(x.recognizers[0].aborted,true);assert.equal(x.game.children[0].attrs['aria-pressed'],'true');
  finish(Response.json({answer:'Counters double.',sources:[]}));await pending;assert.equal(x.spoken.length,1);
  x.runRestart();assert.equal(x.recognizers.length,1);
  x.spoken[0].onend();x.runRestart();assert.equal(x.recognizers.length,2);
  assert.equal(x.calls[0].init.headers.Authorization,'Bearer '+ACCESS);assert.ok(!x.calls[0].init.body.includes(ACCESS));
 });
 test('permission denial and repeated immediate disconnects stop retries',()=>{
- const x=setup();x.wake();x.recognizers[0].onerror({error:'not-allowed'});x.runRestart();assert.equal(x.recognizers.length,1);assert.equal(x.game.children[0].textContent,'Enable Hey Wolf');
- const y=setup();y.wake();for(let i=0;i<3;i++){y.recognizers.at(-1).onend();y.runRestart();}assert.equal(y.recognizers.length,3);assert.equal(y.game.children[0].textContent,'Enable Hey Wolf');
+ const x=setup();x.wake();x.recognizers[0].onerror({error:'not-allowed'});x.runRestart();assert.equal(x.recognizers.length,1);assert.equal(x.game.children[0].attrs['aria-pressed'],'false');
+ const y=setup();y.wake();for(let i=0;i<3;i++){y.recognizers.at(-1).onend();y.runRestart();}assert.equal(y.recognizers.length,3);assert.equal(y.game.children[0].attrs['aria-pressed'],'false');
 });
 test('backgrounding stops microphone and cancels pending restarts',()=>{
- const x=setup();x.wake();x.document.hidden=true;x.docEvents.get('visibilitychange')();assert.equal(x.recognizers[0].aborted,true);x.runRestart();assert.equal(x.recognizers.length,1);assert.equal(x.game.children[0].textContent,'Enable Hey Wolf');
+ const x=setup();x.wake();x.document.hidden=true;x.docEvents.get('visibilitychange')();assert.equal(x.recognizers[0].aborted,true);x.runRestart();assert.equal(x.recognizers.length,1);assert.equal(x.game.children[0].attrs['aria-pressed'],'false');
 });
 test('invalid saved credential is removed; blocked storage does not block chat',async()=>{
  const x=setup({saved:new Map([[KEY,ACCESS]]),fetcher:()=>Response.json({error:'Invalid code'},{status:401})});await x.submit();assert.equal(x.saved.has(KEY),false);assert.equal(x.get('wolfAccessSettings').open,true);
@@ -135,4 +135,28 @@ test('a question spoken after a separate wake phrase survives a recognition rest
 test('closing chat cancels a queued automatic question',()=>{
  const x=setup({saved:new Map([[KEY,ACCESS]])});x.wake();x.result('Hey Wolf how many counters');
  x.dialog.open=false;x.dialog.handlers.close();x.runAuto();assert.equal(x.calls.length,0);
+});
+
+test('voice answer stays on battlefield, uses active player and lights up for each phase',async()=>{
+ let finish;const x=setup({saved:new Map([[KEY,ACCESS]]),fetcher:()=>new Promise(resolve=>{finish=resolve;})});
+ x.wake();assert.equal(x.game.children[0].attrs['data-state'],'listening');
+ x.result('Hey Wolf does my Hydra double');assert.equal(x.dialog.open,false);
+ x.runAuto();assert.equal(x.game.children[0].attrs['data-state'],'thinking');
+ assert.equal(JSON.parse(x.calls[0].init.body).context.selectedPlayerIndex,2);
+ finish(Response.json({answer:'Your counters double.',sources:[]}));await Promise.all(x.submissions);
+ assert.equal(x.dialog.open,false);assert.equal(x.spoken.length,1);
+ assert.equal(x.game.children[0].attrs['data-state'],'speaking');
+ x.spoken[0].onend();x.runRestart();
+ assert.equal(x.game.children[0].attrs['data-state'],'listening');
+});
+test('turning voice off while waiting suppresses the eventual spoken answer',async()=>{
+ let finish;const x=setup({saved:new Map([[KEY,ACCESS]]),fetcher:()=>new Promise(resolve=>{finish=resolve;})});
+ x.wake();x.result('Hey Wolf check this play');x.runAuto();x.get('wolfStop').onclick();
+ finish(Response.json({answer:'A delayed answer.',sources:[]}));await Promise.all(x.submissions);
+ assert.equal(x.spoken.length,0);assert.equal(x.dialog.open,false);assert.equal(x.game.children[0].attrs['aria-pressed'],'false');
+});
+test('voice error is read aloud without opening chat',async()=>{
+ const x=setup({saved:new Map([[KEY,ACCESS]]),fetcher:()=>Response.json({error:'Private test limit reached'},{status:429})});
+ x.wake();x.result('Hey Wolf check my trigger');x.runAuto();await Promise.all(x.submissions);
+ assert.equal(x.dialog.open,false);assert.equal(x.spoken.length,1);assert.match(x.spoken[0].text,/limit reached/);
 });
