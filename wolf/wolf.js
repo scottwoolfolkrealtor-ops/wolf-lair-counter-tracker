@@ -100,8 +100,16 @@ function speakAnswer(){
  if(!lastAnswer){voiceStatus("Ask a question first.");return;}
  if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){voiceStatus("This browser does not support answer playback.");return;}
  stopVoice();
- var utterance=new SpeechSynthesisUtterance(lastAnswer.replace(/\(magic\.wizards\.com\)/g,""));
- utterance.lang="en-US";utterance.rate=1;
+ var spoken=lastAnswer.replace(/\([^)]*\.(?:com|org|net)[^)]*\)/g,"").trim().split(/\n\s*\n/)[0];
+ if(spoken.length>600){var sentences=spoken.match(/[^.!?]+[.!?]+(?:\s|$)|[^.!?]+$/g)||[spoken];spoken=sentences.slice(0,3).join("").trim();}
+ var utterance=new SpeechSynthesisUtterance(spoken);
+ var voices=window.speechSynthesis.getVoices().filter(function(v){return /^en[-_]/i.test(v.lang);});
+ voices.sort(function(a,b){
+  function score(v){return (/enhanced|premium|natural/i.test(v.name)?10:0)+(v.lang==="en-US"?3:0)+(v.default?1:0);}
+  return score(b)-score(a);
+ });
+ if(voices.length)utterance.voice=voices[0];
+ utterance.lang=utterance.voice?utterance.voice.lang:"en-US";utterance.rate=1.12;utterance.pitch=1;
  utterance.onend=function(){voiceStatus("Playback finished. Tap Enable Hey Wolf to listen again.");};
  utterance.onerror=function(){voiceStatus("Playback could not start. Tap Read answer to try again.");};
  window.speechSynthesis.speak(utterance);voiceStatus("Reading Wolf's answer…");
