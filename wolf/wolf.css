@@ -15,3 +15,9 @@
 #wolfDialog .wolfActions{flex-wrap:wrap}
 #wolfDialog input[type="checkbox"]{display:inline-block;width:auto;margin:0 8px 0 0;accent-color:#92ba7f}
 #wolfVoiceStatus{color:#c3cbb9;font-size:14px}
+
+.wolfWakeButton{background:linear-gradient(#694025,#352316);color:#fff1ce;border:1px solid #d6ad66;padding:8px 12px;white-space:nowrap}
+.wolfWakeButton[aria-pressed="true"]{background:#345c35;color:#edffdd;border-color:#98bf74}
+.wolfWakeStatus{font:13px/1.4 system-ui;color:#d0ddc3;margin:4px 0 10px}
+#wolfAccessSettings summary{font-weight:600}
+#wolfForget{margin-top:10px}
