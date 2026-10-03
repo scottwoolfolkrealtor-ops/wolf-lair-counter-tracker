@@ -1,0 +1,16 @@
+{
+  "name": "wolf-ai-backend",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-10-03",
+  "workers_dev": true,
+  "preview_urls": false,
+  "vars": {
+    "WOLF_ENABLED": "false",
+    "ALLOWED_ORIGIN": "https://scottwoolfolkrealtor-ops.github.io"
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "WOLF_LIMITS", "class_name": "WolfLimits" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["WolfLimits"] }],
+  "observability": { "enabled": false }
+}
