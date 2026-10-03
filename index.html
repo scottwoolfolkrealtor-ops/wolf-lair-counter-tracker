@@ -1196,418 +1196,6 @@ body.trackerPreview #decksView .deckSavedValue{
 }
 
 
-/* Compact Table Command: keep the whole table visible on phones */
-@media(max-width:640px){
-  body.trackerPreview #gameView{
-    background-attachment:scroll;
-  }
-  body.trackerPreview #gameView main{
-    padding:8px 7px 18px;
-  }
-  body.trackerPreview #gameView .backHome{
-    margin-bottom:5px;
-    min-height:34px;
-    padding:6px 9px;
-    font-size:10px;
-  }
-  body.trackerPreview #gameView header.tableCommandTitle{
-    margin-bottom:7px;
-    padding:9px 11px 8px;
-    border-radius:12px;
-  }
-  body.trackerPreview #gameView header.tableCommandTitle .trackerBrand{
-    margin-bottom:2px;
-    font-size:7px;
-    letter-spacing:2.5px;
-  }
-  body.trackerPreview #gameView header.tableCommandTitle h1{
-    font-size:18px;
-  }
-  body.trackerPreview #gameView header.tableCommandTitle small{
-    margin-top:2px;
-    font-size:7px;
-    letter-spacing:1.25px;
-  }
-  body.trackerPreview #gameView .gameShell{
-    gap:7px;
-  }
-  body.trackerPreview #gameView .gameBoard{
-    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
-    gap:6px;
-    align-items:start;
-  }
-  body.trackerPreview #gameView .gameBoard[data-player-count="3"] .playerCard:last-child{
-    grid-column:1 / -1;
-  }
-  body.trackerPreview #gameView .playerCard{
-    min-width:0;
-    padding:7px;
-    border-radius:12px;
-  }
-  body.trackerPreview #gameView .playerHeader{
-    gap:3px;
-    margin-bottom:3px;
-    align-items:center;
-  }
-  body.trackerPreview #gameView .playerIdentity{
-    gap:3px;
-    flex-wrap:nowrap;
-  }
-  body.trackerPreview #gameView .playerName{
-    font-size:12px;
-  }
-  body.trackerPreview #gameView .editPlayerName,
-  body.trackerPreview #gameView .resetPlayer{
-    min-height:25px;
-    padding:4px 5px;
-    font-size:7px;
-  }
-  body.trackerPreview #gameView .lifePanel{
-    margin:0 0 4px;
-  }
-  body.trackerPreview #gameView .lifeTotal.editLife{
-    min-height:47px;
-    padding:1px 4px 0;
-    font-size:42px;
-  }
-  body.trackerPreview #gameView .lifeHint{
-    display:none;
-  }
-  body.trackerPreview #gameView .playerCreatures{
-    min-height:34px;
-    margin:0 0 5px;
-    padding:5px 6px;
-    gap:3px;
-    font-size:8px;
-    letter-spacing:.3px;
-  }
-  body.trackerPreview #gameView .playerCreatures span{
-    font-size:7px;
-  }
-  body.trackerPreview #gameView .playerCreatures::after{
-    font-size:14px;
-  }
-  body.trackerPreview #gameView .lifeControls{
-    grid-template-columns:repeat(2,minmax(0,1fr));
-    gap:4px;
-    margin-top:4px;
-  }
-  body.trackerPreview #gameView .lifeControls button{
-    min-width:0;
-    min-height:31px;
-    padding:4px 3px;
-    font-size:8px;
-    border-radius:7px;
-  }
-  body.trackerPreview #gameView .statRow{
-    grid-template-columns:repeat(2,minmax(0,1fr));
-    gap:4px;
-    margin-top:5px;
-  }
-  body.trackerPreview #gameView .statRow .statBox:first-child{
-    display:none;
-  }
-  body.trackerPreview #gameView .statBox{
-    padding:4px 2px;
-    border-radius:7px;
-  }
-  body.trackerPreview #gameView .statLabel{
-    font-size:7px;
-    letter-spacing:.5px;
-  }
-  body.trackerPreview #gameView .statValue{
-    margin-top:1px;
-    font-size:16px;
-  }
-  body.trackerPreview #gameView .playerRosterTools{
-    grid-template-columns:1fr 1fr;
-    gap:5px;
-    margin-top:0;
-  }
-  body.trackerPreview #gameView .playerRosterTools button{
-    min-height:34px;
-    padding:6px 5px;
-    font-size:9px;
-  }
-  body.trackerPreview #gameView .playerLimitMsg{
-    min-height:12px;
-    margin:-2px 0 0;
-    font-size:8px;
-  }
-  body.trackerPreview #gameView .lifeEditRow{
-    grid-template-columns:1fr;
-    gap:4px;
-    padding:3px 0;
-  }
-  body.trackerPreview #gameView .lifeEditInput{
-    height:40px;
-    font-size:22px;
-  }
-  body.trackerPreview #gameView .lifeEditRow button{
-    min-height:30px;
-    padding:4px;
-    font-size:8px;
-  }
-}
-@media(max-width:360px){
-  body.trackerPreview #gameView .playerName{font-size:11px}
-  body.trackerPreview #gameView .lifeTotal.editLife{font-size:38px}
-  body.trackerPreview #gameView .lifeControls button{font-size:7px}
-}
-
-
-/* Tabletop seating layout — 1 full, 2 vertical halves, 3/4 quadrants */
-@media(max-width:640px){
-  body.trackerPreview #gameView main{
-    min-height:100svh;
-    display:flex;
-    flex-direction:column;
-    padding:6px 6px 10px;
-  }
-  body.trackerPreview #gameView .backHome{
-    margin-bottom:3px;
-    min-height:28px;
-    padding:4px 7px;
-    font-size:8px;
-  }
-  body.trackerPreview #gameView header.tableCommandTitle{
-    margin-bottom:4px;
-    padding:6px 9px;
-    border-radius:10px;
-  }
-  body.trackerPreview #gameView header.tableCommandTitle .trackerBrand{font-size:6px;letter-spacing:2px;margin-bottom:1px}
-  body.trackerPreview #gameView header.tableCommandTitle h1{font-size:15px}
-  body.trackerPreview #gameView header.tableCommandTitle small{margin-top:1px;font-size:6px;letter-spacing:1px}
-
-  body.trackerPreview #gameView .gameShell{
-    flex:1;
-    min-height:0;
-    display:flex;
-    flex-direction:column;
-    gap:4px;
-  }
-  body.trackerPreview #gameView .gameBoard{
-    flex:1;
-    min-height:0;
-    display:grid !important;
-    gap:4px;
-    align-items:stretch !important;
-  }
-
-  /* 1 player: full table */
-  body.trackerPreview #gameView .gameBoard[data-player-count="1"]{
-    grid-template-columns:1fr !important;
-    grid-template-rows:1fr;
-  }
-
-  /* 2 players: vertical divider, each player faces their side of the phone */
-  body.trackerPreview #gameView .gameBoard[data-player-count="2"]{
-    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
-    grid-template-rows:1fr;
-  }
-  body.trackerPreview #gameView .gameBoard[data-player-count="2"] .playerCard:nth-child(1) .playerFace{
-    transform:rotate(90deg);
-  }
-  body.trackerPreview #gameView .gameBoard[data-player-count="2"] .playerCard:nth-child(2) .playerFace{
-    transform:rotate(-90deg);
-  }
-
-  /* 3/4 players: add the horizontal divider to form four equal squares */
-  body.trackerPreview #gameView .gameBoard[data-player-count="3"],
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"]{
-    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
-    grid-template-rows:repeat(2,minmax(0,1fr));
-  }
-  body.trackerPreview #gameView .gameBoard[data-player-count="3"] .playerCard,
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .playerCard{
-    grid-column:auto !important;
-  }
-  body.trackerPreview #gameView .gameBoard[data-player-count="3"] .playerCard:nth-child(-n+2) .playerFace,
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .playerCard:nth-child(-n+2) .playerFace{
-    transform:rotate(180deg);
-  }
-  body.trackerPreview #gameView .gameBoard[data-player-count="3"] .playerCard:nth-child(n+3) .playerFace,
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .playerCard:nth-child(n+3) .playerFace{
-    transform:none;
-  }
-
-  body.trackerPreview #gameView .playerCard,
-  body.trackerPreview #gameView .openTableSeat{
-    min-height:0;
-    overflow:hidden;
-  }
-  body.trackerPreview #gameView .playerCard{
-    padding:5px;
-    border-radius:10px;
-  }
-  body.trackerPreview #gameView .playerFace{
-    height:100%;
-    min-height:0;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    transform-origin:center center;
-  }
-
-  body.trackerPreview #gameView .openTableSeat{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    gap:3px;
-    width:100%;
-    border-radius:10px;
-    border:1px dashed rgba(153,126,82,.45);
-    background:rgba(9,12,10,.62);
-    color:#bfa77d;
-  }
-  body.trackerPreview #gameView .openTableSeat strong{font-size:9px;letter-spacing:1.2px}
-  body.trackerPreview #gameView .openTableSeat span{font-size:8px;color:#94b990}
-
-  /* Compact player identity */
-  body.trackerPreview #gameView .playerHeader{
-    gap:3px;
-    margin-bottom:1px;
-    align-items:center;
-  }
-  body.trackerPreview #gameView .playerIdentity{gap:3px;flex-wrap:nowrap}
-  body.trackerPreview #gameView .playerName{font-size:10px}
-  body.trackerPreview #gameView .editPlayerName,
-  body.trackerPreview #gameView .resetPlayer{
-    min-height:21px;
-    padding:2px 4px;
-    font-size:6px;
-  }
-
-  /* Life becomes the main control: minus | total | plus */
-  body.trackerPreview #gameView .lifePanel{
-    display:grid;
-    grid-template-columns:34px minmax(0,1fr) 34px;
-    align-items:center;
-    gap:3px;
-    margin:0;
-  }
-  body.trackerPreview #gameView .lifeTotal.editLife{
-    min-height:46px;
-    padding:0;
-    font-size:42px;
-  }
-  body.trackerPreview #gameView .lifeNudge{
-    min-width:0;
-    min-height:36px;
-    padding:0;
-    font-size:20px;
-    line-height:1;
-    border-radius:9px;
-  }
-
-  /* Symbol-based Commander / Poison controls */
-  body.trackerPreview #gameView .counterStrip{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:4px;
-    margin-top:3px;
-  }
-  body.trackerPreview #gameView .counterChip{
-    min-width:0;
-    display:grid;
-    grid-template-columns:17px 24px minmax(20px,1fr) 24px;
-    align-items:center;
-    gap:2px;
-    min-height:30px;
-    padding:2px 3px;
-    border:1px solid rgba(151,120,73,.42);
-    border-radius:8px;
-    background:rgba(5,9,7,.72);
-  }
-  body.trackerPreview #gameView .poisonChip{
-    border-color:rgba(104,160,88,.5);
-  }
-  body.trackerPreview #gameView .counterIcon{
-    width:16px;
-    height:16px;
-    display:grid;
-    place-items:center;
-  }
-  body.trackerPreview #gameView .counterIcon svg{
-    width:16px;
-    height:16px;
-    fill:none;
-    stroke:#d5c39d;
-    stroke-width:1.65;
-    stroke-linecap:round;
-    stroke-linejoin:round;
-  }
-  body.trackerPreview #gameView .poisonChip .counterIcon svg{
-    stroke:#9fd28c;
-  }
-  body.trackerPreview #gameView .counterValue{
-    text-align:center;
-    font-size:15px;
-    font-weight:900;
-    color:#efe3d2;
-  }
-  body.trackerPreview #gameView .miniStep{
-    min-width:0;
-    min-height:24px;
-    padding:0;
-    border-radius:6px;
-    font-size:14px;
-    line-height:1;
-  }
-
-  body.trackerPreview #gameView .playerCreatures{
-    min-height:27px;
-    margin:3px 0 0;
-    padding:3px 5px;
-    font-size:7px;
-  }
-  body.trackerPreview #gameView .playerCreatures span{font-size:6px}
-  body.trackerPreview #gameView .playerCreatures .battlefieldLabel{font-size:7px;color:#eef8e9}
-
-  /* 1-player mode can breathe a little more */
-  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .playerName{font-size:16px}
-  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .lifeTotal.editLife{font-size:72px;min-height:80px}
-  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .lifePanel{grid-template-columns:52px minmax(0,1fr) 52px}
-  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .lifeNudge{min-height:48px;font-size:26px}
-  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .counterStrip{max-width:430px;width:100%;margin:8px auto 0}
-  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .counterChip{min-height:42px;grid-template-columns:24px 34px 1fr 34px}
-  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .counterIcon svg{width:21px;height:21px}
-  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .counterValue{font-size:21px}
-  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .miniStep{min-height:32px;font-size:17px}
-  body.trackerPreview #gameView .gameBoard[data-player-count="1"] .playerCreatures{max-width:430px;width:100%;margin:8px auto 0;min-height:38px;font-size:10px}
-
-  /* 5/6 keep the compact multi-row fallback */
-  body.trackerPreview #gameView .gameBoard[data-player-count="5"],
-  body.trackerPreview #gameView .gameBoard[data-player-count="6"]{
-    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
-    grid-auto-rows:auto;
-    flex:none;
-    overflow:visible;
-  }
-
-  body.trackerPreview #gameView .playerRosterTools{
-    flex:none;
-    grid-template-columns:1fr 1fr !important;
-    gap:4px;
-  }
-  body.trackerPreview #gameView .playerRosterTools button{
-    min-height:27px;
-    padding:3px 5px;
-    font-size:8px;
-  }
-  body.trackerPreview #gameView .playerLimitMsg{display:none}
-
-  body.trackerPreview #gameView .lifeEditRow{
-    grid-template-columns:1fr;
-    gap:3px;
-    padding:2px 0;
-  }
-  body.trackerPreview #gameView .lifeEditInput{height:36px;font-size:20px}
-  body.trackerPreview #gameView .lifeEditRow button{min-height:26px;padding:3px;font-size:8px}
-}
-
-
 /* Wolf Lair Battlefield Command refresh — artwork-forward tabletop layout */
 body.trackerPreview #gameView .playerQuickRow{
   display:grid;grid-template-columns:minmax(72px,.72fr) minmax(0,1.28fr);gap:6px;margin-top:6px;
@@ -1629,67 +1217,6 @@ body.trackerPreview #gameView .turnDie strong{min-width:24px;color:#f5e8cf;font:
 body.trackerPreview #gameView .turnDie.critical strong{color:#9ce38f}
 body.trackerPreview #gameView .turnDie.fumble strong{color:#e6a58f}
 body.trackerPreview #gameView .playerQuickRow .playerCreatures{margin:0;min-height:48px}
-
-@media(max-width:640px){
-  body.trackerPreview #gameView{
-    background:linear-gradient(180deg,rgba(2,5,4,.16),rgba(2,5,4,.46)),var(--lair-scene),#030605;
-    background-size:cover;background-position:center;
-  }
-  body.trackerPreview #gameView main{
-    height:100svh;min-height:100svh;max-height:100svh;overflow:hidden;
-    padding:4px 4px calc(4px + env(safe-area-inset-bottom));
-  }
-  body.trackerPreview #gameView .backHome{min-height:25px;margin-bottom:2px;padding:3px 7px;font-size:8px;background:rgba(8,12,9,.82)}
-  body.trackerPreview #gameView header.tableCommandTitle{
-    flex:0 0 auto;margin-bottom:3px;padding:4px 8px 5px;border-radius:9px;
-    background:linear-gradient(135deg,rgba(17,21,17,.84),rgba(7,10,8,.88));
-  }
-  body.trackerPreview #gameView header.tableCommandTitle .trackerBrand{margin-bottom:0;font-size:5.5px;letter-spacing:1.8px}
-  body.trackerPreview #gameView header.tableCommandTitle h1{font-size:14px;line-height:1}
-  body.trackerPreview #gameView header.tableCommandTitle small{margin-top:1px;font-size:5.5px;letter-spacing:.9px}
-  body.trackerPreview #gameView .gameShell{flex:1 1 auto;min-height:0;gap:3px}
-  body.trackerPreview #gameView .gameBoard{flex:1 1 auto;min-height:0;gap:4px}
-  body.trackerPreview #gameView .playerCard{
-    min-height:0;padding:6px;border-radius:11px;
-    background:linear-gradient(160deg,rgba(18,24,18,.84),rgba(5,10,7,.90)),radial-gradient(circle at 75% 20%,rgba(85,130,70,.13),transparent 45%);
-    border-color:rgba(191,139,76,.54);box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 5px 14px rgba(0,0,0,.28);
-  }
-  body.trackerPreview #gameView .playerFace{height:100%;justify-content:center}
-  body.trackerPreview #gameView .playerHeader{margin-bottom:3px}
-  body.trackerPreview #gameView .playerName{font-size:12px}
-  body.trackerPreview #gameView .editPlayerName,body.trackerPreview #gameView .resetPlayer{min-height:23px;padding:3px 5px;font-size:6.5px}
-  body.trackerPreview #gameView .lifePanel{grid-template-columns:38px minmax(0,1fr) 38px;gap:4px;margin:1px 0 2px}
-  body.trackerPreview #gameView .lifeTotal.editLife{min-height:58px;font-size:54px;text-shadow:0 2px 10px rgba(0,0,0,.55)}
-  body.trackerPreview #gameView .lifeNudge{min-height:43px;font-size:23px}
-  body.trackerPreview #gameView .counterStrip{gap:5px;margin-top:3px}
-  body.trackerPreview #gameView .counterChip{
-    min-height:34px;grid-template-columns:18px 26px minmax(22px,1fr) 26px;gap:2px;padding:3px;background:rgba(4,8,6,.70);
-  }
-  body.trackerPreview #gameView .counterValue{font-size:17px}
-  body.trackerPreview #gameView .miniStep{min-height:27px;font-size:15px}
-  body.trackerPreview #gameView .playerQuickRow{gap:4px;margin-top:4px;grid-template-columns:minmax(66px,.68fr) minmax(0,1.32fr)}
-  body.trackerPreview #gameView .turnDie,body.trackerPreview #gameView .playerQuickRow .playerCreatures{min-height:39px}
-  body.trackerPreview #gameView .turnDie{gap:5px;padding:4px 5px}
-  body.trackerPreview #gameView .turnDie .dieIcon{width:25px;height:25px;font-size:8px}
-  body.trackerPreview #gameView .turnDie strong{font-size:18px}
-  body.trackerPreview #gameView .playerQuickRow .playerCreatures{padding:4px 5px;font-size:8px}
-  body.trackerPreview #gameView .playerQuickRow .playerCreatures span{font-size:7px}
-  body.trackerPreview #gameView .playerRosterTools{flex:0 0 auto;grid-template-columns:1fr 1fr;gap:4px;margin:0}
-  body.trackerPreview #gameView .playerRosterTools button{min-height:28px;padding:3px 5px;font-size:7.5px;border-radius:8px;background:rgba(11,18,12,.84)}
-  body.trackerPreview #gameView .playerLimitMsg{min-height:8px;margin:0;font-size:6.5px;line-height:1}
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"]{
-    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
-    grid-template-rows:repeat(2,minmax(0,1fr)) !important;
-    min-height:0;
-  }
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .playerCard{width:100%;height:100%}
-}
-@media(max-width:380px){
-  body.trackerPreview #gameView .lifeTotal.editLife{font-size:48px}
-  body.trackerPreview #gameView .lifePanel{grid-template-columns:34px minmax(0,1fr) 34px}
-  body.trackerPreview #gameView .turnDie strong{font-size:16px}
-}
-
 
 /* ===== BATTLEFIELD COMMAND — PRODUCTION UI PASS ===== */
 body.trackerPreview #gameView .playerCard{
@@ -1811,176 +1338,87 @@ body.trackerPreview #gameView .turnDie{border-color:rgba(var(--seat-rgb),.50)}
 body.trackerPreview #gameView .turnDie .dieIcon{box-shadow:inset 0 0 0 1px rgba(var(--seat-rgb),.68)}
 body.trackerPreview #gameView .playerCreatures{border-color:rgba(var(--seat-rgb),.54)}
 
-@media(max-width:640px){
-  body.trackerPreview #gameView .gameBoard{align-items:stretch !important}
-  body.trackerPreview #gameView .gameBoard[data-player-count="2"]{
-    grid-template-columns:1fr !important;grid-template-rows:repeat(2,minmax(0,1fr)) !important;
-  }
-  body.trackerPreview #gameView .gameBoard[data-player-count="3"]{
-    grid-template-columns:repeat(2,minmax(0,1fr)) !important;grid-template-rows:repeat(2,minmax(0,1fr)) !important;
-  }
-  body.trackerPreview #gameView .gameBoard[data-player-count="3"] .playerCard[data-seat-index="0"]{grid-column:1 / -1 !important}
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"]{
-    grid-template-columns:repeat(2,minmax(0,1fr)) !important;grid-template-rows:repeat(2,minmax(0,1fr)) !important;
-  }
-  body.trackerPreview #gameView .playerCard{padding:7px;border-radius:14px}
-  body.trackerPreview #gameView .playerHeader{min-height:28px;margin-bottom:5px}
-  body.trackerPreview #gameView .playerName{font-size:13px}
-  body.trackerPreview #gameView .editPlayerName,
-  body.trackerPreview #gameView .resetPlayer{min-height:25px;padding:3px 6px;font-size:7px}
-  body.trackerPreview #gameView .rotateSeat{min-height:25px;min-width:28px;padding:2px 5px;font-size:14px}
-  body.trackerPreview #gameView .lifePanel{
-    grid-template-columns:42px minmax(0,1fr) 42px;min-height:72px;margin:3px 0 5px;padding:4px 8px;
-  }
-  body.trackerPreview #gameView .lifeTotal.editLife{min-height:62px;font-size:60px}
-  body.trackerPreview #gameView .lifeNudge{min-height:47px;font-size:26px}
-  body.trackerPreview #gameView .counterStrip{gap:6px}
-  body.trackerPreview #gameView .counterChip{
-    min-height:42px;grid-template-columns:minmax(40px,1fr) 27px 32px 27px;padding:4px;
-  }
-  body.trackerPreview #gameView .counterValue{font-size:19px}
-  body.trackerPreview #gameView .miniStep{min-height:29px;font-size:16px}
-  body.trackerPreview #gameView .playerQuickRow{margin-top:5px;gap:5px}
-  body.trackerPreview #gameView .turnDie,
-  body.trackerPreview #gameView .playerQuickRow .playerCreatures{min-height:42px}
-}
-@media(max-width:380px){
-  body.trackerPreview #gameView .playerName{font-size:11px}
-  body.trackerPreview #gameView .lifePanel{grid-template-columns:36px minmax(0,1fr) 36px;min-height:64px;padding:3px 6px}
-  body.trackerPreview #gameView .lifeTotal.editLife{font-size:52px;min-height:56px}
-  body.trackerPreview #gameView .lifeNudge{min-height:42px;font-size:23px}
-  body.trackerPreview #gameView .counterChip{grid-template-columns:32px 24px 28px 24px;gap:2px;min-height:38px}
-  body.trackerPreview #gameView .counterName{font-size:5px;letter-spacing:.35px}
-  body.trackerPreview #gameView .counterIcon,
-  body.trackerPreview #gameView .counterIcon svg{width:17px;height:17px}
-  body.trackerPreview #gameView .counterValue{font-size:17px}
-  body.trackerPreview #gameView .miniStep{min-height:26px;font-size:14px}
-}
-
-
-/* ===== SIDE-SEATED FOUR PLAYER ORIENTATION ===== */
-body.trackerPreview #gameView .playerFace{
-  transform:rotate(var(--player-rotation,0deg)) !important;
-}
-
-@media(max-width:640px){
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"]{
-    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
-    grid-template-rows:repeat(2,minmax(0,1fr)) !important;
-  }
-
-  /* Each quadrant is portrait-shaped on a phone. The inner UI is built as
-     a landscape surface, then rotated toward the player seated at that side. */
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .playerCard{
-    position:relative;
-    container-type:size;
-    padding:0;
-    overflow:hidden;
-  }
-
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .playerFace{
-    position:absolute;
-    left:50%;
-    top:50%;
-    width:calc(100cqh - 14px);
-    height:calc(100cqw - 14px);
-    min-width:0;
-    min-height:0;
-    padding:6px;
-    box-sizing:border-box;
-    justify-content:center;
-    transform:translate(-50%,-50%) rotate(var(--player-rotation,0deg)) !important;
-    transform-origin:center center;
-  }
-
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .playerHeader{
-    flex:0 0 auto;
-    margin-bottom:3px;
-  }
-
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .lifePanel{
-    flex:0 0 auto;
-    grid-template-columns:46px minmax(0,1fr) 46px;
-    min-height:62px;
-    margin:2px 0 4px;
-    padding:3px 8px;
-  }
-
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .lifeTotal.editLife{
-    min-height:54px;
-    font-size:58px;
-  }
-
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .lifeNudge{
-    min-height:43px;
-    font-size:25px;
-  }
-
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .counterStrip{
-    flex:0 0 auto;
-    grid-template-columns:1fr 1fr;
-    gap:5px;
-  }
-
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .counterChip{
-    min-height:38px;
-    grid-template-columns:minmax(38px,1fr) 25px 30px 25px;
-    padding:3px;
-  }
-
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .counterName{
-    font-size:5.5px;
-  }
-
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .counterValue{
-    font-size:18px;
-  }
-
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .miniStep{
-    min-height:26px;
-    font-size:15px;
-  }
-
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .playerQuickRow{
-    flex:0 0 auto;
-    margin-top:4px;
-    grid-template-columns:minmax(68px,.72fr) minmax(0,1.28fr);
-    gap:4px;
-  }
-
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .turnDie,
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .playerQuickRow .playerCreatures{
-    min-height:37px;
-  }
-}
-
-@media(max-width:380px){
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .playerFace{
-    width:calc(100cqh - 10px);
-    height:calc(100cqw - 10px);
-    padding:4px;
-  }
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .lifePanel{
-    grid-template-columns:38px minmax(0,1fr) 38px;
-    min-height:54px;
-  }
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .lifeTotal.editLife{
-    min-height:48px;
-    font-size:50px;
-  }
-  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .lifeNudge{
-    min-height:37px;
-    font-size:22px;
-  }
-}
-
-
 /* Life number follows the correctly oriented player panel */
 body.trackerPreview #gameView .lifeValueFace{
   display:inline-block;
   transform:none;
 }
 
+
+body.trackerPreview #gameView .counterIcon svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+body.trackerPreview #gameView .counterStrip{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+body.trackerPreview #gameView .lifePanel{display:grid;grid-template-columns:48px minmax(0,1fr) 48px}
+/* Mobile table: one viewport, independently scrollable seats, reachable roster. */
+@media(max-width:640px){
+  body.trackerPreview #gameView{min-height:0;background-attachment:scroll}
+  body.trackerPreview #gameView main{
+    height:100vh;height:100dvh;min-height:0;max-height:none;overflow:hidden;
+    display:flex;flex-direction:column;gap:4px;
+    padding:4px max(4px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left));
+  }
+  body.trackerPreview #gameView .backHome{flex:none;min-height:28px;margin:0;padding:4px;font-size:10px}
+  body.trackerPreview #gameView header.tableCommandTitle{flex:none;margin:0;padding:5px 9px;border-radius:10px}
+  body.trackerPreview #gameView header.tableCommandTitle .trackerBrand{font-size:6px;letter-spacing:2px;margin:0}
+  body.trackerPreview #gameView header.tableCommandTitle h1{font-size:16px;line-height:1.1}
+  body.trackerPreview #gameView header.tableCommandTitle small{font-size:6px;letter-spacing:1px;margin:0}
+  body.trackerPreview #gameView .gameShell{flex:1;min-height:0;display:flex;flex-direction:column;gap:4px}
+  body.trackerPreview #gameView #gameBoard{
+    flex:1;min-height:0;display:grid;gap:5px;overflow-y:auto;overflow-x:hidden;
+    grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(250px,1fr));
+  }
+  body.trackerPreview #gameView #gameBoard[data-player-count="1"]{grid-template-columns:1fr;grid-template-rows:minmax(260px,1fr)}
+  body.trackerPreview #gameView #gameBoard[data-player-count="2"]{grid-template-columns:1fr;grid-template-rows:repeat(2,minmax(230px,1fr))}
+  body.trackerPreview #gameView #gameBoard[data-player-count="3"] .playerCard[data-seat-index="0"]{grid-column:1 / -1}
+  body.trackerPreview #gameView #gameBoard[data-player-count="5"],
+  body.trackerPreview #gameView #gameBoard[data-player-count="6"]{grid-template-rows:repeat(3,minmax(250px,1fr))}
+  body.trackerPreview #gameView #gameBoard .playerCard{min-width:0;min-height:0;margin:0;padding:0;container-type:size;border-radius:14px;overflow:hidden}
+  body.trackerPreview #gameView #gameBoard .playerFace{
+    position:absolute;left:50%;top:50%;width:calc(100cqw - 10px);height:calc(100cqh - 10px);
+    min-width:0;min-height:0;padding:2px;display:flex;flex-direction:column;gap:3px;
+    transform:translate(-50%,-50%) rotate(var(--player-rotation,0deg));transform-origin:center;transition:none;
+  }
+  body.trackerPreview #gameView #gameBoard .playerCard[data-sideways="true"] .playerFace{width:calc(100cqh - 10px);height:calc(100cqw - 10px)}
+  body.trackerPreview #gameView #gameBoard .playerHeader{flex:none;height:24px;min-height:0;margin:0;padding:0 1px 2px;gap:4px;align-items:center}
+  body.trackerPreview #gameView #gameBoard .playerIdentity{flex:1;min-width:0;flex-wrap:nowrap;gap:3px}
+  body.trackerPreview #gameView #gameBoard .playerName{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  body.trackerPreview #gameView #gameBoard .editPlayerName,
+  body.trackerPreview #gameView #gameBoard .resetPlayer,
+  body.trackerPreview #gameView #gameBoard .rotateSeat{min-height:23px;min-width:25px;margin:0;padding:3px 5px;font-size:8px}
+  body.trackerPreview #gameView #gameBoard .rotateSeat{font-size:16px}
+  body.trackerPreview #gameView #gameBoard .lifePanel{flex:1;min-height:42px;display:grid;grid-template-columns:42px minmax(0,1fr) 42px;gap:3px;margin:0;padding:2px 5px;align-items:stretch}
+  body.trackerPreview #gameView #gameBoard .lifeTotal.editLife{min-width:0;min-height:0;padding:0;font-size:clamp(46px,16cqw,100px);line-height:1;display:grid;place-items:center}
+  body.trackerPreview #gameView #gameBoard .lifeNudge{min-height:0;padding:0;font-size:27px}
+  body.trackerPreview #gameView #gameBoard .counterStrip{flex:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;margin:0;max-width:none;width:100%}
+  body.trackerPreview #gameView #gameBoard .counterChip{min-width:0;min-height:0;padding:2px 4px;gap:1px 3px;grid-template-columns:minmax(26px,1fr) minmax(24px,1fr) minmax(26px,1fr);grid-template-rows:11px 28px}
+  body.trackerPreview #gameView #gameBoard .counterIdentity{grid-column:1 / -1;flex-direction:row;gap:3px}
+  body.trackerPreview #gameView #gameBoard .counterIcon,
+  body.trackerPreview #gameView #gameBoard .counterIcon svg{height:11px;width:11px}
+  body.trackerPreview #gameView #gameBoard .counterName{font-size:7px;letter-spacing:.5px}
+  body.trackerPreview #gameView #gameBoard .miniStep{min-height:28px;padding:0;font-size:18px}
+  body.trackerPreview #gameView #gameBoard .counterValue{font-size:20px}
+  body.trackerPreview #gameView #gameBoard .playerQuickRow{flex:none;display:grid;grid-template-columns:70px minmax(0,1fr);gap:4px;margin:0}
+  body.trackerPreview #gameView #gameBoard .turnDie,
+  body.trackerPreview #gameView #gameBoard .playerQuickRow .playerCreatures{min-height:28px;max-width:none;width:100%;margin:0;padding:2px 4px;font-size:8px;gap:4px}
+  body.trackerPreview #gameView #gameBoard .turnDie .dieIcon{width:22px;height:22px;font-size:7px}
+  body.trackerPreview #gameView #gameBoard .turnDie strong{font-size:18px;min-width:20px}
+  body.trackerPreview #gameView #gameBoard .playerCreatures span{font-size:7px}
+  body.trackerPreview #gameView #gameBoard .playerCreatures::after{font-size:12px;margin-left:2px}
+  body.trackerPreview #gameView .playerRosterTools{flex:none;display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:0;padding:0}
+  body.trackerPreview #gameView .playerRosterTools button{min-height:36px;padding:4px;font-size:10px}
+  body.trackerPreview #gameView .playerLimitMsg{display:none}
+  body.trackerPreview #gameView #gameBoard .lifeEditRow{grid-column:1 / -1;min-width:0}
+  body.trackerPreview #gameView #gameBoard .lifeEditInput{min-width:0;height:32px;font-size:20px}
+}
+
+@media(max-width:350px){
+  body.trackerPreview #gameView #gameBoard .playerFace{gap:2px}
+  body.trackerPreview #gameView #gameBoard .playerHeader{height:22px}
+  body.trackerPreview #gameView #gameBoard .lifePanel{min-height:36px}
+  body.trackerPreview #gameView #gameBoard .counterChip{grid-template-rows:9px 25px}
+  body.trackerPreview #gameView #gameBoard .miniStep{min-height:25px}
+  body.trackerPreview #gameView #gameBoard .turnDie,
+  body.trackerPreview #gameView #gameBoard .playerQuickRow .playerCreatures{min-height:26px}
+}
 </style>
 </head>
 <body class="trackerPreview">
@@ -2411,9 +1849,9 @@ function loadGame(){
   }
   if(!gameState.phases||!gameState.phases.length){gameState.phases=['Beginning','Precombat','Combat','Postcombat','Ending'];}
   /* One-time migration: clear rotation overrides from the previous seat layout. */
-  if(gameState.seatLayoutVersion!==6){
+  if(gameState.seatLayoutVersion!==7){
     for(var r=0;r<gameState.players.length;r++)gameState.players[r].rotation=0;
-    gameState.seatLayoutVersion=6;
+    gameState.seatLayoutVersion=7;
     try{localStorage.setItem(GAME_KEY,JSON.stringify(gameState))}catch(e){}
   }
   if(typeof playerCreatures!=='undefined')ensurePlayerCreatureSlots();
@@ -2437,15 +1875,16 @@ function renderGame(){
         baseRotation=index===0?0:180;
       }else if(playerCount===3){
         seatOrder=index===0?3:index;
-        baseRotation=index===0?0:180;
-      }else if(playerCount===4){
+        baseRotation=index===0?0:(index===1?270:90);
+      }else if(playerCount>=4){
         /* Side-seated 2x2 table:
            P1 top-left faces left, P2 top-right faces right,
            P3 bottom-left faces left, P4 bottom-right faces right. */
         seatOrder=index+1;
-        baseRotation=(index===0||index===2)?90:270;
+        baseRotation=index%2===0?270:90;
       }
       card.style.order=String(seatOrder);
+      card.dataset.sideways=String(baseRotation===90||baseRotation===270);
       var finalRotation=((baseRotation+(Number(player.rotation)||0))%360+360)%360;
       var creatureCount=(playerCreatures[index]||[]).length;
       card.innerHTML='\
