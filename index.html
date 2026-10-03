@@ -1974,6 +1974,17 @@ body.trackerPreview #gameView .playerFace{
   }
 }
 
+
+/* Left-side seated players: life total faces the player */
+@media(max-width:640px){
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"]
+  .playerCard[data-seat-index="0"] .lifeTotal.editLife,
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"]
+  .playerCard[data-seat-index="2"] .lifeTotal.editLife{
+    transform:rotate(180deg) !important;
+  }
+}
+
 </style>
 </head>
 <body class="trackerPreview">
