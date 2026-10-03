@@ -1552,6 +1552,29 @@ body.trackerPreview .soundToggle{flex:0 0 82px;min-height:36px;padding:5px 7px;f
 body.trackerPreview .soundToggle[aria-pressed="false"]{opacity:.7}
 body.trackerPreview #trackerView .trackerNavigation .soundToggle{min-height:48px}
 
+
+/* Browse creatures across the battlefield, keeping each card mounted. */
+body.trackerPreview #trackerView #field{
+  position:relative;display:flex;align-items:stretch;gap:12px;
+  width:100%;min-width:0;overflow-x:auto;overflow-y:hidden;
+  scroll-snap-type:x proximity;scroll-padding-inline:0;
+  overscroll-behavior-x:contain;overflow-anchor:none;
+  padding:4px 0 12px;-webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;scrollbar-color:#9b865b #08120c;
+}
+body.trackerPreview #trackerView #field>.card{
+  flex:0 0 min(88%,380px);min-width:0;max-width:none;
+  margin:0;scroll-snap-align:start;overflow-anchor:none;
+}
+body.trackerPreview #trackerView #field>.card:only-child{flex-basis:min(100%,480px)}
+body.trackerPreview #trackerView #field button{
+  touch-action:manipulation;user-select:none;-webkit-user-select:none;
+}
+body.trackerPreview #trackerView #field button:active{transform:none}
+body.trackerPreview #trackerView .creatureSwipeHint{
+  padding:4px 2px 8px;color:#c6b587;font-size:12px;letter-spacing:.3px;
+}
+
 </style>
 </head>
 <body class="trackerPreview">
@@ -1788,7 +1811,8 @@ body.trackerPreview #trackerView .trackerNavigation .soundToggle{min-height:48px
 <button id="add" type="button">+ Add Creature</button><div id="msg" class="msg"></div>
 </div>
 <div id="empty" class="empty">Tap + Add to start tracking creatures.</div>
-<div id="field"></div>
+<div id="creatureSwipeHint" class="creatureSwipeHint hidden">Swipe sideways to browse creatures ↔</div>
+<div id="field" tabindex="0" role="region" aria-label="Creature cards; swipe sideways to browse"></div>
 </main>
 <div id="creatureKeyboard" class="creatureKeyboard hidden" role="group" aria-label="Creature keyboard"></div>
 <nav><button id="show" type="button">＋ Add</button><button id="undo" type="button" disabled>↶ Undo</button><button id="bill" type="button">×2 Double All</button></nav>
@@ -1923,11 +1947,17 @@ function adjust(id,n){var c=find(id);if(!c)return;snapshot();c.c=Math.max(0,c.c+
 function render(){
   var f=el("field"), trackerMain=el("trackerView").querySelector("main");
   var savedScroll={x:window.scrollX,y:window.scrollY,
-    top:trackerMain?trackerMain.scrollTop:0,left:trackerMain?trackerMain.scrollLeft:0};
+    top:trackerMain?trackerMain.scrollTop:0,left:trackerMain?trackerMain.scrollLeft:0,
+    railLeft:f.scrollLeft,railTop:f.scrollTop};
   function creatureShape(c){return JSON.stringify([c.id,c.name,c.p,c.t]);}
   // Counter-only changes keep the existing cards, focused controls, and scroll
   // container intact. Rebind from scratch when Undo replaces creature objects.
   var cards=Array.prototype.slice.call(f.children);
+  var anchor=null;
+  cards.forEach(function(card){
+    if(card.offsetLeft<=savedScroll.railLeft+1)anchor={id:card._creatureRef.id,offset:savedScroll.railLeft-card.offsetLeft};
+  });
+  el("creatureSwipeHint").classList.toggle("hidden",creatures.length<2);
   var sameCards=cards.length===creatures.length&&cards.every(function(card,index){
     var c=creatures[index];normalize(c);
     return card._creatureRef===c&&card.getAttribute('data-creature-shape')===creatureShape(c);
@@ -1993,9 +2023,16 @@ function render(){
    })(creatures[i]);
   }
   el("undo").disabled=(undoState===null);
+  var anchorCard=anchor&&Array.prototype.find.call(f.children,function(card){return card._creatureRef.id===anchor.id;});
+  f.scrollLeft=anchorCard?anchorCard.offsetLeft+anchor.offset:savedScroll.railLeft;
+  f.scrollTop=savedScroll.railTop;
   if(trackerMain){trackerMain.scrollTop=savedScroll.top;trackerMain.scrollLeft=savedScroll.left;}
   if(window.scrollX!==savedScroll.x||window.scrollY!==savedScroll.y)window.scrollTo(savedScroll.x,savedScroll.y);
 }
+// Touching a creature action must not focus-scroll the rotated container.
+el("field").addEventListener("pointerdown",function(event){
+  if((event.pointerType==="touch"||event.pointerType==="pen")&&event.target.closest("button"))event.preventDefault();
+});
 // Player-facing keyboard: readonly fields keep the iOS keyboard closed.
 var creatureKeyboard={field:null,cursor:0,shift:false,symbols:false};
 var creatureFieldIds=['nm','pw','th'];
