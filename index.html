@@ -3323,8 +3323,22 @@ function sampleGuideRegion(){
 }
 function runFallbackStability(){
   if(autoCaptureBusy||activeCV)return;
-  var state=el("cameraState");
-  if(state)state.textContent="AUTO DETECTION LOADING";
+  var sample;
+  try{sample=sampleGuideRegion();}catch(e){return;}
+  if(!sample)return;
+  var difference=255;
+  if(fallbackFrameSample){
+    difference=0;
+    for(var i=0;i<sample.gray.length;i++)difference+=Math.abs(sample.gray[i]-fallbackFrameSample.gray[i]);
+    difference/=sample.gray.length;
+  }
+  fallbackFrameSample=sample;
+  // Require both image detail and a stable guide for six frames (~1.5 seconds).
+  var ready=sample.contrast>25&&sample.edgeRatio>.035&&difference<4;
+  fallbackStableFrames=ready?fallbackStableFrames+1:0;
+  drawCardOverlay(null,ready,Math.min(AUTO_CAPTURE_FRAMES,fallbackStableFrames/6*AUTO_CAPTURE_FRAMES));
+  el("cameraState").textContent=ready?"HOLD STILL — "+Math.round(fallbackStableFrames/6*100)+"%":"FILL GUIDE WITH CARD";
+  if(fallbackStableFrames>=6){autoCaptureBusy=true;stopFallbackDetector();captureBasicCard();}
 }
 function cropCardFromVideoBasic(){
   return new Promise(function(resolve,reject){
@@ -3411,11 +3425,15 @@ function captureBasicCard(){
     autoCaptureBusy=false;fallbackStableFrames=0;
     if(btn)btn.disabled=false;
     if(state)state.textContent="READY";
-    if(status)status.textContent="The live-camera shutter failed. Tap Phone Camera instead.";
-    setDeckStatus((err&&err.message?err.message+". ":"")+"Use Phone Camera to take the picture with your phone's native camera.",true);
+    if(cardCameraStream){
+      if(status)status.textContent="Could not capture. Tap Scan This Card or use Phone Camera.";
+      setDeckStatus("Try manual capture or Phone Camera.",true);
+    }
+    // A recognition failure already supplies an editable name; preserve it.
   });
 }
 function startCardCamera(){
+  stopCardCamera();
   closeDeckTools();
   el("scanPanel").className="cardToolPanel scanPanel";
   el("liveScanner").className="liveScanner";
@@ -3453,7 +3471,8 @@ function startCardCamera(){
         overlay.height=Math.max(1,Math.round(video.videoHeight*(360/video.videoWidth)));
         drawCardOverlay(null,false,0);
         el("cameraState").textContent="READY";
-        el("scanStatus").textContent="Fill the guide with the whole card, then tap Scan This Card.";
+        el("scanStatus").textContent="Fill the guide with the card and hold still for auto-scan. You can also tap Scan This Card.";
+        fallbackDetectTimer=setInterval(runFallbackStability,250);
       }).catch(function(){
         el("scanStatus").textContent="Camera opened but could not start video. Try Use Photo.";
       });
@@ -3558,7 +3577,7 @@ function scanImageFile(file,options){
         if(!options.alreadyCropped)passes.unshift({image:full,mode:"11"});
         else passes.push({image:full,mode:"11"});
 
-        var candidates=[];
+        var candidates=[], earlyMatch=null;
         function addCandidate(txt,confidence){
           txt=String(txt||"").replace(/[^A-Za-z0-9'’,:\- ]+/g," ").replace(/\s+/g," ").trim();
           if(txt.length<3||txt.length>60)return;
@@ -3582,16 +3601,30 @@ function scanImageFile(file,options){
         warmOCRWorker().then(function(worker){
           var pass=0;
           function nextPass(){
-            if(pass>=passes.length)return Promise.resolve();
+            if(earlyMatch||pass>=passes.length)return Promise.resolve();
             var current=passes[pass++];
             status.textContent="Reading title… "+Math.round(pass/passes.length*90)+"%";
             var prep=worker.setParameters?worker.setParameters({tessedit_pageseg_mode:current.mode}):Promise.resolve();
             return Promise.resolve(prep).then(function(){return worker.recognize(current.image)})
-              .then(function(result){collectOCR(result&&result.data);return nextPass()})
+               .then(function(result){
+                collectOCR(result&&result.data);
+                // Only a confident, exact title-bar read may skip the remaining passes.
+                if(options.alreadyCropped&&pass===1&&candidates.length===1&&candidates[0].confidence>=85){
+                  var candidate=candidates[0];
+                  return fetch("https://api.scryfall.com/cards/named?exact="+encodeURIComponent(candidate.text))
+                    .then(function(r){if(!r.ok)return null;return r.json();})
+                    .then(function(card){
+                      if(card&&nameSimilarity(candidate.text,card.name)===1)earlyMatch={card:card,ocr:candidate.text,similarity:1,confidence:candidate.confidence};
+                    }).catch(function(){})
+                    .then(nextPass);
+                }
+                return nextPass();
+              })
               .catch(function(){return nextPass()});
           }
           return nextPass();
         }).then(function(){
+          if(earlyMatch)return [earlyMatch];
           candidates.sort(function(a,b){return b.confidence-a.confidence;});
           candidates=candidates.slice(0,12);
           if(!candidates.length)throw new Error("Could not read the title");
@@ -3657,7 +3690,7 @@ function startReliableCardScan(){
   var input=el("cardScanInput");
   if(input){input.value="";input.click();}
 }
-el("scanCardBtn").onclick=startReliableCardScan;
+el("scanCardBtn").onclick=startCardCamera;
 el("manualCapture").onclick=function(){
   if(autoCaptureBusy)return;
   autoCaptureBusy=true;
