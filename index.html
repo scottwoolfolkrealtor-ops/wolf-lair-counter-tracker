@@ -3501,7 +3501,7 @@ function showScanChoices(cards,status,resolve){
   el("cardSearchPanel").className="cardToolPanel";
   renderCardSearchResults(unique.slice(0,12),"scan");
   var results=el("cardSearchResults");
-  status.textContent="I found a few possible matches. Tap the correct card.";
+  status.textContent=unique.length===1?"Possible match — check the image before choosing.":"Possible matches — tap the card that matches your photo.";
   setDeckStatus("Scanner wasn't certain enough to choose for you.");
   if(resolve)resolve(unique);
 }
@@ -3510,6 +3510,9 @@ function scanImageFile(file,options){
   var preview=el("scanPreview"), panel=el("scanPanel"), status=el("scanStatus");
   panel.className="cardToolPanel scanPanel";
   status.textContent="Reading card title…";
+  el("cardLookupResult").className="hidden cardLookupResult";
+  el("cardSearchResults").innerHTML="";
+  el("cardSearchResults").className="hidden cardSearchResults";
   var url=URL.createObjectURL(file);
   preview.src=url;preview.className="";
 
@@ -3517,7 +3520,7 @@ function scanImageFile(file,options){
     var img=new Image();
     img.onload=function(){
       try{
-        var maxSide=1500, scale=Math.min(1,maxSide/Math.max(img.naturalWidth,img.naturalHeight));
+        var maxSide=2200, scale=Math.min(1,maxSide/Math.max(img.naturalWidth,img.naturalHeight));
         var full=document.createElement("canvas");
         full.width=Math.max(1,Math.round(img.naturalWidth*scale));
         full.height=Math.max(1,Math.round(img.naturalHeight*scale));
@@ -3545,21 +3548,25 @@ function scanImageFile(file,options){
           return out;
         }
 
+        // A phone photo's aspect ratio does not locate the card inside it.
+        // Sparse-text OCR reads names anywhere in an uncropped photo.
         var passes=[
-          makeTitleCanvas(.008,.15),
-          makeTitleCanvas(0,.24),
-          makeTitleCanvas(0,.34)
+          {image:makeTitleCanvas(.025,.09),mode:"7"},
+          {image:makeTitleCanvas(0,.18),mode:"11"},
+          {image:makeTitleCanvas(0,.34),mode:"11"}
         ];
+        if(!options.alreadyCropped)passes.unshift({image:full,mode:"11"});
+        else passes.push({image:full,mode:"11"});
 
         var candidates=[];
         function addCandidate(txt,confidence){
           txt=String(txt||"").replace(/[^A-Za-z0-9'’,:\- ]+/g," ").replace(/\s+/g," ").trim();
           if(txt.length<3||txt.length>60)return;
           var low=txt.toLowerCase();
-          if(/^(target|when|whenever|until|creature|instant|sorcery|enchantment|artifact|land|planeswalker|tap|add|draw|you|your|each|the|a|an)\b/.test(low))return;
-          if(!candidates.some(function(x){return x.text.toLowerCase()===low})){
-            candidates.push({text:txt,confidence:confidence||0});
-          }
+          if(/^(target|when|whenever|until|tap|add|draw|you|your|each)\b/.test(low)||/^(creature|instant|sorcery|enchantment|artifact|land|planeswalker)$/.test(low))return;
+          var existing=candidates.find(function(x){return x.text.toLowerCase()===low;});
+          if(existing)existing.confidence=Math.max(existing.confidence,confidence||0);
+          else candidates.push({text:txt,confidence:confidence||0});
         }
         function collectOCR(data){
           if(!data)return;
@@ -3568,36 +3575,43 @@ function scanImageFile(file,options){
               addCandidate(line.text,line.confidence);
             });
           }
-          String(data.text||"").split(/\r?\n/).forEach(function(line){addCandidate(line,0)});
+          String(data.text||"").split(/\r?\n/).forEach(function(line){addCandidate(line,data.confidence||0)});
         }
 
         wolfOCRStatusTarget=status;
         warmOCRWorker().then(function(worker){
           var pass=0;
           function nextPass(){
-            if(pass>=passes.length||candidates.length>=2)return Promise.resolve();
+            if(pass>=passes.length)return Promise.resolve();
             var current=passes[pass++];
-            status.textContent="Reading title… "+Math.min(90,pass*30)+"%";
-            var prep=worker.setParameters?worker.setParameters({tessedit_pageseg_mode:"7"}):Promise.resolve();
-            return Promise.resolve(prep).then(function(){return worker.recognize(current)})
+            status.textContent="Reading title… "+Math.round(pass/passes.length*90)+"%";
+            var prep=worker.setParameters?worker.setParameters({tessedit_pageseg_mode:current.mode}):Promise.resolve();
+            return Promise.resolve(prep).then(function(){return worker.recognize(current.image)})
               .then(function(result){collectOCR(result&&result.data);return nextPass()})
               .catch(function(){return nextPass()});
           }
           return nextPass();
         }).then(function(){
-          candidates=candidates.slice(0,8);
+          candidates.sort(function(a,b){return b.confidence-a.confidence;});
+          candidates=candidates.slice(0,12);
           if(!candidates.length)throw new Error("Could not read the title");
           status.textContent="Checking card name…";
 
-          var jobs=candidates.map(function(candidate){
+          // Serialize lookups instead of sending a burst of fuzzy guesses.
+          var matches=[], index=0;
+          function lookupNext(){
+            if(index>=candidates.length)return Promise.resolve(matches);
+            var candidate=candidates[index++];
             return fetch("https://api.scryfall.com/cards/named?fuzzy="+encodeURIComponent(candidate.text))
               .then(function(r){if(!r.ok)throw new Error("No match");return r.json()})
               .then(function(card){
-                return {card:card,ocr:candidate.text,similarity:nameSimilarity(candidate.text,card.name),confidence:candidate.confidence||0};
-              })
-              .catch(function(){return null});
-          });
-          return Promise.all(jobs);
+                var similarity=nameSimilarity(candidate.text,card.name);
+                if(similarity>=.78)matches.push({card:card,ocr:candidate.text,similarity:similarity,confidence:candidate.confidence||0});
+              }).catch(function(){})
+              .then(function(){return new Promise(function(done){setTimeout(done,120);});})
+              .then(lookupNext);
+          }
+          return lookupNext();
         }).then(function(matches){
           matches=(matches||[]).filter(Boolean);
           if(!matches.length)throw new Error("No card match");
@@ -3609,7 +3623,7 @@ function scanImageFile(file,options){
           });
 
           var best=matches[0];
-          if(best.similarity>=.68){
+          if(best.similarity>=.90&&(!matches[1]||matches[1].card.name===best.card.name||best.similarity-matches[1].similarity>=.08)){
             showCardResult(best.card,"SCANNED CARD");
             status.textContent="Card identified — confirm below.";
             setDeckStatus("Check the card image and printing before adding it.");
@@ -3619,10 +3633,10 @@ function scanImageFile(file,options){
 
           showScanChoices(matches.map(function(x){return x.card}),status,resolve);
         }).catch(function(err){
-          status.textContent="I couldn't read that title clearly.";
+          status.textContent="No confident match. Check the card name below or take a closer photo.";
           el("cardSearchPanel").className="cardToolPanel";
-          el("cardSearchInput").value="";
-          setDeckStatus("Try Scan This Card again with the full card inside the guide, or search by name.",true);
+          el("cardSearchInput").value=candidates.length?candidates[0].text:"";
+          setDeckStatus("Correct the name and tap Search. For another scan, keep the card upright and fill the photo with it.",true);
           reject(err);
         }).finally(function(){setTimeout(function(){URL.revokeObjectURL(url)},3000)});
       }catch(err){
