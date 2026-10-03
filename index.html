@@ -1849,9 +1849,9 @@ function loadGame(){
   }
   if(!gameState.phases||!gameState.phases.length){gameState.phases=['Beginning','Precombat','Combat','Postcombat','Ending'];}
   /* One-time migration: clear rotation overrides from the previous seat layout. */
-  if(gameState.seatLayoutVersion!==7){
+  if(gameState.seatLayoutVersion!==8){
     for(var r=0;r<gameState.players.length;r++)gameState.players[r].rotation=0;
-    gameState.seatLayoutVersion=7;
+    gameState.seatLayoutVersion=8;
     try{localStorage.setItem(GAME_KEY,JSON.stringify(gameState))}catch(e){}
   }
   if(typeof playerCreatures!=='undefined')ensurePlayerCreatureSlots();
@@ -1875,13 +1875,13 @@ function renderGame(){
         baseRotation=index===0?0:180;
       }else if(playerCount===3){
         seatOrder=index===0?3:index;
-        baseRotation=index===0?0:(index===1?270:90);
+        baseRotation=index===0?0:(index===1?90:270);
       }else if(playerCount>=4){
         /* Side-seated 2x2 table:
            P1 top-left faces left, P2 top-right faces right,
            P3 bottom-left faces left, P4 bottom-right faces right. */
         seatOrder=index+1;
-        baseRotation=index%2===0?270:90;
+        baseRotation=index%2===0?90:270;
       }
       card.style.order=String(seatOrder);
       card.dataset.sideways=String(baseRotation===90||baseRotation===270);
