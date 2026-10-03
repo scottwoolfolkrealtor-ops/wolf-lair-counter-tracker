@@ -1422,6 +1422,42 @@ body.trackerPreview #gameView button{touch-action:manipulation}
   body.trackerPreview #gameView #gameBoard .turnDie,
   body.trackerPreview #gameView #gameBoard .playerQuickRow .playerCreatures{min-height:26px}
 }
+
+/* Large side tap zones, with only the digits opening direct editing. */
+body.trackerPreview #gameView #gameBoard .lifePanel{
+  grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  gap:0;padding:0;overflow:hidden;
+}
+body.trackerPreview #gameView #gameBoard .lifeTotal.editLife{
+  width:auto;min-height:0;height:auto;align-self:center;
+  padding:0 2px;line-height:1;user-select:none;-webkit-user-select:none;
+}
+body.trackerPreview #gameView #gameBoard .lifeNudge{
+  width:100%;height:100%;min-height:0;align-self:stretch;
+  border:0;border-radius:0;box-shadow:none;background:transparent;
+  padding:0;font-size:28px;user-select:none;-webkit-user-select:none;
+}
+body.trackerPreview #gameView #gameBoard .lifeNudge:active{
+  background:rgba(var(--seat-rgb),.2);
+}
+body.trackerPreview #gameView #gameBoard .lifeNumberInput{
+  grid-column:2;align-self:center;min-width:0;max-width:5ch;
+  height:1.15em;margin:0;padding:0 2px;box-sizing:content-box;
+  font:900 56px/1 Georgia,'Times New Roman',serif;
+  text-align:center;color:#fff0d3;letter-spacing:-2px;
+  border:1px solid rgba(var(--seat-rgb),.8);border-radius:8px;
+  background:rgba(5,10,7,.9);appearance:textfield;-moz-appearance:textfield;
+}
+body.trackerPreview #gameView #gameBoard .lifeNumberInput::-webkit-inner-spin-button,
+body.trackerPreview #gameView #gameBoard .lifeNumberInput::-webkit-outer-spin-button{
+  -webkit-appearance:none;margin:0;
+}
+@media(max-width:640px){
+  body.trackerPreview #gameView #gameBoard .lifeNumberInput{
+    font-size:clamp(46px,16cqw,100px);
+  }
+}
+
 </style>
 </head>
 <body class="trackerPreview">
@@ -1919,7 +1955,12 @@ function renderGame(){
         </div>';
       // Keep counter controls mounted so repeated taps preserve focus and position.
       function updatePlayerCounters(){
-        card.querySelector('.lifeValueFace').textContent=String(player.life);
+        var lifeFace=card.querySelector('.lifeValueFace');
+        if(lifeFace)lifeFace.textContent=String(player.life);
+        else {
+          var lifeInput=card.querySelector('.lifeNumberInput');
+          if(lifeInput)lifeInput.value=String(player.life);
+        }
         card.querySelector('.commanderChip .counterValue').textContent=String(player.commander);
         card.querySelector('.poisonChip .counterValue').textContent=String(player.poison);
         card.querySelector('.commanderChip').classList.toggle('danger',player.commander>=21);
@@ -1929,24 +1970,32 @@ function renderGame(){
       card.querySelector('.lifeDown').onclick=function(){player.life--;updatePlayerCounters();};
       card.querySelector('.lifeUp').onclick=function(){player.life++;updatePlayerCounters();};
       card.querySelector('.editLife').onclick=function(){
-        var panel=card.querySelector('.lifePanel');
-        if(!panel)return;
-        panel.innerHTML='<div class="lifeEditRow"><input class="lifeEditInput" type="number" inputmode="numeric" min="-999" max="999" value="'+player.life+'" aria-label="Life total"><button class="saveLife" type="button">Save</button><button class="cancelLife" type="button">Cancel</button></div>';
-        var input=panel.querySelector('.lifeEditInput');
-        function commitLife(){
+        var numberButton=this, panel=card.querySelector('.lifePanel');
+        var input=document.createElement('input');
+        input.className='lifeEditInput lifeNumberInput';
+        input.type='number';input.inputMode='numeric';
+        input.min='-999';input.max='999';input.value=String(player.life);
+        input.setAttribute('aria-label','Life total; press Done to save');
+        input.setAttribute('enterkeyhint','done');
+        function sizeInput(){input.style.width=Math.max(2,Math.min(5,input.value.length||2))+'ch';}
+        sizeInput();
+        panel.replaceChild(input,numberButton);
+        var finished=false;
+        function finishLifeEdit(commit){
+          if(finished)return;
+          finished=true;
           var n=parseInt(input.value,10);
-          if(isNaN(n))return;
-          player.life=Math.max(-999,Math.min(999,n));
-          saveGame();
-          renderGame();
+          if(commit&&!isNaN(n))player.life=Math.max(-999,Math.min(999,n));
+          panel.replaceChild(numberButton,input);
+          updatePlayerCounters();
         }
-        panel.querySelector('.saveLife').onclick=commitLife;
-        panel.querySelector('.cancelLife').onclick=function(){renderGame();};
+        input.oninput=sizeInput;
+        input.onblur=function(){finishLifeEdit(true);};
         input.onkeydown=function(e){
-          if(e.key==='Enter'){e.preventDefault();commitLife();}
-          if(e.key==='Escape'){e.preventDefault();renderGame();}
+          if(e.key==='Enter'){e.preventDefault();input.blur();}
+          if(e.key==='Escape'){e.preventDefault();finishLifeEdit(false);}
         };
-        input.focus();
+        input.focus({preventScroll:true});
         input.select();
       };
       card.querySelector('.cmdDown').onclick=function(){player.commander=Math.max(0,player.commander-1);updatePlayerCounters();};
