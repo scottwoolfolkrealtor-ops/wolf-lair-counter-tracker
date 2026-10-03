@@ -47,6 +47,6 @@ body.trackerPreview #gameView .gameNavigation .wolfWakeButton{
 #wolfVoiceAccessDialog p,#wolfVoiceAccessDialog small{color:#c3cbb9;font-size:14px}
 #wolfVoiceAccessDialog label{display:block;margin:14px 0}
 #wolfVoiceAccessDialog input[type="password"]{display:block;box-sizing:border-box;width:100%;font:16px system-ui;background:#07120b;color:#fff3d5;border:1px solid #668060;padding:12px;border-radius:10px;margin-top:5px}
-#wolfVoiceAccessDialog input[type="checkbox"]{accent-color:#92ba7f;margin-right:8px}
+#wolfVoiceAccessDialog input[type="checkbox"]{display:inline-block;width:auto;accent-color:#92ba7f;margin:0 8px 0 0}
 #wolfVoiceAccessDialog .wolfActions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
 #wolfVoiceAccessDialog button{width:auto;min-height:44px;font:600 14px system-ui;border-radius:10px;padding:8px 14px}
