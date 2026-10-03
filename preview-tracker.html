@@ -1857,6 +1857,123 @@ body.trackerPreview #gameView .playerCreatures{border-color:rgba(var(--seat-rgb)
   body.trackerPreview #gameView .miniStep{min-height:26px;font-size:14px}
 }
 
+
+/* ===== SIDE-SEATED FOUR PLAYER ORIENTATION ===== */
+body.trackerPreview #gameView .playerFace{
+  transform:rotate(var(--player-rotation,0deg)) !important;
+}
+
+@media(max-width:640px){
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"]{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    grid-template-rows:repeat(2,minmax(0,1fr)) !important;
+  }
+
+  /* Each quadrant is portrait-shaped on a phone. The inner UI is built as
+     a landscape surface, then rotated toward the player seated at that side. */
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .playerCard{
+    position:relative;
+    container-type:size;
+    padding:0;
+    overflow:hidden;
+  }
+
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .playerFace{
+    position:absolute;
+    left:50%;
+    top:50%;
+    width:calc(100cqh - 14px);
+    height:calc(100cqw - 14px);
+    min-width:0;
+    min-height:0;
+    padding:6px;
+    box-sizing:border-box;
+    justify-content:center;
+    transform:translate(-50%,-50%) rotate(var(--player-rotation,0deg)) !important;
+    transform-origin:center center;
+  }
+
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .playerHeader{
+    flex:0 0 auto;
+    margin-bottom:3px;
+  }
+
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .lifePanel{
+    flex:0 0 auto;
+    grid-template-columns:46px minmax(0,1fr) 46px;
+    min-height:62px;
+    margin:2px 0 4px;
+    padding:3px 8px;
+  }
+
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .lifeTotal.editLife{
+    min-height:54px;
+    font-size:58px;
+  }
+
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .lifeNudge{
+    min-height:43px;
+    font-size:25px;
+  }
+
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .counterStrip{
+    flex:0 0 auto;
+    grid-template-columns:1fr 1fr;
+    gap:5px;
+  }
+
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .counterChip{
+    min-height:38px;
+    grid-template-columns:minmax(38px,1fr) 25px 30px 25px;
+    padding:3px;
+  }
+
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .counterName{
+    font-size:5.5px;
+  }
+
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .counterValue{
+    font-size:18px;
+  }
+
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .miniStep{
+    min-height:26px;
+    font-size:15px;
+  }
+
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .playerQuickRow{
+    flex:0 0 auto;
+    margin-top:4px;
+    grid-template-columns:minmax(68px,.72fr) minmax(0,1.28fr);
+    gap:4px;
+  }
+
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .turnDie,
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .playerQuickRow .playerCreatures{
+    min-height:37px;
+  }
+}
+
+@media(max-width:380px){
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .playerFace{
+    width:calc(100cqh - 10px);
+    height:calc(100cqw - 10px);
+    padding:4px;
+  }
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .lifePanel{
+    grid-template-columns:38px minmax(0,1fr) 38px;
+    min-height:54px;
+  }
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .lifeTotal.editLife{
+    min-height:48px;
+    font-size:50px;
+  }
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"] .lifeNudge{
+    min-height:37px;
+    font-size:22px;
+  }
+}
+
 </style>
 </head>
 <body class="trackerPreview">
@@ -2287,9 +2404,9 @@ function loadGame(){
   }
   if(!gameState.phases||!gameState.phases.length){gameState.phases=['Beginning','Precombat','Combat','Postcombat','Ending'];}
   /* One-time migration: clear rotation overrides from the previous seat layout. */
-  if(gameState.seatLayoutVersion!==2){
+  if(gameState.seatLayoutVersion!==3){
     for(var r=0;r<gameState.players.length;r++)gameState.players[r].rotation=0;
-    gameState.seatLayoutVersion=2;
+    gameState.seatLayoutVersion=3;
     try{localStorage.setItem(GAME_KEY,JSON.stringify(gameState))}catch(e){}
   }
   if(typeof playerCreatures!=='undefined')ensurePlayerCreatureSlots();
@@ -2315,16 +2432,17 @@ function renderGame(){
         seatOrder=index===0?3:index;
         baseRotation=index===0?0:180;
       }else if(playerCount===4){
-        /* Far side: Player 3 + Player 4. Near side: Player 1 + Player 2. */
-        var seatMap=[3,4,1,2];
-        seatOrder=seatMap[index]||index+1;
-        baseRotation=index>=2?180:0;
+        /* Side-seated 2x2 table:
+           P1 top-left faces left, P2 top-right faces right,
+           P3 bottom-left faces left, P4 bottom-right faces right. */
+        seatOrder=index+1;
+        baseRotation=(index===0||index===2)?270:90;
       }
       card.style.order=String(seatOrder);
       var finalRotation=((baseRotation+(Number(player.rotation)||0))%360+360)%360;
       var creatureCount=(playerCreatures[index]||[]).length;
       card.innerHTML='\
-        <div class="playerFace" style="transform:rotate('+finalRotation+'deg)">\
+        <div class="playerFace" style="--player-rotation:'+finalRotation+'deg">\
         <div class="playerHeader"><div class="playerIdentity"><span class="playerName">'+escapeHTML(player.name)+'</span><button class="editPlayerName" type="button" aria-label="Edit player name">EDIT</button></div><button class="rotateSeat" type="button" aria-label="Rotate player panel">↻</button><button class="resetPlayer" type="button">RESET</button></div>\
         <div class="lifePanel">\
           <button class="lifeDown lifeNudge" type="button" aria-label="Lose 1 life">−</button>\
