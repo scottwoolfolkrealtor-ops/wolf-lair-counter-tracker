@@ -40,3 +40,13 @@ body.trackerPreview #gameView .gameNavigation .wolfWakeButton{
 @keyframes wolfListenGlow{50%{filter:brightness(1.25)}}
 @keyframes wolfSpeakingGlow{to{filter:brightness(1.4);transform:scale(1.07)}}
 @media(prefers-reduced-motion:reduce){.wolfWakeButton .wolfVoiceIcon{animation:none!important}}
+
+#wolfVoiceAccessDialog{box-sizing:border-box;width:min(94vw,440px);max-height:88dvh;overflow:auto;padding:20px;border:1px solid #a88450;border-radius:20px;background:#111b15;color:#f4ead6;font:16px/1.4 system-ui}
+#wolfVoiceAccessDialog::backdrop{background:#000b}
+#wolfVoiceAccessDialog strong{font-size:23px}
+#wolfVoiceAccessDialog p,#wolfVoiceAccessDialog small{color:#c3cbb9;font-size:14px}
+#wolfVoiceAccessDialog label{display:block;margin:14px 0}
+#wolfVoiceAccessDialog input[type="password"]{display:block;box-sizing:border-box;width:100%;font:16px system-ui;background:#07120b;color:#fff3d5;border:1px solid #668060;padding:12px;border-radius:10px;margin-top:5px}
+#wolfVoiceAccessDialog input[type="checkbox"]{accent-color:#92ba7f;margin-right:8px}
+#wolfVoiceAccessDialog .wolfActions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+#wolfVoiceAccessDialog button{width:auto;min-height:44px;font:600 14px system-ui;border-radius:10px;padding:8px 14px}
