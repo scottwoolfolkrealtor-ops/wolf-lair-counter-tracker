@@ -1684,7 +1684,7 @@ body.trackerPreview #trackerView .trackerNavigation #quickGameMode:active{backgr
 body.trackerPreview #trackerView .trackerNavigation #quickGameMode:focus-visible{outline:3px solid #fff0b8;outline-offset:2px;}
 
 /* Compact red entry to each player's creatures. */
-body.trackerPreview #gameView #gameBoard .playerQuickRow .playerCreatures{
+body.trackerPreview #gameView #gameBoard .playerHeader .playerCreatures{
   width:auto;max-width:100%;justify-self:end;justify-content:center;
   padding:6px 10px;gap:7px;white-space:nowrap;
   background:linear-gradient(180deg,#ad302e,#781c21);
@@ -1694,6 +1694,13 @@ body.trackerPreview #gameView #gameBoard .playerQuickRow .playerCreatures{
 body.trackerPreview #gameView #gameBoard .playerCreatures span{color:#fff7e8;}
 body.trackerPreview #gameView #gameBoard .playerCreatures::after{margin-left:0;color:#fff0b8;}
 body.trackerPreview #gameView #gameBoard .playerCreatures:active{background:#62171c;}
+
+body.trackerPreview #gameView #gameBoard .playerHeader .playerCreatures{
+  flex:0 0 auto;margin:0;min-height:28px;padding:4px 7px;gap:5px;
+}
+body.trackerPreview #gameView #gameBoard .playerHeader{height:auto;min-height:30px;flex-wrap:nowrap;}
+body.trackerPreview #gameView #gameBoard .playerQuickRow{grid-template-columns:minmax(0,1fr) auto auto;align-items:center;}
+body.trackerPreview #gameView #gameBoard .playerQuickRow .turnDie{width:auto;justify-self:start;}
 </style>
 </head>
 <body class="trackerPreview">
@@ -2393,7 +2400,7 @@ function renderGame(){
       var creatureCount=(playerCreatures[index]||[]).length;
       card.innerHTML='\
         <div class="playerFace" style="--player-rotation:'+finalRotation+'deg">\
-        <div class="playerHeader"><div class="playerIdentity"><span class="playerName">'+escapeHTML(player.name)+'</span><button class="editPlayerName" type="button" aria-label="Edit player name">EDIT</button></div><button class="rotateSeat" type="button" aria-label="Rotate player panel">↻</button><button class="resetPlayer" type="button">RESET</button></div>\
+        <div class="playerHeader"><div class="playerIdentity"><span class="playerName">'+escapeHTML(player.name)+'</span><button class="editPlayerName" type="button" aria-label="Edit player name">EDIT</button></div><button class="playerCreatures" type="button"><span class="battlefieldLabel">CREATURES</span><span>'+creatureCount+'</span></button></div>\
         <div class="lifePanel">\
           <button class="lifeDown lifeNudge" type="button" aria-label="Lose 1 life">−</button>\
           <button class="lifeTotal editLife" type="button" aria-label="Edit life total"><span class="lifeValueFace">'+player.life+'</span></button>\
@@ -2415,7 +2422,7 @@ function renderGame(){
         </div>\
         <div class="playerQuickRow">\
           <button class="turnDie '+(player.roll===20?'critical':(player.roll===1?'fumble':''))+'" type="button" aria-label="Roll a twenty-sided die"><span class="dieIcon">D20</span><strong>'+(player.roll||'—')+'</strong></button>\
-          <button class="playerCreatures" type="button"><span class="battlefieldLabel">CREATURES</span><span>'+creatureCount+'</span></button>\
+          <button class="rotateSeat" type="button" aria-label="Rotate player panel">↻</button><button class="resetPlayer" type="button">RESET</button>\
         </div>\
         </div>';
       // Keep counter controls mounted so repeated taps preserve focus and position.
