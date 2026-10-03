@@ -2833,7 +2833,7 @@ function showCardResult(card,sourceLabel){
     closeDeckTools();
     el("scanPanel").className="cardToolPanel scanPanel";
     el("scanStatus").textContent="Fill most of the photo with the card and keep it upright.";
-    if(typeof startCardCamera==="function")startCardCamera(); else el("cardScanInput").click();
+    startReliableCardScan();
   };
 }
 function lookupScryfall(query,sourceLabel){
@@ -3555,14 +3555,13 @@ function scanImageFile(file,options){
           gx=guide[0].x;gy=guide[0].y;gw=guide[1].x-guide[0].x;gh=guide[3].y-guide[0].y;
         }
 
-        function makeTitleCanvas(yPct,hPct,filter){
-          var sx=gx+gw*.035, sy=gy+gh*yPct, sw=gw*.84, sh=gh*hPct;
+        function makeTitleCanvas(yPct,hPct){
+          var sx=gx+gw*.015, sy=gy+gh*yPct, sw=gw*.97, sh=gh*hPct;
           var out=document.createElement("canvas");
-          var titleScale=Math.min(4,Math.max(1,1600/sw));
-          out.width=Math.max(1,Math.round(sw*titleScale));
-          out.height=Math.max(1,Math.round(sh*titleScale));
+          out.width=Math.max(1,Math.round(sw*2.2));
+          out.height=Math.max(1,Math.round(sh*2.2));
           var ctx=out.getContext("2d");
-          ctx.filter=filter||"none";
+          ctx.filter="grayscale(1) contrast(1.75) brightness(1.08)";
           ctx.drawImage(full,sx,sy,sw,sh,0,0,out.width,out.height);
           ctx.filter="none";
           return out;
@@ -3571,25 +3570,22 @@ function scanImageFile(file,options){
         // A phone photo's aspect ratio does not locate the card inside it.
         // Sparse-text OCR reads names anywhere in an uncropped photo.
         var passes=[
-          {image:makeTitleCanvas(.018,.075),mode:"7",title:true},
-          {image:makeTitleCanvas(.018,.075,"grayscale(1) contrast(1.3)"),mode:"7",title:true},
-          {image:makeTitleCanvas(0,.16),mode:"11",title:true},
-          {image:makeTitleCanvas(0,.30),mode:"11",title:true}
+          {image:makeTitleCanvas(.025,.09),mode:"7"},
+          {image:makeTitleCanvas(0,.18),mode:"11"},
+          {image:makeTitleCanvas(0,.34),mode:"11"}
         ];
         if(!options.alreadyCropped)passes.unshift({image:full,mode:"11"});
         else passes.push({image:full,mode:"11"});
 
-        var candidates=[], earlyMatch=null, readingTitle=false;
+        var candidates=[];
         function addCandidate(txt,confidence){
           txt=String(txt||"").replace(/[^A-Za-z0-9'’,:\- ]+/g," ").replace(/\s+/g," ").trim();
-          // Stats, collector numbers and mana symbols are never useful title guesses.
           if(txt.length<3||txt.length>60||!/[A-Za-z]{3}/.test(txt))return;
-          txt=txt.replace(/\s+[0-9 ]+$/,"").trim();
           var low=txt.toLowerCase();
           if(/^(target|when|whenever|until|tap|add|draw|you|your|each)\b/.test(low)||/^(creature|instant|sorcery|enchantment|artifact|land|planeswalker)$/.test(low))return;
           var existing=candidates.find(function(x){return x.text.toLowerCase()===low;});
-          if(existing){existing.confidence=Math.max(existing.confidence,confidence||0);existing.title=existing.title||readingTitle;}
-          else candidates.push({text:txt,confidence:confidence||0,title:readingTitle});
+          if(existing)existing.confidence=Math.max(existing.confidence,confidence||0);
+          else candidates.push({text:txt,confidence:confidence||0});
         }
         function collectOCR(data){
           if(!data)return;
@@ -3605,31 +3601,17 @@ function scanImageFile(file,options){
         warmOCRWorker().then(function(worker){
           var pass=0;
           function nextPass(){
-            if(earlyMatch||pass>=passes.length)return Promise.resolve();
+            if(pass>=passes.length)return Promise.resolve();
             var current=passes[pass++];
             status.textContent="Reading title… "+Math.round(pass/passes.length*90)+"%";
             var prep=worker.setParameters?worker.setParameters({tessedit_pageseg_mode:current.mode}):Promise.resolve();
             return Promise.resolve(prep).then(function(){return worker.recognize(current.image)})
-               .then(function(result){
-                readingTitle=!!current.title;collectOCR(result&&result.data);
-                // Only a confident, exact title-bar read may skip the remaining passes.
-                if(options.alreadyCropped&&pass===1&&candidates.length===1&&candidates[0].confidence>=85){
-                  var candidate=candidates[0];
-                  return fetch("https://api.scryfall.com/cards/named?exact="+encodeURIComponent(candidate.text))
-                    .then(function(r){if(!r.ok)return null;return r.json();})
-                    .then(function(card){
-                      if(card&&nameSimilarity(candidate.text,card.name)===1)earlyMatch={card:card,ocr:candidate.text,similarity:1,confidence:candidate.confidence};
-                    }).catch(function(){})
-                    .then(nextPass);
-                }
-                return nextPass();
-              })
+              .then(function(result){collectOCR(result&&result.data);return nextPass()})
               .catch(function(){return nextPass()});
           }
           return nextPass();
         }).then(function(){
-          if(earlyMatch)return [earlyMatch];
-          candidates.sort(function(a,b){return Number(b.title)-Number(a.title)||b.confidence-a.confidence;});
+          candidates.sort(function(a,b){return b.confidence-a.confidence;});
           candidates=candidates.slice(0,12);
           if(!candidates.length)throw new Error("Could not read the title");
           status.textContent="Checking card name…";
@@ -3694,7 +3676,7 @@ function startReliableCardScan(){
   var input=el("cardScanInput");
   if(input){input.value="";input.click();}
 }
-el("scanCardBtn").onclick=startCardCamera;
+el("scanCardBtn").onclick=startReliableCardScan;
 el("manualCapture").onclick=function(){
   if(autoCaptureBusy)return;
   autoCaptureBusy=true;
