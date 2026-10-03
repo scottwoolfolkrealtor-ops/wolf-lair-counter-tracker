@@ -5,8 +5,10 @@ import {readFileSync} from 'node:fs';
 const source=readFileSync(new URL('./wolf.js',import.meta.url),'utf8');
 const ACCESS='private-code-only-for-voice-unit-tests';
 const KEY='wolfLairPrivateAccess1';
-function setup({saved=new Map(),fetcher,storageBlocked=false}={}){
- const nodes=new Map(),recognizers=[],timers=new Map(),spoken=[],calls=[],docEvents=new Map(),pageEvents=new Map();
+function setup({saved=new Map(),fetcher,storageBlocked=false,requiresSpeechGesture=false}={}){
+ const nodes=new Map(),recognizers=[],timers=new Map(),spoken=[],greetings=[],calls=[],docEvents=new Map(),pageEvents=new Map();
+ let gesture=false,unlocked=false;
+ function userGesture(fn){gesture=true;try{return fn();}finally{gesture=false;}}
  let serial=0;const submissions=[],rowsByRecognition=new WeakMap();
  class Node{
   constructor(tag){this.tag=tag;this.children=[];this.handlers={};this.value='';this.checked=false;this.open=false;this.textContent='';this.attrs={};}
@@ -34,7 +36,13 @@ function setup({saved=new Map(),fetcher,storageBlocked=false}={}){
   start(){this.started=true;if(this.onstart)this.onstart();}
   abort(){this.aborted=true;}
  }
- const speech={cancel(){},getVoices:()=>[],speak:u=>spoken.push(u)};
+ const speech={autoStart:true,autoEndGreeting:true,cancelCount:0,resumeCount:0,paused:false,cancel(){this.cancelCount++;},resume(){this.resumeCount++;this.paused=false;},getVoices:()=>[],speak(u){
+  const welcome=u.text==='Wolf is ready.';(welcome?greetings:spoken).push(u);
+  if(requiresSpeechGesture&&!unlocked&&!gesture)return;
+  if(gesture)unlocked=true;
+  if(this.autoStart&&u.onstart)u.onstart();
+  if(welcome&&this.autoEndGreeting&&u.onend)u.onend();
+ }};
  const window={
   SpeechRecognition:Recognition,speechSynthesis:speech,SpeechSynthesisUtterance:class{constructor(text){this.text=text;}},
   getWolfGameContext:()=>({selectedPlayerIndex:2,battlefieldComplete:false,players:[{index:0,name:'Scott',life:40,trackedCreatures:[]}]}),
@@ -51,11 +59,12 @@ function setup({saved=new Map(),fetcher,storageBlocked=false}={}){
  function runRestart(){for(const [id,t] of [...timers])if(t.delay===500){timers.delete(id);t.fn();}}
  const dialog=document.body.children[0];
  function result(words){const current=recognizers.at(-1),rows=rowsByRecognition.get(current)||[];const row=[{transcript:words}];row.isFinal=true;rows.push(row);rowsByRecognition.set(current,rows);current.onresult({resultIndex:rows.length-1,results:rows});}
- async function submit(){get('wolfQuestion').value='How do these counters work?';if(!get('wolfAccess').value)get('wolfAccess').value=ACCESS;return get('wolfQuestionForm').onsubmit({preventDefault(){}});}
+ async function submit(){get('wolfQuestion').value='How do these counters work?';if(!get('wolfAccess').value)get('wolfAccess').value=ACCESS;return userGesture(()=>get('wolfQuestionForm').onsubmit({preventDefault(){}}));}
  function runAuto(){for(const [id,t] of [...timers])if(t.delay===1400){timers.delete(id);t.fn();}}
  const accessDialog=document.body.children[1];
- function saveVoice(code=ACCESS,remember=true){get('wolfVoiceAccessCode').value=code;get('wolfVoiceRemember').checked=remember;get('wolfVoiceAccessForm').onsubmit({preventDefault(){}});}
- return {get,game,tracker,dialog,accessDialog,document,docEvents,pageEvents,askGame,recognizers,timers,spoken,calls,result,submit,saveVoice,runRestart,runAuto,submissions,wake:()=>game.children[0].onclick(),saved};
+ function saveVoice(code=ACCESS,remember=true){get('wolfVoiceAccessCode').value=code;get('wolfVoiceRemember').checked=remember;userGesture(()=>get('wolfVoiceAccessForm').onsubmit({preventDefault(){}}));}
+ function runSpeechTimer(delay){for(const [id,t] of [...timers])if(t.delay===delay){timers.delete(id);t.fn();}}
+ return {get,game,tracker,dialog,accessDialog,document,docEvents,pageEvents,askGame,recognizers,timers,speech,spoken,greetings,calls,result,submit,saveVoice,runRestart,runAuto,runSpeechTimer,submissions,wake:()=>userGesture(()=>game.children[0].onclick()),saved};
 }
 test('valid code persists across visits, forget removes it and no listening starts by itself',async()=>{
  const x=setup();await x.submit();assert.equal(x.saved.get(KEY),ACCESS);
@@ -217,4 +226,55 @@ test('a successful remembered test-page answer supplies access to battlefield vo
 test('the test page respects forgetting and clears rejected credentials',async()=>{
  const saved=new Map([[KEY,ACCESS]]),page=setupTestPage(saved);page.get('remember').checked=false;page.get('remember').onchange.call(page.get('remember'));page.get('question').value='How many counters?';await page.submit();assert.equal(saved.has(KEY),false);
  saved.set(KEY,ACCESS);const rejected=setupTestPage(saved,()=>Response.json({error:'Invalid code'},{status:401}));rejected.get('question').value='How many counters?';await rejected.submit();assert.equal(saved.has(KEY),false);assert.equal(rejected.get('code').value,'');
+});
+
+test('voice activation prepares speech from the tap and waits for the greeting before listening',()=>{
+ const x=setup({saved:new Map([[KEY,ACCESS]]),requiresSpeechGesture:true});x.speech.autoEndGreeting=false;x.wake();
+ assert.equal(x.greetings.length,1);assert.equal(x.greetings[0].text,'Wolf is ready.');assert.equal(x.game.children[0].attrs['data-state'],'speaking');assert.equal(x.recognizers.length,0);
+ x.greetings[0].onend();assert.equal(x.recognizers.length,1);assert.equal(x.game.children[0].attrs['data-state'],'listening');assert.equal(x.calls.length,0);
+});
+test('an asynchronously received answer can speak after voice activation unlocks the engine',async()=>{
+ const x=setup({saved:new Map([[KEY,ACCESS]]),requiresSpeechGesture:true});x.wake();x.result('Hey Wolf check my counters');x.runAuto();await Promise.all(x.submissions);
+ assert.equal(x.spoken.length,1);assert.equal(x.game.children[0].attrs['data-state'],'speaking');assert.equal(x.dialog.open,false);assert.equal(x.calls.length,1);
+});
+test('saving the access code also prepares speech from that same user gesture',async()=>{
+ const x=setup({requiresSpeechGesture:true});x.wake();x.saveVoice();x.result('Hey Wolf check my counters');x.runAuto();await Promise.all(x.submissions);
+ assert.equal(x.greetings.length,1);assert.equal(x.game.children[0].attrs['data-state'],'speaking');assert.equal(x.saved.get(KEY),ACCESS);
+});
+test('silent speech start recovers on the battlefield, and tapping replays without another paid request',async()=>{
+ const x=setup({saved:new Map([[KEY,ACCESS]])});x.wake();x.speech.autoStart=false;x.result('Hey Wolf check my counters');x.runAuto();await Promise.all(x.submissions);
+ assert.equal(x.game.children[0].attrs['data-state'],'queued');assert.doesNotMatch(x.game.status.textContent,/Reading Wolf/);
+ x.runSpeechTimer(4500);assert.equal(x.game.children[0].attrs['data-state'],'answer');assert.match(x.game.status.textContent,/answer is ready/);assert.equal(x.dialog.open,false);
+ x.runRestart();assert.equal(x.recognizers.length,1);
+ x.speech.autoStart=true;x.wake();assert.equal(x.spoken.length,2);assert.equal(x.spoken[1].text,x.spoken[0].text);assert.equal(x.calls.length,1);assert.equal(x.game.children[0].attrs['data-state'],'speaking');
+ x.spoken[1].onend();x.runRestart();assert.equal(x.recognizers.length,2);assert.equal(x.dialog.open,false);
+});
+test('an end event without a start event does not pretend that audio played',async()=>{
+ const x=setup({saved:new Map([[KEY,ACCESS]])});x.wake();x.speech.autoStart=false;x.result('Hey Wolf check my counters');x.runAuto();await Promise.all(x.submissions);x.spoken[0].onend();
+ assert.equal(x.game.children[0].attrs['data-state'],'answer');assert.match(x.game.status.textContent,/Tap Wolf/);x.runRestart();assert.equal(x.recognizers.length,1);
+});
+test('missing speech completion recovers and stale events cannot interrupt a replay',async()=>{
+ const x=setup({saved:new Map([[KEY,ACCESS]])});x.wake();x.result('Hey Wolf check my counters');x.runAuto();await Promise.all(x.submissions);
+ const staleEnd=x.spoken[0].onend;x.runSpeechTimer(10000);assert.equal(x.game.children[0].attrs['data-state'],'answer');x.wake();staleEnd();
+ assert.equal(x.game.children[0].attrs['data-state'],'speaking');assert.equal(x.calls.length,1);
+ x.spoken[1].onend();x.runRestart();assert.equal(x.recognizers.length,2);
+});
+test('replacing speech waits for cancellation to settle before queuing the new utterance',async()=>{
+ const x=setup({saved:new Map([[KEY,ACCESS]])});x.speech.autoEndGreeting=false;x.wake();await x.submit();
+ assert.equal(x.spoken.length,0);assert.equal(x.speech.cancelCount,1);x.runSpeechTimer(150);assert.equal(x.spoken.length,1);assert.equal(x.game.children[0].attrs['data-state'],'speaking');
+});
+test('turning voice off cancels a delayed speech replacement',async()=>{
+ const x=setup({saved:new Map([[KEY,ACCESS]])});x.speech.autoEndGreeting=false;x.wake();await x.submit();x.get('wolfStop').onclick();x.runSpeechTimer(150);
+ assert.equal(x.spoken.length,0);assert.equal(x.game.children[0].attrs['data-state'],'off');
+});
+test('a paused synthesis engine resumes before speaking and an idle engine is not canceled',async()=>{
+ const x=setup({saved:new Map([[KEY,ACCESS]])});x.wake();x.speech.paused=true;x.result('Hey Wolf check my counters');x.runAuto();await Promise.all(x.submissions);
+ assert.equal(x.speech.resumeCount,1);assert.equal(x.speech.cancelCount,0);assert.equal(x.game.children[0].attrs['data-state'],'speaking');
+});
+test('a backend error remains visible when error playback cannot start',async()=>{
+ const x=setup({saved:new Map([[KEY,ACCESS]]),fetcher:()=>Response.json({error:'Private test limit reached'},{status:429})});x.wake();x.speech.autoStart=false;x.result('Hey Wolf check my counters');x.runAuto();await Promise.all(x.submissions);x.runSpeechTimer(4500);
+ assert.match(x.game.status.textContent,/Private test limit reached/);assert.equal(x.dialog.open,false);assert.equal(x.calls.length,1);
+});
+test('both voice buttons use the original wolf-head asset',()=>{
+ const x=setup();for(const nav of [x.game,x.tracker]){const icon=nav.children[0].children[0];assert.equal(icon.textContent,'');assert.equal(icon.children[0].src,'./wolf/wolf-head.svg?v=9');}
 });
