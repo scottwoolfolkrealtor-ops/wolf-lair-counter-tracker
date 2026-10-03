@@ -1690,6 +1690,173 @@ body.trackerPreview #gameView .playerQuickRow .playerCreatures{margin:0;min-heig
   body.trackerPreview #gameView .turnDie strong{font-size:16px}
 }
 
+
+/* ===== BATTLEFIELD COMMAND — PRODUCTION UI PASS ===== */
+body.trackerPreview #gameView .playerCard{
+  --seat-rgb:127,179,106;
+  position:relative;isolation:isolate;overflow:hidden;
+  border:1px solid rgba(var(--seat-rgb),.60);
+  background:
+    linear-gradient(145deg,rgba(14,22,16,.78),rgba(4,8,6,.91)),
+    radial-gradient(circle at 50% 18%,rgba(var(--seat-rgb),.20),transparent 48%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),inset 0 0 30px rgba(0,0,0,.18),0 8px 22px rgba(0,0,0,.30);
+}
+body.trackerPreview #gameView .playerCard::before{
+  content:"";position:absolute;inset:5px;z-index:-1;pointer-events:none;border-radius:inherit;
+  border:1px solid rgba(var(--seat-rgb),.22);
+  background:
+    linear-gradient(135deg,transparent 0 47%,rgba(var(--seat-rgb),.09) 49% 51%,transparent 53%),
+    radial-gradient(circle at 50% 50%,transparent 0 58%,rgba(0,0,0,.14) 76%,transparent 78%);
+}
+body.trackerPreview #gameView .playerCard::after{
+  content:"";position:absolute;left:18%;right:18%;top:7px;height:2px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(var(--seat-rgb),.88),#c8a46d,rgba(var(--seat-rgb),.88),transparent);
+  opacity:.82;box-shadow:0 0 10px rgba(var(--seat-rgb),.40);
+}
+body.trackerPreview #gameView .playerCard[data-seat-index="0"]{--seat-rgb:127,179,106}
+body.trackerPreview #gameView .playerCard[data-seat-index="1"]{--seat-rgb:193,141,85}
+body.trackerPreview #gameView .playerCard[data-seat-index="2"]{--seat-rgb:111,168,160}
+body.trackerPreview #gameView .playerCard[data-seat-index="3"]{--seat-rgb:154,111,124}
+body.trackerPreview #gameView .playerCard[data-seat-index="4"]{--seat-rgb:127,143,183}
+body.trackerPreview #gameView .playerCard[data-seat-index="5"]{--seat-rgb:158,164,95}
+body.trackerPreview #gameView .playerFace{position:relative;z-index:1;transition:transform .18s ease}
+body.trackerPreview #gameView .playerHeader{
+  padding:2px 2px 4px;border-bottom:1px solid rgba(var(--seat-rgb),.28);
+}
+body.trackerPreview #gameView .playerName{
+  color:#f5ead8;text-shadow:0 1px 8px rgba(0,0,0,.68);letter-spacing:.25px;
+}
+body.trackerPreview #gameView .rotateSeat{
+  min-width:30px;padding:4px 6px;border-color:rgba(var(--seat-rgb),.50);
+  background:linear-gradient(180deg,rgba(38,45,34,.94),rgba(11,16,12,.97));
+  color:#d9c39d;font-size:15px;line-height:1;
+}
+
+/* Life is intentionally the dominant control */
+body.trackerPreview #gameView .lifePanel{
+  position:relative;border:1px solid rgba(var(--seat-rgb),.50);border-radius:18px;
+  background:radial-gradient(circle at 50% 45%,rgba(var(--seat-rgb),.18),transparent 54%),linear-gradient(180deg,rgba(7,13,9,.67),rgba(2,6,4,.80));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.024),inset 0 -12px 28px rgba(0,0,0,.22),0 4px 14px rgba(0,0,0,.22);
+}
+body.trackerPreview #gameView .lifePanel::before,
+body.trackerPreview #gameView .lifePanel::after{
+  content:"✦";position:absolute;top:50%;transform:translateY(-50%);
+  color:rgba(var(--seat-rgb),.86);opacity:.8;font-size:11px;pointer-events:none;
+}
+body.trackerPreview #gameView .lifePanel::before{left:6px}
+body.trackerPreview #gameView .lifePanel::after{right:6px}
+body.trackerPreview #gameView .lifeTotal.editLife{
+  color:#fff0d3;font-family:Georgia,'Times New Roman',serif;letter-spacing:-2px;
+  text-shadow:0 2px 0 rgba(0,0,0,.48),0 0 14px rgba(var(--seat-rgb),.36);
+}
+body.trackerPreview #gameView .lifeNudge{
+  border-radius:13px;border-color:rgba(var(--seat-rgb),.46);
+  background:linear-gradient(180deg,rgba(42,49,36,.97),rgba(10,14,11,.99));
+  color:#ead8b8;box-shadow:inset 0 1px 0 rgba(255,255,255,.045);
+}
+
+/* Commander and poison are status crests, not generic stat boxes */
+body.trackerPreview #gameView .counterStrip{gap:6px}
+body.trackerPreview #gameView .counterChip{
+  position:relative;overflow:hidden;display:grid;
+  grid-template-columns:minmax(42px,1fr) 28px 34px 28px;
+  align-items:center;gap:3px;min-height:42px;padding:4px 5px;border-radius:11px;
+}
+body.trackerPreview #gameView .counterChip::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(115deg,rgba(255,255,255,.04),transparent 35%,rgba(255,255,255,.018) 58%,transparent 70%);
+}
+body.trackerPreview #gameView .commanderChip{
+  border-color:rgba(198,155,82,.68);
+  background:radial-gradient(circle at 18% 50%,rgba(209,163,82,.20),transparent 44%),linear-gradient(180deg,rgba(49,38,23,.92),rgba(15,13,9,.95));
+  box-shadow:inset 0 0 18px rgba(170,120,48,.09);
+}
+body.trackerPreview #gameView .poisonChip{
+  border-color:rgba(98,184,92,.65);
+  background:radial-gradient(circle at 18% 50%,rgba(91,205,94,.20),transparent 44%),linear-gradient(180deg,rgba(20,48,25,.92),rgba(7,17,9,.96));
+  box-shadow:inset 0 0 18px rgba(67,176,70,.09);
+}
+body.trackerPreview #gameView .counterIdentity{
+  min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+}
+body.trackerPreview #gameView .counterIcon{width:20px;height:20px}
+body.trackerPreview #gameView .counterIcon svg{width:20px;height:20px}
+body.trackerPreview #gameView .commanderChip .counterIcon svg{stroke:#e3be76}
+body.trackerPreview #gameView .poisonChip .counterIcon svg{stroke:#8fe18a}
+body.trackerPreview #gameView .counterName{
+  display:block;font-size:6px;font-weight:900;letter-spacing:.62px;line-height:1;text-transform:uppercase;white-space:nowrap;
+}
+body.trackerPreview #gameView .commanderChip .counterName{color:#d7b575}
+body.trackerPreview #gameView .poisonChip .counterName{color:#85d982}
+body.trackerPreview #gameView .counterValue{
+  position:relative;z-index:1;text-align:center;font-size:20px;font-weight:950;line-height:1;color:#f4ead9;
+  text-shadow:0 1px 8px rgba(0,0,0,.60);
+}
+body.trackerPreview #gameView .miniStep{
+  position:relative;z-index:1;min-height:30px;border-radius:8px;font-size:17px;background:rgba(5,8,6,.74);
+}
+body.trackerPreview #gameView .commanderChip .miniStep{border-color:rgba(198,155,82,.44);color:#e1c28a}
+body.trackerPreview #gameView .poisonChip .miniStep{border-color:rgba(98,184,92,.42);color:#9be297}
+body.trackerPreview #gameView .counterChip.danger{
+  animation:dangerPulse 1.7s ease-in-out infinite alternate;
+}
+body.trackerPreview #gameView .commanderChip.danger{
+  border-color:#e5755d;box-shadow:0 0 14px rgba(229,117,93,.36),inset 0 0 18px rgba(229,117,93,.12);
+}
+body.trackerPreview #gameView .poisonChip.danger{
+  border-color:#a6ef78;box-shadow:0 0 14px rgba(126,225,92,.36),inset 0 0 18px rgba(126,225,92,.12);
+}
+@keyframes dangerPulse{from{filter:brightness(1)}to{filter:brightness(1.14)}}
+body.trackerPreview #gameView .turnDie{border-color:rgba(var(--seat-rgb),.50)}
+body.trackerPreview #gameView .turnDie .dieIcon{box-shadow:inset 0 0 0 1px rgba(var(--seat-rgb),.68)}
+body.trackerPreview #gameView .playerCreatures{border-color:rgba(var(--seat-rgb),.54)}
+
+@media(max-width:640px){
+  body.trackerPreview #gameView .gameBoard{align-items:stretch !important}
+  body.trackerPreview #gameView .gameBoard[data-player-count="2"]{
+    grid-template-columns:1fr !important;grid-template-rows:repeat(2,minmax(0,1fr)) !important;
+  }
+  body.trackerPreview #gameView .gameBoard[data-player-count="3"]{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;grid-template-rows:repeat(2,minmax(0,1fr)) !important;
+  }
+  body.trackerPreview #gameView .gameBoard[data-player-count="3"] .playerCard[data-seat-index="0"]{grid-column:1 / -1 !important}
+  body.trackerPreview #gameView .gameBoard[data-player-count="4"]{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;grid-template-rows:repeat(2,minmax(0,1fr)) !important;
+  }
+  body.trackerPreview #gameView .playerCard{padding:7px;border-radius:14px}
+  body.trackerPreview #gameView .playerHeader{min-height:28px;margin-bottom:5px}
+  body.trackerPreview #gameView .playerName{font-size:13px}
+  body.trackerPreview #gameView .editPlayerName,
+  body.trackerPreview #gameView .resetPlayer{min-height:25px;padding:3px 6px;font-size:7px}
+  body.trackerPreview #gameView .rotateSeat{min-height:25px;min-width:28px;padding:2px 5px;font-size:14px}
+  body.trackerPreview #gameView .lifePanel{
+    grid-template-columns:42px minmax(0,1fr) 42px;min-height:72px;margin:3px 0 5px;padding:4px 8px;
+  }
+  body.trackerPreview #gameView .lifeTotal.editLife{min-height:62px;font-size:60px}
+  body.trackerPreview #gameView .lifeNudge{min-height:47px;font-size:26px}
+  body.trackerPreview #gameView .counterStrip{gap:6px}
+  body.trackerPreview #gameView .counterChip{
+    min-height:42px;grid-template-columns:minmax(40px,1fr) 27px 32px 27px;padding:4px;
+  }
+  body.trackerPreview #gameView .counterValue{font-size:19px}
+  body.trackerPreview #gameView .miniStep{min-height:29px;font-size:16px}
+  body.trackerPreview #gameView .playerQuickRow{margin-top:5px;gap:5px}
+  body.trackerPreview #gameView .turnDie,
+  body.trackerPreview #gameView .playerQuickRow .playerCreatures{min-height:42px}
+}
+@media(max-width:380px){
+  body.trackerPreview #gameView .playerName{font-size:11px}
+  body.trackerPreview #gameView .lifePanel{grid-template-columns:36px minmax(0,1fr) 36px;min-height:64px;padding:3px 6px}
+  body.trackerPreview #gameView .lifeTotal.editLife{font-size:52px;min-height:56px}
+  body.trackerPreview #gameView .lifeNudge{min-height:42px;font-size:23px}
+  body.trackerPreview #gameView .counterChip{grid-template-columns:32px 24px 28px 24px;gap:2px;min-height:38px}
+  body.trackerPreview #gameView .counterName{font-size:5px;letter-spacing:.35px}
+  body.trackerPreview #gameView .counterIcon,
+  body.trackerPreview #gameView .counterIcon svg{width:17px;height:17px}
+  body.trackerPreview #gameView .counterValue{font-size:17px}
+  body.trackerPreview #gameView .miniStep{min-height:26px;font-size:14px}
+}
+
 </style>
 </head>
 <body class="trackerPreview">
@@ -2132,24 +2299,40 @@ function renderGame(){
     (function(player,index){
       var card=document.createElement('div');
       card.className='playerCard';
+      card.setAttribute('data-seat-index',String(index));
+      var playerCount=gameState.players.length;
+      var seatOrder=index+1, baseRotation=0;
+      if(playerCount===2){
+        seatOrder=index===0?2:1;
+        baseRotation=index===0?0:180;
+      }else if(playerCount===3){
+        seatOrder=index===0?3:index;
+        baseRotation=index===0?0:180;
+      }else if(playerCount===4){
+        var seatMap=[3,1,2,4];
+        seatOrder=seatMap[index]||index+1;
+        baseRotation=(index===1||index===2)?180:0;
+      }
+      card.style.order=String(seatOrder);
+      var finalRotation=((baseRotation+(Number(player.rotation)||0))%360+360)%360;
       var creatureCount=(playerCreatures[index]||[]).length;
       card.innerHTML='\
-        <div class="playerFace">\
-        <div class="playerHeader"><div class="playerIdentity"><span class="playerName">'+escapeHTML(player.name)+'</span><button class="editPlayerName" type="button" aria-label="Edit player name">EDIT</button></div><button class="resetPlayer" type="button">RESET</button></div>\
+        <div class="playerFace" style="transform:rotate('+finalRotation+'deg)">\
+        <div class="playerHeader"><div class="playerIdentity"><span class="playerName">'+escapeHTML(player.name)+'</span><button class="editPlayerName" type="button" aria-label="Edit player name">EDIT</button></div><button class="rotateSeat" type="button" aria-label="Rotate player panel">↻</button><button class="resetPlayer" type="button">RESET</button></div>\
         <div class="lifePanel">\
           <button class="lifeDown lifeNudge" type="button" aria-label="Lose 1 life">−</button>\
           <button class="lifeTotal editLife" type="button" aria-label="Edit life total">'+player.life+'</button>\
           <button class="lifeUp lifeNudge" type="button" aria-label="Gain 1 life">＋</button>\
         </div>\
         <div class="counterStrip">\
-          <div class="counterChip commanderChip">\
-            <span class="counterIcon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 18h14M7 16l-2-9 5 4 2-6 2 6 5-4-2 9H7z"/></svg></span>\
+          <div class="counterChip commanderChip '+(player.commander>=21?'danger':'')+'">\
+            <span class="counterIdentity"><span class="counterIcon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 18h14M7 16l-2-9 5 4 2-6 2 6 5-4-2 9H7z"/></svg></span><span class="counterName">Commander</span></span>\
             <button class="cmdDown miniStep" type="button" aria-label="Remove 1 commander damage">−</button>\
             <span class="counterValue">'+player.commander+'</span>\
             <button class="cmdUp miniStep" type="button" aria-label="Add 1 commander damage">＋</button>\
           </div>\
-          <div class="counterChip poisonChip">\
-            <span class="counterIcon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3c-4 0-7 3-7 6.6 0 2.2 1.1 4.1 3 5.3V18h2v3h4v-3h2v-3.1c1.9-1.2 3-3.1 3-5.3C19 6 16 3 12 3z"/><circle cx="9.4" cy="9.7" r="1.4"/><circle cx="14.6" cy="9.7" r="1.4"/><path d="M10 14h4"/></svg></span>\
+          <div class="counterChip poisonChip '+(player.poison>=10?'danger':'')+'">\
+            <span class="counterIdentity"><span class="counterIcon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3c-4 0-7 3-7 6.6 0 2.2 1.1 4.1 3 5.3V18h2v3h4v-3h2v-3.1c1.9-1.2 3-3.1 3-5.3C19 6 16 3 12 3z"/><circle cx="9.4" cy="9.7" r="1.4"/><circle cx="14.6" cy="9.7" r="1.4"/><path d="M10 14h4"/></svg></span><span class="counterName">Poison</span></span>\
             <button class="poisonDown miniStep" type="button" aria-label="Remove 1 poison counter">−</button>\
             <span class="counterValue">'+player.poison+'</span>\
             <button class="poisonUp miniStep" type="button" aria-label="Add 1 poison counter">＋</button>\
@@ -2187,6 +2370,7 @@ function renderGame(){
       card.querySelector('.cmdUp').onclick=function(){player.commander++;saveGame();renderGame();};
       card.querySelector('.poisonDown').onclick=function(){player.poison=Math.max(0,player.poison-1);saveGame();renderGame();};
       card.querySelector('.poisonUp').onclick=function(){player.poison++;saveGame();renderGame();};
+      card.querySelector('.rotateSeat').onclick=function(){player.rotation=((Number(player.rotation)||0)+180)%360;saveGame();renderGame();};
       card.querySelector('.resetPlayer').onclick=function(){player.life=40;player.commander=0;player.poison=0;saveGame();renderGame();};
       card.querySelector('.editPlayerName').onclick=function(){
         var identity=card.querySelector('.playerIdentity');
