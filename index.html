@@ -1710,6 +1710,7 @@ body.trackerPreview #decksView #cameraLight[aria-pressed="true"]{background:#715
 
 #scanTiming{margin:8px 0;padding:8px 12px;font-size:12px;color:#c9c9b8;}#scanTiming summary{cursor:pointer;}#scanTimingText{padding-top:6px;line-height:1.5;}
 </style>
+<link rel="stylesheet" href="./wolf/wolf.css">
 </head>
 <body class="trackerPreview">
 <section id="home">
@@ -1935,7 +1936,7 @@ body.trackerPreview #decksView #cameraLight[aria-pressed="true"]{background:#715
 <div class="playerTrackerSurface">
 <main>
 <div class="trackerNavigation"><button id="backHome" class="backHome" type="button">‹ Wolf Lair Home</button>
-<button id="quickGameMode" class="quickSwitch" type="button">GAME MODE ›</button><button class="soundToggle" type="button" aria-label="Mute sound effects" aria-pressed="true">Sound on</button></div>
+<button class="askWolf" type="button">Ask Wolf</button><button id="quickGameMode" class="quickSwitch" type="button">GAME MODE ›</button><button class="soundToggle" type="button" aria-label="Mute sound effects" aria-pressed="true">Sound on</button></div>
 <header class="trackerTitle">
   <div id="activePlayerLabel" class="trackerBrand">PLAYER 1 • THE WOLF LAIR</div>
   <h1>BATTLEFIELD COMMAND</h1>
@@ -1958,7 +1959,7 @@ body.trackerPreview #decksView #cameraLight[aria-pressed="true"]{background:#715
 
 <section id="gameView" class="hidden">
   <main>
-    <div class="gameNavigation"><button id="backGameHome" class="backHome" type="button">‹ Wolf Lair Home</button><button class="soundToggle" type="button" aria-label="Mute sound effects" aria-pressed="true">Sound on</button></div>
+    <div class="gameNavigation"><button class="askWolf" type="button">Ask Wolf</button><button id="backGameHome" class="backHome" type="button">‹ Wolf Lair Home</button><button class="soundToggle" type="button" aria-label="Mute sound effects" aria-pressed="true">Sound on</button></div>
     <header class="gameTitle tableCommandTitle">
   <div class="trackerBrand">THE WOLF LAIR</div>
   <h1>BATTLEFIELD COMMAND</h1>
@@ -3826,6 +3827,28 @@ el("cardScanInput").onchange=function(){
   this.value="";
 };
 document.addEventListener("visibilitychange",function(){if(document.hidden)stopCardCamera()});
+window.getWolfGameContext=function(){
+  function number(value){var n=Number(value);return Number.isFinite(n)?n:0;}
+  return {
+    version:1,
+    capturedAt:new Date().toISOString(),
+    battlefieldComplete:false,
+    coverageNote:"Tracked entries are partial. Missing entries mean unknown, not absent. Ask only for missing facts relevant to the question.",
+    selectedPlayerIndex:activePlayerIndex,
+    players:gameState.players.map(function(player,index){
+      return {
+        index:index,name:String(player.name||"Player "+(index+1)),
+        life:number(player.life),commanderDamage:number(player.commander),poison:number(player.poison),
+        battlefieldComplete:false,
+        trackedCreatures:(playerCreatures[index]||[]).map(function(c){
+          return {id:String(c.id),name:String(c.name),basePower:number(c.p),baseToughness:number(c.t),
+            plusOneCounters:number(c.c),displayedPower:number(c.p)+number(c.c),displayedToughness:number(c.t)+number(c.c),
+            counterLinks:(c.links||[]).map(String)};
+        })
+      };
+    })
+  };
+};
 loadDecks();
 loadGame();
 load();render();
@@ -4031,6 +4054,7 @@ renderGame();
 })();
 </script>
 
+<script src="./wolf/wolf.js"></script>
 </body>
 </html>
 
