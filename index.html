@@ -78,6 +78,23 @@ nav button{min-height:52px}button:disabled{opacity:.4}
 .phaseBanner{text-align:center;border:1px solid #45604d;border-radius:12px;background:#0b1710;padding:12px}
 .phaseBanner strong{display:block;font-size:14px;color:#aebcaf;text-transform:uppercase;letter-spacing:2px;margin-bottom:6px}
 .phaseBanner span{font-size:22px;font-weight:800}
+.gameStatePanel{border:1px solid rgba(190,136,73,.45);border-radius:16px;padding:12px;background:linear-gradient(160deg,rgba(18,21,18,.97),rgba(6,9,7,.98));box-shadow:0 10px 24px rgba(0,0,0,.3)}
+.gameStateHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.gameStateHead h3{margin:0;font:800 17px Georgia,'Times New Roman',serif;color:#f3e8d5}
+.gameStateHead small{color:#91b68b;font-size:9px;font-weight:800;letter-spacing:1.5px}
+.dayNightRow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.dayNightBtn{min-height:48px;opacity:.58}
+.dayNightBtn.active{opacity:1;border-color:rgba(221,180,95,.82)!important;box-shadow:inset 0 0 0 1px rgba(221,180,95,.18),0 0 16px rgba(203,157,65,.10)}
+.dayNightBtn[data-state="night"].active{border-color:rgba(122,150,224,.82)!important;box-shadow:inset 0 0 0 1px rgba(122,150,224,.18),0 0 16px rgba(85,112,198,.13)}
+.effectToggleGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-bottom:10px}
+.effectToggle{min-height:46px;padding:8px 6px;font-size:11px;letter-spacing:.4px}
+.effectToggle.active{border-color:rgba(91,190,99,.82)!important;background:linear-gradient(180deg,rgba(31,78,38,.98),rgba(12,36,17,.98))!important;color:#ecffe8}
+.effectCounterGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.effectCounter{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:7px;padding:7px;border:1px solid rgba(139,119,82,.42);border-radius:11px;background:rgba(3,7,5,.64)}
+.effectCounterLabel{grid-column:1/-1;text-align:center;color:#aa9a7c;font-size:9px;font-weight:900;letter-spacing:1.1px;text-transform:uppercase}
+.effectCounter button{min-height:34px;padding:5px 8px}
+.effectCounter strong{text-align:center;font-size:20px;color:#eef4ea}
+@media(max-width:420px){.effectToggleGrid{grid-template-columns:1fr 1fr}.effectCounterGrid{grid-template-columns:1fr 1fr}.gameStateHead{align-items:flex-start;flex-direction:column;gap:3px}}
 .proPanel{display:grid;gap:12px}
 .quickCard{background:#0b1710;border:1px solid #45604d;border-radius:16px;padding:12px}
 .quickCard h3{margin:0 0 8px;font-size:18px}
@@ -2085,6 +2102,7 @@ body.trackerPreview #trackerView .tokenBankItem button{min-height:30px;padding:3
         </div>
         <div id="gameDeckStatus" class="deckToolStatus" aria-live="polite"></div>
       </div>
+      <div id="gameStatePanel" class="gameStatePanel" aria-label="Game state controls"></div>
       <div id="gameBoard" class="gameBoard"></div>
     </div>
   </main>
@@ -2605,10 +2623,11 @@ el("bill").onclick=function(){
 var GAME_KEY='wolfLairGame2';
 var gameState={
   players:[
-    {name:'Player 1', life:40, commander:0, poison:0}
+    {name:'Player 1', life:40, commander:0, poison:0, monarch:false, initiative:false, ascended:false, radiation:0, experience:0, energy:0, commanderTax:0}
   ],
   phases:['Beginning','Precombat','Combat','Postcombat','Ending'],
-  phaseIndex:0
+  phaseIndex:0,
+  dayNight:'day'
 };
 function loadGame(){
   try{
@@ -2621,9 +2640,15 @@ function loadGame(){
     }
   }catch(e){}
   if(!gameState.players||gameState.players.length<1||gameState.players.length>6){
-    gameState={players:[{name:'Player 1', life:40, commander:0, poison:0}], phases:['Beginning','Precombat','Combat','Postcombat','Ending'], phaseIndex:0};
+    gameState={players:[{name:'Player 1', life:40, commander:0, poison:0, monarch:false, initiative:false, ascended:false, radiation:0, experience:0, energy:0, commanderTax:0}], phases:['Beginning','Precombat','Combat','Postcombat','Ending'], phaseIndex:0, dayNight:'day'};
   }
   if(!gameState.phases||!gameState.phases.length){gameState.phases=['Beginning','Precombat','Combat','Postcombat','Ending'];}
+  if(gameState.dayNight!=='day'&&gameState.dayNight!=='night')gameState.dayNight='day';
+  gameState.players.forEach(function(player){
+    player.monarch=!!player.monarch;player.initiative=!!player.initiative;player.ascended=!!player.ascended;
+    player.radiation=Math.max(0,Number(player.radiation)||0);player.experience=Math.max(0,Number(player.experience)||0);
+    player.energy=Math.max(0,Number(player.energy)||0);player.commanderTax=Math.max(0,Number(player.commanderTax)||0);
+  });
   /* One-time migration: clear rotation overrides from the previous seat layout. */
   if(gameState.seatLayoutVersion!==8){
     for(var r=0;r<gameState.players.length;r++)gameState.players[r].rotation=0;
@@ -2636,7 +2661,7 @@ function saveGame(){
   try{localStorage.setItem(GAME_KEY,JSON.stringify(gameState))}catch(e){}
 }
 function enforceSoloGame(){
-  if(!gameState.players||!gameState.players.length)gameState.players=[{name:'Player 1',life:40,commander:0,poison:0}];
+  if(!gameState.players||!gameState.players.length)gameState.players=[{name:'Player 1',life:40,commander:0,poison:0,monarch:false,initiative:false,ascended:false,radiation:0,experience:0,energy:0,commanderTax:0}];
   if(gameState.players.length>1)gameState.players=[gameState.players[0]];
   if(typeof playerCreatures!=='undefined'){
     if(!playerCreatures.length)playerCreatures=[[]];
@@ -2765,9 +2790,41 @@ function changeSoloStat(stat,delta){
   if(stat==='commander')next=Math.max(0,next);
   p[stat]=next;saveGame();renderSoloHud();playCounterChange(stat,before,next);
 }
+function renderGameStatePanel(){
+  var panel=el('gameStatePanel');if(!panel||!gameState.players||!gameState.players.length)return;
+  var player=gameState.players[0];
+  function n(key){return Math.max(0,Number(player[key])||0);}
+  panel.innerHTML='\
+    <div class="gameStateHead"><h3>Game State</h3><small>MANUAL • TAP TO TRACK</small></div>\
+    <div class="dayNightRow">\
+      <button class="dayNightBtn '+(gameState.dayNight==='day'?'active':'')+'" data-state="day" type="button">☀ DAY</button>\
+      <button class="dayNightBtn '+(gameState.dayNight==='night'?'active':'')+'" data-state="night" type="button">☾ NIGHT</button>\
+    </div>\
+    <div class="effectToggleGrid">\
+      <button class="effectToggle '+(player.monarch?'active':'')+'" data-toggle="monarch" type="button">♛ MONARCH</button>\
+      <button class="effectToggle '+(player.initiative?'active':'')+'" data-toggle="initiative" type="button">⚑ INITIATIVE</button>\
+      <button class="effectToggle '+(player.ascended?'active':'')+'" data-toggle="ascended" type="button">✦ ASCENDED</button>\
+    </div>\
+    <div class="effectCounterGrid">\
+      <div class="effectCounter"><span class="effectCounterLabel">Radiation</span><button type="button" data-counter="radiation" data-delta="-1">−</button><strong>'+n('radiation')+'</strong><button type="button" data-counter="radiation" data-delta="1">＋</button></div>\
+      <div class="effectCounter"><span class="effectCounterLabel">Experience</span><button type="button" data-counter="experience" data-delta="-1">−</button><strong>'+n('experience')+'</strong><button type="button" data-counter="experience" data-delta="1">＋</button></div>\
+      <div class="effectCounter"><span class="effectCounterLabel">Energy</span><button type="button" data-counter="energy" data-delta="-1">−</button><strong>'+n('energy')+'</strong><button type="button" data-counter="energy" data-delta="1">＋</button></div>\
+      <div class="effectCounter"><span class="effectCounterLabel">Commander Tax</span><button type="button" data-counter="commanderTax" data-delta="-2">−2</button><strong>'+n('commanderTax')+'</strong><button type="button" data-counter="commanderTax" data-delta="2">＋2</button></div>\
+    </div>';
+  Array.prototype.forEach.call(panel.querySelectorAll('.dayNightBtn'),function(button){
+    button.onclick=function(){gameState.dayNight=this.getAttribute('data-state');saveGame();renderGameStatePanel();};
+  });
+  Array.prototype.forEach.call(panel.querySelectorAll('.effectToggle'),function(button){
+    button.onclick=function(){var key=this.getAttribute('data-toggle');player[key]=!player[key];saveGame();renderGameStatePanel();};
+  });
+  Array.prototype.forEach.call(panel.querySelectorAll('[data-counter]'),function(button){
+    button.onclick=function(){var key=this.getAttribute('data-counter'),delta=Number(this.getAttribute('data-delta'))||0;player[key]=Math.max(0,n(key)+delta);saveGame();renderGameStatePanel();};
+  });
+}
 function renderGame(){
   enforceSoloGame();
   renderGameDeckControls();
+  renderGameStatePanel();
   if(el('trackerView').hasAttribute('data-seat-aligned'))orientPlayerTracker();
   var board=el('gameBoard');
   board.innerHTML='';
@@ -2877,7 +2934,7 @@ function renderGame(){
       card.querySelector('.poisonDown').onclick=function(){player.poison=Math.max(0,player.poison-1);updatePlayerCounters();};
       card.querySelector('.poisonUp').onclick=function(){if(player.poison>=10)return;var before=player.poison;player.poison=Math.min(10,player.poison+1);updatePlayerCounters();playCounterChange('poison',before,player.poison);};
       card.querySelector('.rotateSeat').onclick=function(){player.rotation=((Number(player.rotation)||0)+180)%360;saveGame();renderGame();};
-      card.querySelector('.resetPlayer').onclick=function(){player.life=40;player.commander=0;player.poison=0;player.roll=null;saveGame();renderGame();};
+      card.querySelector('.resetPlayer').onclick=function(){player.life=40;player.commander=0;player.poison=0;player.roll=null;player.monarch=false;player.initiative=false;player.ascended=false;player.radiation=0;player.experience=0;player.energy=0;player.commanderTax=0;saveGame();renderGame();};
       card.querySelector('.editPlayerName').onclick=function(){
         var identity=card.querySelector('.playerIdentity');
         if(!identity)return;
@@ -4221,6 +4278,9 @@ window.getWolfGameContext=function(){
       return {
         index:index,name:String(player.name||"Player "+(index+1)),
         life:number(player.life),commanderDamage:number(player.commander),poison:number(player.poison),
+        monarch:!!player.monarch,initiative:!!player.initiative,ascended:!!player.ascended,
+        radiation:number(player.radiation),experience:number(player.experience),energy:number(player.energy),commanderTax:number(player.commanderTax),
+        dayNight:String(gameState.dayNight||'day'),
         battlefieldComplete:false,
         trackedCreatures:(playerCreatures[index]||[]).map(function(c){
           return {id:String(c.id),name:String(c.name),basePower:number(c.p),baseToughness:number(c.t),
