@@ -2060,7 +2060,7 @@ body.trackerPreview #trackerView .tokenBankItem button{min-height:30px;padding:3
 <header class="trackerTitle">
   <div id="activePlayerLabel" class="trackerBrand">PLAYER 1 • THE WOLF LAIR</div>
   <h1>BATTLEFIELD COMMAND</h1>
-  <small>CREATURE &amp; COUNTER CONTROL</small>
+  <small>SPELL &amp; COUNTER CONTROL</small>
   
 </header>
 <div id="soloHud" class="soloHud" aria-label="Game counters">
@@ -2089,26 +2089,26 @@ body.trackerPreview #trackerView .tokenBankItem button{min-height:30px;padding:3
 </div>
 </aside>
 <div class="quickCard trackerDeckControl">
-  <h3>Add From My Deck</h3>
+  <h3>Add Spells From My Deck</h3>
   <select id="trackerDeckSelect" aria-label="Choose a saved deck"></select>
   <div class="gameDeckAddRow">
     <select id="trackerCreatureSelect" aria-label="Choose a card from this deck"></select>
-    <button id="addTrackerDeckCreature" type="button">＋ Battlefield</button>
+    <button id="addTrackerDeckCreature" type="button">＋ Add Spell</button>
   </div>
   <div id="trackerDeckStatus" class="deckToolStatus" aria-live="polite"></div>
 </div>
 <div id="form" class="hidden">
 <input id="nm" placeholder="Creature name">
 <div class="pt"><input id="pw" inputmode="numeric" placeholder="Power"><input id="th" inputmode="numeric" placeholder="Toughness"></div>
-<button id="add" type="button">+ Add Creature</button><div id="msg" class="msg"></div>
+<button id="add" type="button">+ Add Spell</button><div id="msg" class="msg"></div>
 </div>
-<div class="battlefieldZoneTitle"><span>YOUR BATTLEFIELD</span><small>Creatures you add appear here</small></div>
-<div id="empty" class="empty">Choose a creature from your deck or tap + Add.</div>
+<div class="battlefieldZoneTitle"><span>YOUR SPELLS</span><small>Spells you add appear here</small></div>
+<div id="empty" class="empty">Choose a spell from your deck or tap + Add.</div>
 <div id="creatureSwipeHint" class="creatureSwipeHint hidden" role="navigation" aria-label="Jump to creature"></div>
 <div id="field" tabindex="0" role="region" aria-label="Creature cards; swipe sideways to browse"></div>
 </main>
 <div id="creatureKeyboard" class="creatureKeyboard hidden" role="group" aria-label="Creature keyboard"></div>
-<nav><button id="show" type="button">＋ Add</button><button id="undo" type="button" disabled>↶ Undo</button><button id="bill" type="button">×2 Double All</button></nav>
+<nav><button id="show" type="button">＋ Add Spell</button><button id="undo" type="button" disabled>↶ Undo</button><button id="bill" type="button">×2 Double All</button></nav>
 </div>
 </section>
 
@@ -2126,7 +2126,7 @@ body.trackerPreview #trackerView .tokenBankItem button{min-height:30px;padding:3
         <select id="gameDeckSelect" aria-label="Choose a saved deck"></select>
         <div class="gameDeckAddRow">
           <select id="gameCreatureSelect" aria-label="Choose a card from this deck"></select>
-          <button id="addDeckCreature" type="button">＋ Battlefield</button>
+          <button id="addDeckCreature" type="button">＋ Add Spell</button>
         </div>
         <div id="gameDeckStatus" class="deckToolStatus" aria-live="polite"></div>
       </div>
@@ -2723,7 +2723,7 @@ function renderGameDeckControls(){
   decks.forEach(function(d){var o=document.createElement('option');o.value=d.id;o.textContent=d.name+(d.commander?' — '+d.commander:'');deckSelect.appendChild(o);});
   if(decks.some(function(d){return d.id===previous}))deckSelect.value=previous;
   var deck=selectedGameDeck(), names=deckCreatureNames(deck);
-  creatureSelect.innerHTML='<option value="">Choose a card…</option>';
+  creatureSelect.innerHTML='<option value="">Choose a spell…</option>';
   names.forEach(function(name){var o=document.createElement('option');o.value=name;o.textContent=name;creatureSelect.appendChild(o);});
   creatureSelect.disabled=!deck;addBtn.disabled=!deck;
   status.textContent=deck?(names.length+' cards available from '+deck.name):'Select one of your saved decks for this game.';
@@ -2775,7 +2775,7 @@ function renderTrackerDeckControls(){
   decks.forEach(function(d){var o=document.createElement('option');o.value=d.id;o.textContent=d.name+(d.commander?' — '+d.commander:'');deckSelect.appendChild(o);});
   if(decks.some(function(d){return d.id===previous}))deckSelect.value=previous;
   var deck=selectedTrackerDeck(), names=deckCreatureNames(deck);
-  creatureSelect.innerHTML='<option value="">Choose a card…</option>';
+  creatureSelect.innerHTML='<option value="">Choose a spell…</option>';
   names.forEach(function(name){var o=document.createElement('option');o.value=name;o.textContent=name;creatureSelect.appendChild(o);});
   creatureSelect.disabled=!deck;addBtn.disabled=!deck;
   status.textContent=deck?(names.length+' cards available from '+deck.name):'Choose one of your saved decks.';
@@ -2895,7 +2895,7 @@ function renderGame(){
       var creatureCount=(playerCreatures[index]||[]).length;
       card.innerHTML='\
         <div class="playerFace" style="--player-rotation:'+finalRotation+'deg">\
-        <div class="playerHeader"><div class="playerIdentity"><span class="playerName">'+escapeHTML(player.name)+'</span><button class="editPlayerName" type="button" aria-label="Edit player name">EDIT</button></div><button class="playerCreatures" type="button"><span class="battlefieldLabel">CREATURES</span><span>'+creatureCount+'</span></button></div>\
+        <div class="playerHeader"><div class="playerIdentity"><span class="playerName">'+escapeHTML(player.name)+'</span><button class="editPlayerName" type="button" aria-label="Edit player name">EDIT</button></div><button class="playerCreatures" type="button"><span class="battlefieldLabel">SPELLS</span><span>'+creatureCount+'</span></button></div>\
         <div class="lifePanel">\
           <button class="lifeDown lifeNudge" type="button" aria-label="Lose 1 life">−</button>\
           <button class="lifeTotal editLife" type="button" aria-label="Edit life total"><span class="lifeValueFace">'+player.life+'</span></button>\
@@ -3322,7 +3322,7 @@ function showCardResult(card,sourceLabel){
   else if(card&&card.card_faces&&card.card_faces[0]&&card.card_faces[0].image_uris)image='<img src="'+escapeHTML(card.card_faces[0].image_uris.small)+'" alt="'+escapeHTML(card.name)+'">';
   var finishes=(card&&Array.isArray(card.finishes)&&card.finishes.length)?card.finishes:["nonfoil"];
   var finishOptions=finishes.map(function(f){return '<option value="'+escapeHTML(f)+'" '+(f===chooseDefaultFinish(card)?'selected':'')+'>'+finishLabel(f)+(finishPrice(card,f)!==null?' • '+moneyOrDash(finishPrice(card,f)):'')+'</option>'}).join('');
-  box.innerHTML='<div class="cardLookupMedia">'+image+'</div><div class="cardLookupInfo"><span class="lookupSource">'+escapeHTML(sourceLabel||"CARD FOUND")+'</span><strong>'+escapeHTML(card.name)+'</strong><small>'+escapeHTML(card.set_name||"")+(card.collector_number?' • #'+escapeHTML(card.collector_number):'')+'</small>'+cardPriceSummary(card)+'<label class="finishLabel" for="finishChoice">Printing finish</label><select id="finishChoice" class="finishChoice">'+finishOptions+'</select><button id="addFoundCard" type="button">＋ Add to Deck</button><div id="afterAddActions" class="hidden afterAddActions"><button id="addAnotherCopy" type="button">＋ Another Copy</button><button id="removeOneCopy" type="button">− Remove One</button><button id="undoThisAdd" type="button">↶ Undo</button></div><div class="scanRecovery"><button id="wrongCard" type="button">Not This Card</button><button id="rescanCard" type="button">Rescan</button></div></div>';
+  box.innerHTML='<div class="cardLookupMedia">'+image+'</div><div class="cardLookupInfo"><span class="lookupSource">'+escapeHTML(sourceLabel||"CARD FOUND")+'</span><strong>'+escapeHTML(card.name)+'</strong><small>'+escapeHTML(card.set_name||"")+(card.collector_number?' • #'+escapeHTML(card.collector_number):'')+'</small>'+cardPriceSummary(card)+'<label class="finishLabel" for="finishChoice">Printing finish</label><select id="finishChoice" class="finishChoice">'+finishOptions+'</select><button id="addFoundCard" type="button">＋ Add Spell to Deck</button><div id="afterAddActions" class="hidden afterAddActions"><button id="addAnotherCopy" type="button">＋ Another Copy</button><button id="removeOneCopy" type="button">− Remove One</button><button id="undoThisAdd" type="button">↶ Undo</button></div><div class="scanRecovery"><button id="wrongCard" type="button">Not This Card</button><button id="rescanCard" type="button">Rescan</button></div></div>';
   box.className="cardLookupResult";
 
   var addBtn=el("addFoundCard"), after=el("afterAddActions"), finishChoice=el("finishChoice");
@@ -3335,7 +3335,7 @@ function showCardResult(card,sourceLabel){
       after.className="afterAddActions";
     }else{
       addBtn.disabled=false;
-      addBtn.textContent="＋ Add to Deck";
+      addBtn.textContent="＋ Add Spell to Deck";
       after.className="hidden afterAddActions";
     }
   }
