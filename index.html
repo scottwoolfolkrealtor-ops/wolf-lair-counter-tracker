@@ -95,6 +95,11 @@ nav button{min-height:52px}button:disabled{opacity:.4}
 .effectCounter button{min-height:34px;padding:5px 8px}
 .effectCounter strong{text-align:center;font-size:20px;color:#eef4ea}
 @media(max-width:420px){.effectToggleGrid{grid-template-columns:1fr 1fr}.effectCounterGrid{grid-template-columns:1fr 1fr}.gameStateHead{align-items:flex-start;flex-direction:column;gap:3px}}
+.playerEffects{margin-top:10px;padding-top:10px;border-top:1px solid rgba(139,119,82,.34)}
+.playerEffects .dayNightRow,.playerEffects .effectToggleGrid,.playerEffects .effectCounterGrid{margin-bottom:8px}
+.playerEffects .effectCounterGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.playerEffects .effectToggleGrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:420px){.playerEffects .effectToggleGrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.playerEffects .effectToggle{font-size:9px;padding:6px 4px}.playerEffects .effectCounter{gap:4px;padding:6px}.playerEffects .effectCounter button{padding:4px 6px}.playerEffects .effectCounterLabel{font-size:8px}}
 .proPanel{display:grid;gap:12px}
 .quickCard{background:#0b1710;border:1px solid #45604d;border-radius:16px;padding:12px}
 .quickCard h3{margin:0 0 8px;font-size:18px}
@@ -2102,7 +2107,6 @@ body.trackerPreview #trackerView .tokenBankItem button{min-height:30px;padding:3
         </div>
         <div id="gameDeckStatus" class="deckToolStatus" aria-live="polite"></div>
       </div>
-      <div id="gameStatePanel" class="gameStatePanel" aria-label="Game state controls"></div>
       <div id="gameBoard" class="gameBoard"></div>
     </div>
   </main>
@@ -2824,7 +2828,6 @@ function renderGameStatePanel(){
 function renderGame(){
   enforceSoloGame();
   renderGameDeckControls();
-  renderGameStatePanel();
   if(el('trackerView').hasAttribute('data-seat-aligned'))orientPlayerTracker();
   var board=el('gameBoard');
   board.innerHTML='';
@@ -2880,6 +2883,23 @@ function renderGame(){
           <button class="turnDie '+(player.roll===20?'critical':(player.roll===1?'fumble':''))+'" type="button" aria-label="Roll a twenty-sided die"><span class="dieIcon">D20</span><strong>'+(player.roll||'—')+'</strong></button>\
           <button class="rotateSeat" type="button" aria-label="Rotate player panel">↻</button><button class="resetPlayer" type="button">RESET</button>\
         </div>\
+        <div class="playerEffects">\
+          <div class="dayNightRow">\
+            <button class="dayNightBtn '+(gameState.dayNight==='day'?'active':'')+'" data-state="day" type="button">☀ DAY</button>\
+            <button class="dayNightBtn '+(gameState.dayNight==='night'?'active':'')+'" data-state="night" type="button">☾ NIGHT</button>\
+          </div>\
+          <div class="effectToggleGrid">\
+            <button class="effectToggle '+(player.monarch?'active':'')+'" data-toggle="monarch" type="button">♛ MONARCH</button>\
+            <button class="effectToggle '+(player.initiative?'active':'')+'" data-toggle="initiative" type="button">⚑ INITIATIVE</button>\
+            <button class="effectToggle '+(player.ascended?'active':'')+'" data-toggle="ascended" type="button">✦ ASCENDED</button>\
+          </div>\
+          <div class="effectCounterGrid">\
+            <div class="effectCounter"><span class="effectCounterLabel">Radiation</span><button type="button" data-counter="radiation" data-delta="-1">−</button><strong>'+Math.max(0,Number(player.radiation)||0)+'</strong><button type="button" data-counter="radiation" data-delta="1">＋</button></div>\
+            <div class="effectCounter"><span class="effectCounterLabel">Experience</span><button type="button" data-counter="experience" data-delta="-1">−</button><strong>'+Math.max(0,Number(player.experience)||0)+'</strong><button type="button" data-counter="experience" data-delta="1">＋</button></div>\
+            <div class="effectCounter"><span class="effectCounterLabel">Energy</span><button type="button" data-counter="energy" data-delta="-1">−</button><strong>'+Math.max(0,Number(player.energy)||0)+'</strong><button type="button" data-counter="energy" data-delta="1">＋</button></div>\
+            <div class="effectCounter"><span class="effectCounterLabel">Commander Tax</span><button type="button" data-counter="commanderTax" data-delta="-2">−2</button><strong>'+Math.max(0,Number(player.commanderTax)||0)+'</strong><button type="button" data-counter="commanderTax" data-delta="2">＋2</button></div>\
+          </div>\
+        </div>\
         </div>';
       // Keep counter controls mounted so repeated taps preserve focus and position.
       function updatePlayerCounters(){
@@ -2933,6 +2953,15 @@ function renderGame(){
       card.querySelector('.cmdUp').onclick=function(){var before=player.commander;player.commander++;updatePlayerCounters();playCounterChange('commander',before,player.commander);};
       card.querySelector('.poisonDown').onclick=function(){player.poison=Math.max(0,player.poison-1);updatePlayerCounters();};
       card.querySelector('.poisonUp').onclick=function(){if(player.poison>=10)return;var before=player.poison;player.poison=Math.min(10,player.poison+1);updatePlayerCounters();playCounterChange('poison',before,player.poison);};
+      Array.prototype.forEach.call(card.querySelectorAll('.dayNightBtn'),function(button){
+        button.onclick=function(){gameState.dayNight=this.getAttribute('data-state');saveGame();renderGame();};
+      });
+      Array.prototype.forEach.call(card.querySelectorAll('.effectToggle'),function(button){
+        button.onclick=function(){var key=this.getAttribute('data-toggle');player[key]=!player[key];saveGame();renderGame();};
+      });
+      Array.prototype.forEach.call(card.querySelectorAll('[data-counter]'),function(button){
+        button.onclick=function(){var key=this.getAttribute('data-counter'),delta=Number(this.getAttribute('data-delta'))||0;player[key]=Math.max(0,(Number(player[key])||0)+delta);saveGame();renderGame();};
+      });
       card.querySelector('.rotateSeat').onclick=function(){player.rotation=((Number(player.rotation)||0)+180)%360;saveGame();renderGame();};
       card.querySelector('.resetPlayer').onclick=function(){player.life=40;player.commander=0;player.poison=0;player.roll=null;player.monarch=false;player.initiative=false;player.ascended=false;player.radiation=0;player.experience=0;player.energy=0;player.commanderTax=0;saveGame();renderGame();};
       card.querySelector('.editPlayerName').onclick=function(){
