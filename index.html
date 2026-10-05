@@ -1748,6 +1748,26 @@ body.trackerPreview #trackerView .creatureSwipeHint{display:none!important}
  body.trackerPreview #trackerView #field{grid-template-columns:1fr}
  body.trackerPreview #trackerView .battlefieldZoneTitle{align-items:flex-start;flex-direction:column;gap:1px}
 }
+
+/* Card-image battlefield */
+body.trackerPreview #trackerView #field{align-items:start}
+body.trackerPreview #trackerView #field>.card{padding:7px;background:linear-gradient(160deg,rgba(14,17,14,.98),rgba(5,8,6,.99));border-color:rgba(173,129,72,.48)}
+body.trackerPreview #trackerView .battleCardVisual{position:relative;width:100%;max-width:340px;margin:0 auto;border-radius:14px;overflow:hidden;background:#080b08;box-shadow:0 8px 20px rgba(0,0,0,.38)}
+body.trackerPreview #trackerView .battleCardImage{display:block;width:100%;height:auto;aspect-ratio:488/680;object-fit:cover}
+body.trackerPreview #trackerView .battleCardFallback{aspect-ratio:488/680;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:14px;text-align:center;background:radial-gradient(circle at 50% 35%,rgba(48,92,49,.35),transparent 45%),linear-gradient(145deg,#151b15,#070a08);border:1px solid rgba(177,132,72,.5)}
+body.trackerPreview #trackerView .battleCardFallback strong{font-family:Georgia,'Times New Roman',serif;font-size:20px;color:#efe1ca}
+body.trackerPreview #trackerView .battleCardFallback span{color:#9faf9e}
+body.trackerPreview #trackerView .battleCardPower,body.trackerPreview #trackerView .battleCardCounters{position:absolute;bottom:8px;padding:5px 8px;border-radius:9px;font-weight:950;line-height:1;background:rgba(4,8,5,.9);backdrop-filter:blur(4px);border:1px solid rgba(110,199,102,.62);color:#e9ffe5;box-shadow:0 2px 8px rgba(0,0,0,.45)}
+body.trackerPreview #trackerView .battleCardPower{right:8px;font-size:22px}
+body.trackerPreview #trackerView .battleCardCounters{left:8px;font-size:18px;color:#a8ef9f}
+body.trackerPreview #trackerView .battleControls{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:6px}
+body.trackerPreview #trackerView .battleControls button{min-height:38px;padding:5px;font-size:12px}
+body.trackerPreview #trackerView .battleControls .plus{border-color:rgba(81,180,87,.7);background:linear-gradient(180deg,rgba(30,74,37,.96),rgba(13,35,18,.98))}
+body.trackerPreview #trackerView .battleControls .double{border-color:rgba(177,132,72,.62);color:#ead2a8}
+body.trackerPreview #trackerView .battleMore{margin-top:6px;border:1px solid rgba(121,105,78,.4);border-radius:9px;padding:5px;background:rgba(3,6,4,.62)}
+body.trackerPreview #trackerView .battleMore summary{cursor:pointer;color:#cbb58d;font-size:11px;font-weight:900;text-align:center;padding:4px}
+body.trackerPreview #trackerView .battleMore .count{margin:5px 0}
+@media(min-width:700px){body.trackerPreview #trackerView #field{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
 <link rel="stylesheet" href="./wolf/wolf.css?v=9">
 </head>
@@ -2071,6 +2091,7 @@ function normalize(c){
   c.id=String(c.id||("c"+Date.now()+Math.random()));
   c.name=String(c.name||"Creature");
   c.p=Number(c.p)||0;c.t=Number(c.t)||0;c.c=Math.max(0,Number(c.c)||0);
+  c.image=String(c.image||"");
   if(!Array.isArray(c.links))c.links=[];
 }
 function ensurePlayerCreatureSlots(){
@@ -2178,7 +2199,7 @@ function render(){
   var savedScroll={x:window.scrollX,y:window.scrollY,
     top:trackerMain?trackerMain.scrollTop:0,left:trackerMain?trackerMain.scrollLeft:0,
     railLeft:f.scrollLeft,railTop:f.scrollTop};
-  function creatureShape(c){return JSON.stringify([c.id,c.name,c.p,c.t]);}
+  function creatureShape(c){return JSON.stringify([c.id,c.name,c.p,c.t,c.image]);}
   // Counter-only changes keep the existing cards, focused controls, and scroll
   // container intact. Rebind from scratch when Undo replaces creature objects.
   var cards=Array.prototype.slice.call(f.children);
@@ -2194,7 +2215,8 @@ function render(){
   if(sameCards){
     cards.forEach(function(card,index){
       var c=creatures[index];
-      card.querySelector('.power').textContent=(c.p+c.c)+'/'+(c.t+c.c);
+      card.querySelector('.battleCardPower').textContent=(c.p+c.c)+'/'+(c.t+c.c);
+      card.querySelector('.battleCardCounters').textContent='+'+c.c;
       card.querySelector('.count strong').textContent=String(c.c);
       Array.prototype.forEach.call(card.querySelectorAll('.lnk'),function(box){
         box.checked=c.links.indexOf(box.getAttribute('data-id'))>=0;
@@ -2217,17 +2239,27 @@ function render(){
     var card=document.createElement("section");card.className="card";
     card._creatureRef=c;card.setAttribute("data-creature-shape",creatureShape(c));
     card.innerHTML=
-     '<div class="head"><div><div class="name">'+escapeHTML(c.name)+'</div><div class="base">Base '+c.p+'/'+c.t+'</div></div><div class="power">'+(c.p+c.c)+'/'+(c.t+c.c)+'</div></div>'+ 
-     '<div class="count"><span>+1/+1 Counters</span><strong>'+c.c+'</strong></div>'+ 
-     '<div class="controls"><button class="minus">−1</button><button class="plus">+1</button><button class="current">+ Current Power</button><button class="reset">Reset to Base</button></div>'+
-     '<div class="custom"><input class="amt" inputmode="numeric" placeholder="Custom"><button class="addx">+X</button></div>'+ 
-     '<div class="links"><b>Target / Link to:</b><div class="linkTargets">'+targets+'</div>'+
-     '<button class="wide linked">+ Current Power to Me + Linked</button>'+ 
-     '<button class="wide counters">+ My Counters to Target(s)</button></div>'+ 
-     '<button class="remove">Remove Creature</button>';
+     '<div class="battleCardVisual">'+
+       (c.image?'<img class="battleCardImage" src="'+escapeHTML(c.image)+'" alt="'+escapeHTML(c.name)+' card">':'<div class="battleCardFallback"><strong>'+escapeHTML(c.name)+'</strong><span>Base '+c.p+'/'+c.t+'</span></div>')+
+       '<div class="battleCardPower">'+(c.p+c.c)+'/'+(c.t+c.c)+'</div>'+
+       '<div class="battleCardCounters">+'+c.c+'</div>'+
+     '</div>'+
+     '<div class="battleControls">'+
+       '<button class="minus">−1</button><button class="plus">+1</button><button class="double">×2</button><button class="reset">Reset</button>'+
+     '</div>'+
+     '<div class="custom"><input class="amt" inputmode="numeric" placeholder="Custom +X"><button class="addx">+X</button></div>'+
+     '<details class="battleMore"><summary>More controls</summary>'+
+       '<div class="count"><span>+1/+1 Counters</span><strong>'+c.c+'</strong></div>'+
+       '<button class="wide current">+ Current Power</button>'+
+       '<div class="links"><b>Target / Link to:</b><div class="linkTargets">'+targets+'</div>'+
+       '<button class="wide linked">+ Current Power to Me + Linked</button>'+
+       '<button class="wide counters">+ My Counters to Target(s)</button></div>'+
+       '<button class="remove">Remove Creature</button>'+
+     '</details>';
     card.querySelector(".minus").onclick=function(){adjust(c.id,-1)};
     card.querySelector(".plus").onclick=function(){adjust(c.id,1)};
     card.querySelector(".current").onclick=function(){adjust(c.id,c.p+c.c)};
+    card.querySelector(".double").onclick=function(){snapshot();c.c*=2;finish()};
     card.querySelector(".reset").onclick=function(){snapshot();c.c=0;finish()};
     card.querySelector(".addx").onclick=function(){var n=parseInt(card.querySelector(".amt").value,10);if(!isNaN(n)&&n!==0)adjust(c.id,n)};
     var boxes=card.querySelectorAll(".lnk");
@@ -2487,7 +2519,8 @@ function addSelectedDeckCreature(){
       if((card.power==null||card.toughness==null)&&card.card_faces&&card.card_faces.length)face=card.card_faces[0];
       var p=parseInt(face.power,10),t=parseInt(face.toughness,10);
       if(isNaN(p)||isNaN(t))throw new Error('That card does not have standard creature power/toughness.');
-      creatures.push({id:'c'+Date.now()+'_'+Math.floor(Math.random()*1000000),name:card.name,p:p,t:t,c:0,links:[]});
+      var image=(card.image_uris&&(card.image_uris.normal||card.image_uris.large||card.image_uris.small))||((card.card_faces&&card.card_faces[0]&&card.card_faces[0].image_uris)&&(card.card_faces[0].image_uris.normal||card.card_faces[0].image_uris.large||card.card_faces[0].image_uris.small))||'';
+      creatures.push({id:'c'+Date.now()+'_'+Math.floor(Math.random()*1000000),name:card.name,p:p,t:t,c:0,links:[],image:image});
       finish();
       status.textContent=card.name+' added to your battlefield.';
     }).catch(function(err){status.textContent=err.message||'Could not add that card.';});
@@ -2521,7 +2554,8 @@ function addTrackerDeckCreature(){
       var p=parseInt(face.power,10),t=parseInt(face.toughness,10);
       if(isNaN(p)||isNaN(t))throw new Error('That card does not have standard creature power/toughness.');
       snapshot();
-      creatures.push({id:'c'+Date.now()+'_'+Math.floor(Math.random()*1000000),name:card.name,p:p,t:t,c:0,links:[]});
+      var image=(card.image_uris&&(card.image_uris.normal||card.image_uris.large||card.image_uris.small))||((card.card_faces&&card.card_faces[0]&&card.card_faces[0].image_uris)&&(card.card_faces[0].image_uris.normal||card.card_faces[0].image_uris.large||card.card_faces[0].image_uris.small))||'';
+      creatures.push({id:'c'+Date.now()+'_'+Math.floor(Math.random()*1000000),name:card.name,p:p,t:t,c:0,links:[],image:image});
       finish();status.textContent=card.name+' added to your battlefield.';
     }).catch(function(err){status.textContent=err.message||'Could not add that card.';});
 }
