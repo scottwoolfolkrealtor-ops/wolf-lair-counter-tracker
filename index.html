@@ -2535,18 +2535,35 @@ function renderGameDeckControls(){
   creatureSelect.disabled=!deck;addBtn.disabled=!deck;
   status.textContent=deck?(names.length+' cards available from '+deck.name):'Select one of your saved decks for this game.';
 }
+function lookupDeckCard(name){
+  var clean=String(name||'').trim();
+  function request(mode){
+    return fetch('https://api.scryfall.com/cards/named?'+mode+'='+encodeURIComponent(clean))
+      .then(function(r){if(!r.ok)throw new Error('Card lookup failed');return r.json();});
+  }
+  return request('exact').catch(function(){return request('fuzzy');});
+}
+function cardImageUrl(card){
+  var images=card&&card.image_uris;
+  if(images)return images.normal||images.large||images.small||images.png||'';
+  var faces=card&&card.card_faces||[];
+  for(var i=0;i<faces.length;i++){
+    images=faces[i]&&faces[i].image_uris;
+    if(images)return images.normal||images.large||images.small||images.png||'';
+  }
+  return '';
+}
 function addSelectedDeckCreature(){
   var deck=selectedGameDeck(), name=el('gameCreatureSelect').value, status=el('gameDeckStatus');
   if(!deck||!name){status.textContent='Choose a deck and creature first.';return;}
   status.textContent='Loading '+name+'…';
-  fetch('https://api.scryfall.com/cards/named?exact='+encodeURIComponent(name))
-    .then(function(r){if(!r.ok)throw new Error('Card lookup failed');return r.json();})
+  lookupDeckCard(name)
     .then(function(card){
       var face=card;
       if((card.power==null||card.toughness==null)&&card.card_faces&&card.card_faces.length)face=card.card_faces[0];
       var p=parseInt(face.power,10),t=parseInt(face.toughness,10);
       if(isNaN(p)||isNaN(t))throw new Error('That card does not have standard creature power/toughness.');
-      var image=(card.image_uris&&(card.image_uris.normal||card.image_uris.large||card.image_uris.small))||((card.card_faces&&card.card_faces[0]&&card.card_faces[0].image_uris)&&(card.card_faces[0].image_uris.normal||card.card_faces[0].image_uris.large||card.card_faces[0].image_uris.small))||'';
+      var image=cardImageUrl(card);
       creatures.push({id:'c'+Date.now()+'_'+Math.floor(Math.random()*1000000),name:card.name,p:p,t:t,c:0,links:[],image:image});
       finish();
       status.textContent=card.name+' added to your battlefield.';
@@ -2574,14 +2591,13 @@ function addTrackerDeckCreature(){
   var deck=selectedTrackerDeck(), name=el('trackerCreatureSelect').value, status=el('trackerDeckStatus');
   if(!deck||!name){status.textContent='Choose a deck card first.';return;}
   status.textContent='Loading '+name+'…';
-  fetch('https://api.scryfall.com/cards/named?exact='+encodeURIComponent(name))
-    .then(function(r){if(!r.ok)throw new Error('Card lookup failed');return r.json();})
+  lookupDeckCard(name)
     .then(function(card){
       var typeLine=String(card.type_line||''), isCreature=/Creature/i.test(typeLine);
       var face=card;if(isCreature&&(card.power==null||card.toughness==null)&&card.card_faces&&card.card_faces.length)face=card.card_faces[0];
       var p=isCreature?parseInt(face.power,10):0,t=isCreature?parseInt(face.toughness,10):0;
       if(isCreature&&(isNaN(p)||isNaN(t)))throw new Error('Wolf Lair could not read that creature’s power/toughness.');
-      var image=(card.image_uris&&(card.image_uris.normal||card.image_uris.large||card.image_uris.small))||((card.card_faces&&card.card_faces[0]&&card.card_faces[0].image_uris)&&(card.card_faces[0].image_uris.normal||card.card_faces[0].image_uris.large||card.card_faces[0].image_uris.small))||'';
+      var image=cardImageUrl(card);
       snapshot();
       creatures.push({id:'c'+Date.now()+'_'+Math.floor(Math.random()*1000000),name:card.name,p:p||0,t:t||0,c:0,links:[],image:image,typeLine:typeLine,oracle:String(card.oracle_text||''),isCreature:isCreature,treasures:0,lore:0});
       finish();status.textContent=card.name+' added to your battlefield.';
