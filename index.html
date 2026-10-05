@@ -95,6 +95,10 @@ nav button{min-height:52px}button:disabled{opacity:.4}
 .effectCounter button{min-height:34px;padding:5px 8px}
 .effectCounter strong{text-align:center;font-size:20px;color:#eef4ea}
 @media(max-width:420px){.effectToggleGrid{grid-template-columns:1fr 1fr}.effectCounterGrid{grid-template-columns:1fr 1fr}.gameStateHead{align-items:flex-start;flex-direction:column;gap:3px}}
+.integratedQuickRow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+#trackerGameStatePanel{margin:0 0 10px}
+#trackerGameStatePanel .turnDie{min-height:48px}
+#trackerGameStatePanel .resetGameState{min-height:48px}
 .playerEffects{margin-top:10px;padding-top:10px;border-top:1px solid rgba(139,119,82,.34)}
 .playerEffects .dayNightRow,.playerEffects .effectToggleGrid,.playerEffects .effectCounterGrid{margin-bottom:8px}
 .playerEffects .effectCounterGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -2040,7 +2044,7 @@ body.trackerPreview #trackerView .tokenBankItem button{min-height:30px;padding:3
 <div class="playerTrackerSurface">
 <main>
 <div class="trackerNavigation"><button id="backHome" class="backHome" type="button">‹ Wolf Lair Home</button>
-<button class="askWolf" type="button">Ask Wolf</button><button id="quickGameMode" class="quickSwitch" type="button">GAME MODE ›</button><button class="soundToggle" type="button" aria-label="Mute sound effects" aria-pressed="true">Sound on</button></div>
+<button class="askWolf" type="button">Ask Wolf</button><button id="quickGameMode" class="quickSwitch" type="button">BATTLEFIELD</button><button class="soundToggle" type="button" aria-label="Mute sound effects" aria-pressed="true">Sound on</button></div>
 <header class="trackerTitle">
   <div id="activePlayerLabel" class="trackerBrand">PLAYER 1 • THE WOLF LAIR</div>
   <h1>BATTLEFIELD COMMAND</h1>
@@ -2056,6 +2060,7 @@ body.trackerPreview #trackerView .tokenBankItem button{min-height:30px;padding:3
   <div class="soloMini"><span>COMMANDER</span><div><button id="soloCmdDown" type="button">−</button><strong id="soloCmdValue">0</strong><button id="soloCmdUp" type="button">＋</button></div></div>
   <div class="soloMini"><span>POISON</span><div><button id="soloPoisonDown" type="button">−</button><strong id="soloPoisonValue">0</strong><button id="soloPoisonUp" type="button">＋</button></div></div>
 </div>
+<div id="trackerGameStatePanel" class="gameStatePanel" aria-label="Game state controls"></div>
 <div id="globalTokenBank" class="quickCard tokenBank">
   <h3>Token Bank</h3>
   <div class="tokenBankGrid">
@@ -2299,6 +2304,7 @@ function renderCreatureJump(){
 }
 function render(){
   renderSoloHud();
+  renderGameStatePanel();
   renderTokenBank();
   var f=el("field"), trackerMain=el("trackerView").querySelector("main");
   var savedScroll={x:window.scrollX,y:window.scrollY,
@@ -2795,11 +2801,11 @@ function changeSoloStat(stat,delta){
   p[stat]=next;saveGame();renderSoloHud();playCounterChange(stat,before,next);
 }
 function renderGameStatePanel(){
-  var panel=el('gameStatePanel');if(!panel||!gameState.players||!gameState.players.length)return;
-  var player=gameState.players[0];
+  var panel=el('trackerGameStatePanel');if(!panel||!gameState.players||!gameState.players.length)return;
+  var player=gameState.players[activePlayerIndex]||gameState.players[0];
   function n(key){return Math.max(0,Number(player[key])||0);}
   panel.innerHTML='\
-    <div class="gameStateHead"><h3>Game State</h3><small>MANUAL • TAP TO TRACK</small></div>\
+    <div class="gameStateHead"><h3>Game State</h3><small>ALL BATTLEFIELD TRACKERS</small></div>\
     <div class="dayNightRow">\
       <button class="dayNightBtn '+(gameState.dayNight==='day'?'active':'')+'" data-state="day" type="button">☀ DAY</button>\
       <button class="dayNightBtn '+(gameState.dayNight==='night'?'active':'')+'" data-state="night" type="button">☾ NIGHT</button>\
@@ -2814,6 +2820,10 @@ function renderGameStatePanel(){
       <div class="effectCounter"><span class="effectCounterLabel">Experience</span><button type="button" data-counter="experience" data-delta="-1">−</button><strong>'+n('experience')+'</strong><button type="button" data-counter="experience" data-delta="1">＋</button></div>\
       <div class="effectCounter"><span class="effectCounterLabel">Energy</span><button type="button" data-counter="energy" data-delta="-1">−</button><strong>'+n('energy')+'</strong><button type="button" data-counter="energy" data-delta="1">＋</button></div>\
       <div class="effectCounter"><span class="effectCounterLabel">Commander Tax</span><button type="button" data-counter="commanderTax" data-delta="-2">−2</button><strong>'+n('commanderTax')+'</strong><button type="button" data-counter="commanderTax" data-delta="2">＋2</button></div>\
+    </div>\
+    <div class="playerQuickRow integratedQuickRow">\
+      <button class="turnDie '+(player.roll===20?'critical':(player.roll===1?'fumble':''))+'" type="button" aria-label="Roll a twenty-sided die"><span class="dieIcon">D20</span><strong>'+(player.roll||'—')+'</strong></button>\
+      <button class="resetGameState" type="button">RESET GAME STATE</button>\
     </div>';
   Array.prototype.forEach.call(panel.querySelectorAll('.dayNightBtn'),function(button){
     button.onclick=function(){gameState.dayNight=this.getAttribute('data-state');saveGame();renderGameStatePanel();};
@@ -2824,6 +2834,14 @@ function renderGameStatePanel(){
   Array.prototype.forEach.call(panel.querySelectorAll('[data-counter]'),function(button){
     button.onclick=function(){var key=this.getAttribute('data-counter'),delta=Number(this.getAttribute('data-delta'))||0;player[key]=Math.max(0,n(key)+delta);saveGame();renderGameStatePanel();};
   });
+  var die=panel.querySelector('.turnDie');
+  if(die)die.onclick=function(){player.roll=1+Math.floor(Math.random()*20);saveGame();renderGameStatePanel();};
+  var reset=panel.querySelector('.resetGameState');
+  if(reset)reset.onclick=function(){
+    gameState.dayNight='day';player.monarch=false;player.initiative=false;player.ascended=false;
+    player.radiation=0;player.experience=0;player.energy=0;player.commanderTax=0;player.roll=null;
+    saveGame();renderGameStatePanel();
+  };
 }
 function renderGame(){
   enforceSoloGame();
@@ -3052,7 +3070,7 @@ el('backHome').onclick=function(){el('trackerView').className='hidden';el('home'
 el('openDecks').onclick=function(){el('home').className='hidden';el('decksView').className='';loadDecks();renderDecks();window.scrollTo(0,0)};
 el('backDecksHome').onclick=function(){closeDeckForm();el('decksView').className='hidden';el('home').className='';window.scrollTo(0,0)};
 
-el('openGame').onclick=function(){el('home').className='hidden';el('gameView').className='';renderGame();window.scrollTo(0,0)};
+el('openGame').onclick=function(){el('home').className='hidden';el('gameView').className='hidden';el('trackerView').className='';loadDecks();renderTrackerDeckControls();render();window.scrollTo(0,0)};
 el('backGameHome').onclick=function(){el('gameView').className='hidden';el('home').className='';window.scrollTo(0,0)};
 
 el('openPro').onclick=function(){el('home').className='hidden';el('proView').className='';loadPro();window.scrollTo(0,0)};
@@ -4340,10 +4358,10 @@ renderGame();
     window.scrollTo(0,0);
   }
   function showGame(){
-    document.getElementById('trackerView').className='hidden';
+    document.getElementById('gameView').className='hidden';
     document.getElementById('decksView').className='hidden';
-    document.getElementById('gameView').className='';
-    if(typeof renderGame==='function') renderGame();
+    document.getElementById('trackerView').className='';
+    if(typeof render==='function') render();
     window.scrollTo(0,0);
   }
   function showDecks(){
