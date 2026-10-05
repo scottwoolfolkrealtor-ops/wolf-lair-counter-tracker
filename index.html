@@ -2151,13 +2151,23 @@ function normalize(c){
   if(!Array.isArray(c.links))c.links=[];
 }
 function buildSmartTriggers(card){
-  var text=String(card&&card.oracle_text||'');
-  var triggers=[];
-  if(/at the beginning of (?:your|each|every|the) upkeep/i.test(text)){
-    triggers.push({kind:'upkeep',label:'Upkeep Trigger'});
+  var text=String(card&&card.oracle_text||''), triggers=[], seen={};
+  function add(kind,label,line){
+    var key=kind+'|'+label+'|'+line;if(seen[key])return;seen[key]=true;
+    triggers.push({kind:kind,label:label,text:String(line||'').trim()});
   }
-  if(/when(?:ever)? [^\n.]*enters(?: the battlefield)?/i.test(text))triggers.push({kind:'etb',label:'ETB Trigger'});
-  if(/at the beginning of (?:your|each|every|the) end step/i.test(text))triggers.push({kind:'endstep',label:'End Step Trigger'});
+  String(text).split(/\n+/).forEach(function(raw){
+    var line=raw.trim();if(!line)return;
+    if(/at the beginning of (?:your|each|every|the) upkeep/i.test(line))add('upkeep','Upkeep Trigger',line);
+    if(/when(?:ever)? [^.]*enters(?: the battlefield)?/i.test(line))add('etb','ETB Trigger',line);
+    if(/at the beginning of (?:your|each|every|the) end step/i.test(line))add('endstep','End Step Trigger',line);
+    if(/whenever\b/i.test(line)&&!/enters/i.test(line))add('whenever','Triggered Ability',line);
+    if(/\bchoose (?:one|two|one or more)\b/i.test(line))add('choice','Choose Mode',line);
+    if(/^[^:]{0,80}:\s*.+/.test(line)&&!/^[+−-]?\d+\s*:/.test(line))add('activated','Activate Ability',line);
+    if(/\bcreate(?:s)?\b[^.]*\btoken/i.test(line))add('token','Create Token',line);
+    if(/\bput\b[^.]*\bcounter/i.test(line))add('counter','Place Counter',line);
+    if(/\bsacrifice\b/i.test(line))add('sacrifice','Sacrifice Ability',line);
+  });
   return triggers;
 }
 function planeswalkerAbilities(card){var out=[];String(card&&card.oracle_text||'').split(/\n+/).forEach(function(line){var m=line.trim().match(/^([+−-]?\d+|0)\s*:/);if(!m)return;var d=parseInt(m[1].replace('−','-'),10);if(!isNaN(d))out.push({delta:d,label:(d>0?'+':'')+d});});return out;}
@@ -2315,7 +2325,7 @@ function render(){
     var typeControls='';
     if(c.isPlaneswalker)typeControls='<div class="cardSpecificControls"><div class="specificStat"><span>LOYALTY</span><strong>'+c.loyalty+'</strong></div><div class="specificButtons">'+(c.loyaltyAbilities||[]).map(function(a,i){return '<button class="loyaltyAction" data-loyalty-index="'+i+'">'+escapeHTML(a.label)+'</button>';}).join('')+'</div></div>';
     else if(c.isSaga&&!isMisty)typeControls='<div class="cardSpecificControls"><div class="specificStat"><span>LORE</span><strong>'+c.lore+'</strong></div><div class="specificButtons"><button class="sagaLoreMinus">− Lore</button><button class="sagaLorePlus">＋ Lore</button></div></div>';
-    var smartControls=(c.smartTriggers||[]).map(function(trigger,index){return '<button class="smartTrigger" data-trigger-index="'+index+'">'+escapeHTML(trigger.label)+'</button>';}).join('');
+    var smartControls=(c.smartTriggers||[]).map(function(trigger,index){return '<button class="smartTrigger" data-trigger-index="'+index+'" title="'+escapeHTML(trigger.text||'')+'">'+escapeHTML(trigger.label)+'</button>';}).join('');
     if(smartControls)smartControls='<div class="smartControls">'+smartControls+'</div>';
     var creatureControls=c.isCreature?
       '<div class="battleControls"><button class="minus">−1</button><button class="plus">+1</button><button class="double">×2</button><button class="reset">Reset</button></div>'+
