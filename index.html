@@ -2948,10 +2948,10 @@ el('loadProfile').onclick=function(){loadPro(); gameState=clone(proState.game ||
 el('copyJson').onclick=function(){var text=el('proArea').value; if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).catch(function(){})} else {el('proArea').select();document.execCommand('copy');}};
 el('resetProfile').onclick=function(){try{localStorage.removeItem('wolfLairPro1')}catch(e){}; proState={lastSaved:new Date().toISOString(), tracker:{count:creatures.length}, decks:{count:decks.length}, game:clone(gameState)}; el('proArea').value=JSON.stringify(proState,null,2);};
 
-el('openTracker').onclick=function(){el('home').className='hidden';el('trackerView').className='';window.scrollTo(0,0)};
+el('openTracker').onclick=function(){el('home').className='hidden';el('trackerView').className='';loadDecks();renderTrackerDeckControls();render();window.scrollTo(0,0)};
 el('backHome').onclick=function(){el('trackerView').className='hidden';el('home').className='';window.scrollTo(0,0)};
 
-el('openDecks').onclick=function(){el('home').className='hidden';el('decksView').className='';renderDecks();window.scrollTo(0,0)};
+el('openDecks').onclick=function(){el('home').className='hidden';el('decksView').className='';loadDecks();renderDecks();window.scrollTo(0,0)};
 el('backDecksHome').onclick=function(){closeDeckForm();el('decksView').className='hidden';el('home').className='';window.scrollTo(0,0)};
 
 el('openGame').onclick=function(){el('home').className='hidden';el('gameView').className='';renderGame();window.scrollTo(0,0)};
@@ -4256,9 +4256,9 @@ renderGame();
   var backGame=document.getElementById('backGameHome');
   var backDecks=document.getElementById('backDecksHome');
   var toGame=document.getElementById('quickGameMode');
-  if(back)back.onclick=function(){window.WolfAudio.navigate('./preview-home.html?preview=6');};
-  if(backGame)backGame.onclick=function(){window.WolfAudio.navigate('./preview-home.html?preview=6');};
-  if(backDecks)backDecks.onclick=function(){window.WolfAudio.navigate('./preview-home.html?preview=6');};
+  if(back)back.onclick=function(){document.getElementById('trackerView').className='hidden';document.getElementById('home').className='';window.scrollTo(0,0);};
+  if(backGame)backGame.onclick=function(){document.getElementById('gameView').className='hidden';document.getElementById('home').className='';window.scrollTo(0,0);};
+  if(backDecks)backDecks.onclick=function(){if(typeof closeDeckForm==='function')closeDeckForm();document.getElementById('decksView').className='hidden';document.getElementById('home').className='';window.scrollTo(0,0);};
   if(toGame){
     toGame.onclick=showGame;
     // Resolve touch taps before input blur or layout movement can swallow click.
