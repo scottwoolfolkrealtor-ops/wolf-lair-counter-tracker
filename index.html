@@ -1781,6 +1781,18 @@ body.trackerPreview #trackerView .permanentRemove{width:100%;margin-top:6px;bord
 body.trackerPreview #trackerView .smartControls{display:grid;grid-template-columns:1fr;gap:5px;margin-top:6px}body.trackerPreview #trackerView .smartTrigger{border-color:rgba(92,181,100,.7);background:linear-gradient(180deg,rgba(28,67,34,.96),rgba(11,31,16,.98));color:#eaffdf}
 </style>
 <link rel="stylesheet" href="./wolf/wolf.css?v=9">
+
+<style id="token-bank-style">
+body.trackerPreview #trackerView .tokenBank{margin:0 0 10px;padding:10px;border:1px solid rgba(193,139,75,.5);background:linear-gradient(180deg,rgba(16,18,16,.97),rgba(7,10,8,.97))}
+body.trackerPreview #trackerView .tokenBank h3{margin:0 0 8px;font-size:13px;letter-spacing:1.4px;color:#d9c18f;text-transform:uppercase}
+body.trackerPreview #trackerView .tokenBankGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+body.trackerPreview #trackerView .tokenBankItem{text-align:center;padding:7px 4px;border:1px solid rgba(88,170,91,.32);border-radius:10px;background:rgba(8,20,10,.9)}
+body.trackerPreview #trackerView .tokenBankItem span{display:block;font-size:8px;color:#a8b3a5;letter-spacing:.7px;font-weight:900}
+body.trackerPreview #trackerView .tokenBankItem strong{display:block;font-size:22px;color:#e5f3df;margin:2px 0 5px}
+body.trackerPreview #trackerView .tokenBankItem div{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+body.trackerPreview #trackerView .tokenBankItem button{min-height:30px;padding:3px;font-size:14px}
+@media(max-width:430px){body.trackerPreview #trackerView .tokenBankGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
 </head>
 <body class="trackerPreview">
 <section id="home">
@@ -2022,6 +2034,15 @@ body.trackerPreview #trackerView .smartControls{display:grid;grid-template-colum
   <div class="soloMini"><span>COMMANDER</span><div><button id="soloCmdDown" type="button">−</button><strong id="soloCmdValue">0</strong><button id="soloCmdUp" type="button">＋</button></div></div>
   <div class="soloMini"><span>POISON</span><div><button id="soloPoisonDown" type="button">−</button><strong id="soloPoisonValue">0</strong><button id="soloPoisonUp" type="button">＋</button></div></div>
 </div>
+<div id="globalTokenBank" class="quickCard tokenBank">
+  <h3>Token Bank</h3>
+  <div class="tokenBankGrid">
+    <div class="tokenBankItem"><span>TREASURE</span><strong id="tokenTreasure">0</strong><div><button type="button" data-token="treasure" data-delta="-1">−</button><button type="button" data-token="treasure" data-delta="1">＋</button></div></div>
+    <div class="tokenBankItem"><span>FOOD</span><strong id="tokenFood">0</strong><div><button type="button" data-token="food" data-delta="-1">−</button><button type="button" data-token="food" data-delta="1">＋</button></div></div>
+    <div class="tokenBankItem"><span>CLUE</span><strong id="tokenClue">0</strong><div><button type="button" data-token="clue" data-delta="-1">−</button><button type="button" data-token="clue" data-delta="1">＋</button></div></div>
+    <div class="tokenBankItem"><span>BLOOD</span><strong id="tokenBlood">0</strong><div><button type="button" data-token="blood" data-delta="-1">−</button><button type="button" data-token="blood" data-delta="1">＋</button></div></div>
+  </div>
+</div>
 <div class="quickCard trackerDeckControl">
   <h3>Add From My Deck</h3>
   <select id="trackerDeckSelect" aria-label="Choose a saved deck"></select>
@@ -2094,8 +2115,25 @@ body.trackerPreview #trackerView .smartControls{display:grid;grid-template-colum
 <script>
 (function(){
 "use strict";
-var LEGACY_KEY="wolfLairClean1", PLAYER_KEY="wolfLairPlayerCreatures1";
+var LEGACY_KEY="wolfLairClean1", PLAYER_KEY="wolfLairPlayerCreatures1", TOKEN_KEY="wolfLairTokenBank1";
 var playerCreatures=[[],[]], activePlayerIndex=0, creatures=playerCreatures[0], undoState=null;
+var tokenBank={treasure:0,food:0,clue:0,blood:0};
+function normalizeTokenBank(){
+  ["treasure","food","clue","blood"].forEach(function(k){tokenBank[k]=Math.max(0,Number(tokenBank[k])||0);});
+}
+function saveTokenBank(){try{localStorage.setItem(TOKEN_KEY,JSON.stringify(tokenBank));}catch(e){}}
+function loadTokenBank(){try{var raw=localStorage.getItem(TOKEN_KEY);if(raw){var data=JSON.parse(raw);if(data&&typeof data==="object")tokenBank=data;}}catch(e){}normalizeTokenBank();}
+function renderTokenBank(){
+  normalizeTokenBank();
+  var map={treasure:"tokenTreasure",food:"tokenFood",clue:"tokenClue",blood:"tokenBlood"};
+  Object.keys(map).forEach(function(k){var node=el(map[k]);if(node)node.textContent=String(tokenBank[k]);});
+  var bank=el("globalTokenBank");if(!bank)return;
+  Array.prototype.forEach.call(bank.querySelectorAll("[data-token]"),function(button){
+    var kind=button.getAttribute("data-token"),delta=Number(button.getAttribute("data-delta"))||0;
+    button.disabled=delta<0&&tokenBank[kind]<=0;
+    button.onclick=function(){tokenBank[kind]=Math.max(0,(Number(tokenBank[kind])||0)+delta);saveTokenBank();render();};
+  });
+}
 function el(id){return document.getElementById(id)}
 function clone(x){return JSON.parse(JSON.stringify(x))}
 function normalize(c){
@@ -2220,6 +2258,7 @@ function renderCreatureJump(){
 }
 function render(){
   renderSoloHud();
+  renderTokenBank();
   var f=el("field"), trackerMain=el("trackerView").querySelector("main");
   var savedScroll={x:window.scrollX,y:window.scrollY,
     top:trackerMain?trackerMain.scrollTop:0,left:trackerMain?trackerMain.scrollLeft:0,
@@ -2245,8 +2284,9 @@ function render(){
       if(counters)counters.textContent='+'+c.c;
       if(countStrong)countStrong.textContent=String(c.c);
       var treasure=card.querySelector('.mistyTreasureValue'), lore=card.querySelector('.mistyLoreValue');
-      if(treasure)treasure.textContent=String(c.treasures);
+      if(treasure)treasure.textContent=String(tokenBank.treasure);
       if(lore)lore.textContent=String(c.lore);
+      var dragonButton=card.querySelector(".mistyDragon");if(dragonButton)dragonButton.disabled=tokenBank.treasure<4;
       Array.prototype.forEach.call(card.querySelectorAll('.lnk'),function(box){
         box.checked=c.links.indexOf(box.getAttribute('data-id'))>=0;
       });
@@ -2275,7 +2315,7 @@ function render(){
       '<div class="custom"><input class="amt" inputmode="numeric" placeholder="Custom +X"><button class="addx">+X</button></div>'+
       '<details class="battleMore"><summary>More controls</summary><div class="count"><span>+1/+1 Counters</span><strong>'+c.c+'</strong></div><button class="wide current">+ Current Power</button><div class="links"><b>Target / Link to:</b><div class="linkTargets">'+targets+'</div><button class="wide linked">+ Current Power to Me + Linked</button><button class="wide counters">+ My Counters to Target(s)</button></div><button class="remove">Remove Creature</button></details>'
       :'<div class="permanentType">'+escapeHTML(c.typeLine||'Permanent')+'</div>'+
-       (isMisty?'<div class="mistyControls"><div class="mistyStat"><span>LORE</span><strong class="mistyLoreValue">'+c.lore+'</strong></div><div class="mistyStat"><span>TREASURES</span><strong class="mistyTreasureValue">'+c.treasures+'</strong></div><button class="mistyChapter">＋ Chapter / Treasure</button><button class="mistySpend">− Spend Treasure</button><button class="mistyDragon" '+(c.treasures<4?'disabled':'')+'>Create 6/6 Dragon</button></div>':'')+
+       (isMisty?'<div class="mistyControls"><div class="mistyStat"><span>LORE</span><strong class="mistyLoreValue">'+c.lore+'</strong></div><div class="mistyStat"><span>GLOBAL TREASURES</span><strong class="mistyTreasureValue">'+tokenBank.treasure+'</strong></div><button class="mistyChapter">＋ Chapter / Treasure</button><button class="mistySpend">− Spend Treasure</button><button class="mistyDragon" '+(tokenBank.treasure<4?'disabled':'')+'>Create 6/6 Dragon</button></div>':'')+
        '<button class="remove permanentRemove">Remove Permanent</button>';
     card.innerHTML=
      '<div class="battleCardVisual">'+
@@ -2313,10 +2353,10 @@ function render(){
       };
     }
     if(isMisty){
-      card.querySelector(".mistyChapter").onclick=function(){snapshot();c.lore=Math.min(4,c.lore+1);c.treasures++;finish()};
-      card.querySelector(".mistySpend").onclick=function(){if(c.treasures<1)return;snapshot();c.treasures--;finish()};
+      card.querySelector(".mistyChapter").onclick=function(){snapshot();c.lore=Math.min(4,c.lore+1);tokenBank.treasure++;saveTokenBank();finish()};
+      card.querySelector(".mistySpend").onclick=function(){if(tokenBank.treasure<1)return;snapshot();tokenBank.treasure--;saveTokenBank();finish()};
       card.querySelector(".mistyDragon").onclick=function(){
-        if(c.treasures<4)return;
+        if(tokenBank.treasure<4)return;
         snapshot();
         var tokenId='c'+Date.now()+'_'+Math.floor(Math.random()*1000000);
         creatures.push({id:tokenId,name:'Dragon Token',p:6,t:6,c:0,links:[],image:'',typeLine:'Token Creature — Dragon',oracle:'Flying',isCreature:true,treasures:0,lore:0});
@@ -4126,6 +4166,7 @@ window.getWolfGameContext=function(){
 loadDecks();
 loadGame();
 load();
+loadTokenBank();
 enforceSoloGame();
 saveGame();save();
 render();
