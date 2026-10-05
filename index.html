@@ -1778,6 +1778,7 @@ body.trackerPreview #trackerView .mistyControls button{min-height:38px;padding:6
 body.trackerPreview #trackerView .mistyChapter,body.trackerPreview #trackerView .mistySpend{grid-column:auto}
 body.trackerPreview #trackerView .mistyDragon{grid-column:1/-1;border-color:rgba(197,145,73,.7);background:linear-gradient(180deg,rgba(74,48,22,.96),rgba(31,20,10,.98));color:#f2d5a2}
 body.trackerPreview #trackerView .permanentRemove{width:100%;margin-top:6px;border-color:rgba(151,87,67,.56)}
+body.trackerPreview #trackerView .smartControls{display:grid;grid-template-columns:1fr;gap:5px;margin-top:6px}body.trackerPreview #trackerView .smartTrigger{border-color:rgba(92,181,100,.7);background:linear-gradient(180deg,rgba(28,67,34,.96),rgba(11,31,16,.98));color:#eaffdf}
 </style>
 <link rel="stylesheet" href="./wolf/wolf.css?v=9">
 </head>
@@ -2107,7 +2108,16 @@ function normalize(c){
   c.isCreature=(c.isCreature!==false)&&(/Creature/i.test(c.typeLine)||c.typeLine==="Creature");
   c.treasures=Math.max(0,Number(c.treasures)||0);
   c.lore=Math.max(0,Number(c.lore)||0);
+  c.smartTriggers=Array.isArray(c.smartTriggers)?c.smartTriggers:[];
   if(!Array.isArray(c.links))c.links=[];
+}
+function buildSmartTriggers(card){
+  var text=String(card&&card.oracle_text||'');
+  var triggers=[];
+  if(/at the beginning of (?:your|each|every|the) upkeep/i.test(text)){
+    triggers.push({kind:'upkeep',label:'Upkeep Trigger'});
+  }
+  return triggers;
 }
 function ensurePlayerCreatureSlots(){
   var count=(gameState&&gameState.players&&gameState.players.length)||2;
@@ -2258,6 +2268,8 @@ function render(){
     var card=document.createElement("section");card.className="card";
     card._creatureRef=c;card.setAttribute("data-creature-shape",creatureShape(c));
     var isMisty=/^The Misty Mountains Cold$/i.test(c.name);
+    var smartControls=(c.smartTriggers||[]).map(function(trigger,index){return '<button class="smartTrigger" data-trigger-index="'+index+'">'+escapeHTML(trigger.label)+'</button>';}).join('');
+    if(smartControls)smartControls='<div class="smartControls">'+smartControls+'</div>';
     var creatureControls=c.isCreature?
       '<div class="battleControls"><button class="minus">−1</button><button class="plus">+1</button><button class="double">×2</button><button class="reset">Reset</button></div>'+
       '<div class="custom"><input class="amt" inputmode="numeric" placeholder="Custom +X"><button class="addx">+X</button></div>'+
@@ -2269,7 +2281,15 @@ function render(){
      '<div class="battleCardVisual">'+
        (c.image?'<img class="battleCardImage" src="'+escapeHTML(c.image)+'" alt="'+escapeHTML(c.name)+' card">':'<div class="battleCardFallback"><strong>'+escapeHTML(c.name)+'</strong><span>'+escapeHTML(c.typeLine||'Permanent')+'</span></div>')+
        (c.isCreature?'<div class="battleCardPower">'+(c.p+c.c)+'/'+(c.t+c.c)+'</div><div class="battleCardCounters">+'+c.c+'</div>':'')+
-     '</div>'+creatureControls;
+     '</div>'+smartControls+creatureControls;
+    Array.prototype.forEach.call(card.querySelectorAll(".smartTrigger"),function(button){
+      button.onclick=function(){
+        var trigger=(c.smartTriggers||[])[Number(this.getAttribute("data-trigger-index"))];
+        if(!trigger)return;
+        this.textContent=trigger.label+" ✓";
+        setTimeout(function(){button.textContent=trigger.label;},700);
+      };
+    });
     if(c.isCreature){
       card.querySelector(".minus").onclick=function(){adjust(c.id,-1)};
       card.querySelector(".plus").onclick=function(){adjust(c.id,1)};
@@ -2612,7 +2632,7 @@ function addTrackerDeckCreature(){
       if(isCreature&&(isNaN(p)||isNaN(t)))throw new Error('Wolf Lair could not read that creature’s power/toughness.');
       var image=cardImageUrl(card);
       snapshot();
-      creatures.push({id:'c'+Date.now()+'_'+Math.floor(Math.random()*1000000),name:card.name,p:p||0,t:t||0,c:0,links:[],image:image,typeLine:typeLine,oracle:String(card.oracle_text||''),isCreature:isCreature,treasures:0,lore:0});
+      creatures.push({id:'c'+Date.now()+'_'+Math.floor(Math.random()*1000000),name:card.name,p:p||0,t:t||0,c:0,links:[],image:image,typeLine:typeLine,oracle:String(card.oracle_text||''),isCreature:isCreature,treasures:0,lore:0,smartTriggers:buildSmartTriggers(card)});
       finish();status.textContent=card.name+' added to your battlefield.';
     }).catch(function(err){status.textContent=err.message||'Could not add that card.';});
 }
