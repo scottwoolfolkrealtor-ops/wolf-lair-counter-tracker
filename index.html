@@ -2347,8 +2347,32 @@ function render(){
       button.onclick=function(){
         var trigger=(c.smartTriggers||[])[Number(this.getAttribute("data-trigger-index"))];
         if(!trigger)return;
-        this.textContent=trigger.label+" ✓";
-        setTimeout(function(){button.textContent=trigger.label;},700);
+        var text=String(trigger.text||""), changed=false;
+        function amountFromWords(source){
+          var m=source.match(/\\b(?:create|creates|put|puts)\\s+(?:(a|an|one|two|three|four|five|six|seven|eight|nine|ten|\\d+)\\s+)?/i);
+          var raw=m&&m[1]?m[1].toLowerCase():"one", words={a:1,an:1,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10};
+          return words[raw]||Math.max(1,parseInt(raw,10)||1);
+        }
+        var tokenMatch=text.match(/\\b(Treasure|Food|Clue|Blood)\\s+token/i);
+        if(tokenMatch){
+          var kind=tokenMatch[1].toLowerCase(), amount=amountFromWords(text);
+          snapshot();tokenBank[kind]=Math.max(0,(Number(tokenBank[kind])||0)+amount);saveTokenBank();changed=true;
+        }
+        if(/\\bput\\b[^.]*\\+1\\/+1 counter/i.test(text)){
+          var eligible=creatures.filter(function(x){return x.isCreature;});
+          if(eligible.length){
+            var labels=eligible.map(function(x,i){return (i+1)+". "+x.name;}).join("\\n");
+            var picked=window.prompt("Choose target creature for the +1/+1 counter:\\n"+labels,"1");
+            var index=parseInt(picked,10)-1;
+            if(index>=0&&index<eligible.length){
+              if(!changed)snapshot();
+              eligible[index].c+=amountFromWords(text);changed=true;
+            }
+          }
+        }
+        if(changed){finish();this.textContent=trigger.label+" ✓";setTimeout(function(){button.textContent=trigger.label;},700);return;}
+        this.textContent=trigger.label+" • Confirmed";
+        setTimeout(function(){button.textContent=trigger.label;},900);
       };
     });
     if(c.isCreature){
