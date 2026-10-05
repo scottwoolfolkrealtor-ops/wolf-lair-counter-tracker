@@ -1768,6 +1768,16 @@ body.trackerPreview #trackerView .battleMore{margin-top:6px;border:1px solid rgb
 body.trackerPreview #trackerView .battleMore summary{cursor:pointer;color:#cbb58d;font-size:11px;font-weight:900;text-align:center;padding:4px}
 body.trackerPreview #trackerView .battleMore .count{margin:5px 0}
 @media(min-width:700px){body.trackerPreview #trackerView #field{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+body.trackerPreview #trackerView .permanentType{margin-top:6px;padding:6px 8px;border-radius:8px;text-align:center;color:#cdbb9b;background:rgba(5,8,6,.78);border:1px solid rgba(151,119,76,.4);font-size:11px;font-weight:800}
+body.trackerPreview #trackerView .mistyControls{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
+body.trackerPreview #trackerView .mistyStat{padding:6px;border-radius:9px;text-align:center;background:rgba(8,14,10,.9);border:1px solid rgba(88,170,91,.42)}
+body.trackerPreview #trackerView .mistyStat span{display:block;font-size:8px;color:#a8b3a5;letter-spacing:1px;font-weight:900}
+body.trackerPreview #trackerView .mistyStat strong{display:block;font-size:22px;color:#dff4d9}
+body.trackerPreview #trackerView .mistyControls button{min-height:38px;padding:6px;font-size:11px}
+body.trackerPreview #trackerView .mistyChapter,body.trackerPreview #trackerView .mistySpend{grid-column:auto}
+body.trackerPreview #trackerView .mistyDragon{grid-column:1/-1;border-color:rgba(197,145,73,.7);background:linear-gradient(180deg,rgba(74,48,22,.96),rgba(31,20,10,.98));color:#f2d5a2}
+body.trackerPreview #trackerView .permanentRemove{width:100%;margin-top:6px;border-color:rgba(151,87,67,.56)}
 </style>
 <link rel="stylesheet" href="./wolf/wolf.css?v=9">
 </head>
@@ -2015,7 +2025,7 @@ body.trackerPreview #trackerView .battleMore .count{margin:5px 0}
   <h3>Add From My Deck</h3>
   <select id="trackerDeckSelect" aria-label="Choose a saved deck"></select>
   <div class="gameDeckAddRow">
-    <select id="trackerCreatureSelect" aria-label="Choose a creature from this deck"></select>
+    <select id="trackerCreatureSelect" aria-label="Choose a card from this deck"></select>
     <button id="addTrackerDeckCreature" type="button">＋ Battlefield</button>
   </div>
   <div id="trackerDeckStatus" class="deckToolStatus" aria-live="polite"></div>
@@ -2048,7 +2058,7 @@ body.trackerPreview #trackerView .battleMore .count{margin:5px 0}
         <h3>My Game Deck</h3>
         <select id="gameDeckSelect" aria-label="Choose a saved deck"></select>
         <div class="gameDeckAddRow">
-          <select id="gameCreatureSelect" aria-label="Choose a creature from this deck"></select>
+          <select id="gameCreatureSelect" aria-label="Choose a card from this deck"></select>
           <button id="addDeckCreature" type="button">＋ Battlefield</button>
         </div>
         <div id="gameDeckStatus" class="deckToolStatus" aria-live="polite"></div>
@@ -2092,6 +2102,11 @@ function normalize(c){
   c.name=String(c.name||"Creature");
   c.p=Number(c.p)||0;c.t=Number(c.t)||0;c.c=Math.max(0,Number(c.c)||0);
   c.image=String(c.image||"");
+  c.typeLine=String(c.typeLine||"Creature");
+  c.oracle=String(c.oracle||"");
+  c.isCreature=(c.isCreature!==false)&&(/Creature/i.test(c.typeLine)||c.typeLine==="Creature");
+  c.treasures=Math.max(0,Number(c.treasures)||0);
+  c.lore=Math.max(0,Number(c.lore)||0);
   if(!Array.isArray(c.links))c.links=[];
 }
 function ensurePlayerCreatureSlots(){
@@ -2199,7 +2214,7 @@ function render(){
   var savedScroll={x:window.scrollX,y:window.scrollY,
     top:trackerMain?trackerMain.scrollTop:0,left:trackerMain?trackerMain.scrollLeft:0,
     railLeft:f.scrollLeft,railTop:f.scrollTop};
-  function creatureShape(c){return JSON.stringify([c.id,c.name,c.p,c.t,c.image]);}
+  function creatureShape(c){return JSON.stringify([c.id,c.name,c.p,c.t,c.image,c.typeLine,c.isCreature,c.treasures,c.lore]);}
   // Counter-only changes keep the existing cards, focused controls, and scroll
   // container intact. Rebind from scratch when Undo replaces creature objects.
   var cards=Array.prototype.slice.call(f.children);
@@ -2215,9 +2230,13 @@ function render(){
   if(sameCards){
     cards.forEach(function(card,index){
       var c=creatures[index];
-      card.querySelector('.battleCardPower').textContent=(c.p+c.c)+'/'+(c.t+c.c);
-      card.querySelector('.battleCardCounters').textContent='+'+c.c;
-      card.querySelector('.count strong').textContent=String(c.c);
+      var power=card.querySelector('.battleCardPower'), counters=card.querySelector('.battleCardCounters'), countStrong=card.querySelector('.count strong');
+      if(power)power.textContent=(c.p+c.c)+'/'+(c.t+c.c);
+      if(counters)counters.textContent='+'+c.c;
+      if(countStrong)countStrong.textContent=String(c.c);
+      var treasure=card.querySelector('.mistyTreasureValue'), lore=card.querySelector('.mistyLoreValue');
+      if(treasure)treasure.textContent=String(c.treasures);
+      if(lore)lore.textContent=String(c.lore);
       Array.prototype.forEach.call(card.querySelectorAll('.lnk'),function(box){
         box.checked=c.links.indexOf(box.getAttribute('data-id'))>=0;
       });
@@ -2238,44 +2257,52 @@ function render(){
     if(!targets)targets="<div>Add another creature first.</div>";
     var card=document.createElement("section");card.className="card";
     card._creatureRef=c;card.setAttribute("data-creature-shape",creatureShape(c));
+    var isMisty=/^The Misty Mountains Cold$/i.test(c.name);
+    var creatureControls=c.isCreature?
+      '<div class="battleControls"><button class="minus">−1</button><button class="plus">+1</button><button class="double">×2</button><button class="reset">Reset</button></div>'+
+      '<div class="custom"><input class="amt" inputmode="numeric" placeholder="Custom +X"><button class="addx">+X</button></div>'+
+      '<details class="battleMore"><summary>More controls</summary><div class="count"><span>+1/+1 Counters</span><strong>'+c.c+'</strong></div><button class="wide current">+ Current Power</button><div class="links"><b>Target / Link to:</b><div class="linkTargets">'+targets+'</div><button class="wide linked">+ Current Power to Me + Linked</button><button class="wide counters">+ My Counters to Target(s)</button></div><button class="remove">Remove Creature</button></details>'
+      :'<div class="permanentType">'+escapeHTML(c.typeLine||'Permanent')+'</div>'+
+       (isMisty?'<div class="mistyControls"><div class="mistyStat"><span>LORE</span><strong class="mistyLoreValue">'+c.lore+'</strong></div><div class="mistyStat"><span>TREASURES</span><strong class="mistyTreasureValue">'+c.treasures+'</strong></div><button class="mistyChapter">＋ Chapter / Treasure</button><button class="mistySpend">− Spend Treasure</button><button class="mistyDragon" '+(c.treasures<4?'disabled':'')+'>Create 6/6 Dragon</button></div>':'')+
+       '<button class="remove permanentRemove">Remove Permanent</button>';
     card.innerHTML=
      '<div class="battleCardVisual">'+
-       (c.image?'<img class="battleCardImage" src="'+escapeHTML(c.image)+'" alt="'+escapeHTML(c.name)+' card">':'<div class="battleCardFallback"><strong>'+escapeHTML(c.name)+'</strong><span>Base '+c.p+'/'+c.t+'</span></div>')+
-       '<div class="battleCardPower">'+(c.p+c.c)+'/'+(c.t+c.c)+'</div>'+
-       '<div class="battleCardCounters">+'+c.c+'</div>'+
-     '</div>'+
-     '<div class="battleControls">'+
-       '<button class="minus">−1</button><button class="plus">+1</button><button class="double">×2</button><button class="reset">Reset</button>'+
-     '</div>'+
-     '<div class="custom"><input class="amt" inputmode="numeric" placeholder="Custom +X"><button class="addx">+X</button></div>'+
-     '<details class="battleMore"><summary>More controls</summary>'+
-       '<div class="count"><span>+1/+1 Counters</span><strong>'+c.c+'</strong></div>'+
-       '<button class="wide current">+ Current Power</button>'+
-       '<div class="links"><b>Target / Link to:</b><div class="linkTargets">'+targets+'</div>'+
-       '<button class="wide linked">+ Current Power to Me + Linked</button>'+
-       '<button class="wide counters">+ My Counters to Target(s)</button></div>'+
-       '<button class="remove">Remove Creature</button>'+
-     '</details>';
-    card.querySelector(".minus").onclick=function(){adjust(c.id,-1)};
-    card.querySelector(".plus").onclick=function(){adjust(c.id,1)};
-    card.querySelector(".current").onclick=function(){adjust(c.id,c.p+c.c)};
-    card.querySelector(".double").onclick=function(){snapshot();c.c*=2;finish()};
-    card.querySelector(".reset").onclick=function(){snapshot();c.c=0;finish()};
-    card.querySelector(".addx").onclick=function(){var n=parseInt(card.querySelector(".amt").value,10);if(!isNaN(n)&&n!==0)adjust(c.id,n)};
-    var boxes=card.querySelectorAll(".lnk");
-    for(var k=0;k<boxes.length;k++)boxes[k].onchange=function(){
-      var id=this.getAttribute("data-id"), ix=c.links.indexOf(id);
-      if(this.checked&&ix<0)c.links.push(id);else if(!this.checked&&ix>=0)c.links.splice(ix,1);
-      save();
-    };
-    card.querySelector(".linked").onclick=function(){
-      if(!c.links.length)return;snapshot();var amount=c.p+c.c;c.c+=amount;
-      for(var q=0;q<c.links.length;q++){var t=find(c.links[q]);if(t)t.c+=amount}finish();
-    };
-    card.querySelector(".counters").onclick=function(){
-      if(!c.links.length||c.c<=0)return;snapshot();var amount=c.c;
-      for(var q=0;q<c.links.length;q++){var t=find(c.links[q]);if(t)t.c+=amount}finish();
-    };
+       (c.image?'<img class="battleCardImage" src="'+escapeHTML(c.image)+'" alt="'+escapeHTML(c.name)+' card">':'<div class="battleCardFallback"><strong>'+escapeHTML(c.name)+'</strong><span>'+escapeHTML(c.typeLine||'Permanent')+'</span></div>')+
+       (c.isCreature?'<div class="battleCardPower">'+(c.p+c.c)+'/'+(c.t+c.c)+'</div><div class="battleCardCounters">+'+c.c+'</div>':'')+
+     '</div>'+creatureControls;
+    if(c.isCreature){
+      card.querySelector(".minus").onclick=function(){adjust(c.id,-1)};
+      card.querySelector(".plus").onclick=function(){adjust(c.id,1)};
+      card.querySelector(".current").onclick=function(){adjust(c.id,c.p+c.c)};
+      card.querySelector(".double").onclick=function(){snapshot();c.c*=2;finish()};
+      card.querySelector(".reset").onclick=function(){snapshot();c.c=0;finish()};
+      card.querySelector(".addx").onclick=function(){var n=parseInt(card.querySelector(".amt").value,10);if(!isNaN(n)&&n!==0)adjust(c.id,n)};
+      var boxes=card.querySelectorAll(".lnk");
+      for(var k=0;k<boxes.length;k++)boxes[k].onchange=function(){
+        var id=this.getAttribute("data-id"), ix=c.links.indexOf(id);
+        if(this.checked&&ix<0)c.links.push(id);else if(!this.checked&&ix>=0)c.links.splice(ix,1);
+        save();
+      };
+      card.querySelector(".linked").onclick=function(){
+        if(!c.links.length)return;snapshot();var amount=c.p+c.c;c.c+=amount;
+        for(var q=0;q<c.links.length;q++){var t=find(c.links[q]);if(t&&t.isCreature)t.c+=amount}finish();
+      };
+      card.querySelector(".counters").onclick=function(){
+        if(!c.links.length||c.c<=0)return;snapshot();var amount=c.c;
+        for(var q=0;q<c.links.length;q++){var t=find(c.links[q]);if(t&&t.isCreature)t.c+=amount}finish();
+      };
+    }
+    if(isMisty){
+      card.querySelector(".mistyChapter").onclick=function(){snapshot();c.lore=Math.min(4,c.lore+1);c.treasures++;finish()};
+      card.querySelector(".mistySpend").onclick=function(){if(c.treasures<1)return;snapshot();c.treasures--;finish()};
+      card.querySelector(".mistyDragon").onclick=function(){
+        if(c.treasures<4)return;
+        snapshot();
+        creatures.push({id:'c'+Date.now()+'_'+Math.floor(Math.random()*1000000),name:'Dragon Token',p:6,t:6,c:0,links:[],image:'',typeLine:'Token Creature — Dragon',oracle:'Flying',isCreature:true,treasures:0,lore:0});
+        creatures=creatures.filter(function(x){return x.id!==c.id});
+        finish();
+      };
+    }
     card.querySelector(".remove").onclick=function(){
       snapshot();creatures=creatures.filter(function(x){return x.id!==c.id});
       for(var q=0;q<creatures.length;q++)creatures[q].links=creatures[q].links.filter(function(x){return x!==c.id});
@@ -2503,7 +2530,7 @@ function renderGameDeckControls(){
   decks.forEach(function(d){var o=document.createElement('option');o.value=d.id;o.textContent=d.name+(d.commander?' — '+d.commander:'');deckSelect.appendChild(o);});
   if(decks.some(function(d){return d.id===previous}))deckSelect.value=previous;
   var deck=selectedGameDeck(), names=deckCreatureNames(deck);
-  creatureSelect.innerHTML='<option value="">Choose a creature…</option>';
+  creatureSelect.innerHTML='<option value="">Choose a card…</option>';
   names.forEach(function(name){var o=document.createElement('option');o.value=name;o.textContent=name;creatureSelect.appendChild(o);});
   creatureSelect.disabled=!deck;addBtn.disabled=!deck;
   status.textContent=deck?(names.length+' cards available from '+deck.name):'Select one of your saved decks for this game.';
@@ -2538,24 +2565,25 @@ function renderTrackerDeckControls(){
   decks.forEach(function(d){var o=document.createElement('option');o.value=d.id;o.textContent=d.name+(d.commander?' — '+d.commander:'');deckSelect.appendChild(o);});
   if(decks.some(function(d){return d.id===previous}))deckSelect.value=previous;
   var deck=selectedTrackerDeck(), names=deckCreatureNames(deck);
-  creatureSelect.innerHTML='<option value="">Choose a creature…</option>';
+  creatureSelect.innerHTML='<option value="">Choose a card…</option>';
   names.forEach(function(name){var o=document.createElement('option');o.value=name;o.textContent=name;creatureSelect.appendChild(o);});
   creatureSelect.disabled=!deck;addBtn.disabled=!deck;
   status.textContent=deck?(names.length+' cards available from '+deck.name):'Choose one of your saved decks.';
 }
 function addTrackerDeckCreature(){
   var deck=selectedTrackerDeck(), name=el('trackerCreatureSelect').value, status=el('trackerDeckStatus');
-  if(!deck||!name){status.textContent='Choose a deck and creature first.';return;}
+  if(!deck||!name){status.textContent='Choose a deck card first.';return;}
   status.textContent='Loading '+name+'…';
   fetch('https://api.scryfall.com/cards/named?exact='+encodeURIComponent(name))
     .then(function(r){if(!r.ok)throw new Error('Card lookup failed');return r.json();})
     .then(function(card){
-      var face=card;if((card.power==null||card.toughness==null)&&card.card_faces&&card.card_faces.length)face=card.card_faces[0];
-      var p=parseInt(face.power,10),t=parseInt(face.toughness,10);
-      if(isNaN(p)||isNaN(t))throw new Error('That card does not have standard creature power/toughness.');
-      snapshot();
+      var typeLine=String(card.type_line||''), isCreature=/Creature/i.test(typeLine);
+      var face=card;if(isCreature&&(card.power==null||card.toughness==null)&&card.card_faces&&card.card_faces.length)face=card.card_faces[0];
+      var p=isCreature?parseInt(face.power,10):0,t=isCreature?parseInt(face.toughness,10):0;
+      if(isCreature&&(isNaN(p)||isNaN(t)))throw new Error('Wolf Lair could not read that creature’s power/toughness.');
       var image=(card.image_uris&&(card.image_uris.normal||card.image_uris.large||card.image_uris.small))||((card.card_faces&&card.card_faces[0]&&card.card_faces[0].image_uris)&&(card.card_faces[0].image_uris.normal||card.card_faces[0].image_uris.large||card.card_faces[0].image_uris.small))||'';
-      creatures.push({id:'c'+Date.now()+'_'+Math.floor(Math.random()*1000000),name:card.name,p:p,t:t,c:0,links:[],image:image});
+      snapshot();
+      creatures.push({id:'c'+Date.now()+'_'+Math.floor(Math.random()*1000000),name:card.name,p:p||0,t:t||0,c:0,links:[],image:image,typeLine:typeLine,oracle:String(card.oracle_text||''),isCreature:isCreature,treasures:0,lore:0});
       finish();status.textContent=card.name+' added to your battlefield.';
     }).catch(function(err){status.textContent=err.message||'Could not add that card.';});
 }
