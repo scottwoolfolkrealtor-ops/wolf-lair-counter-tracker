@@ -2548,7 +2548,7 @@ function deckCreatureNames(deck){
   String(deck&&deck.cards||'').split(/\n+/).forEach(function(line){
     var m=line.trim().match(/^(?:\d+\s+)?(.+)$/);if(m)add(m[1]);
   });
-  return out;
+  return out.sort(function(a,b){return a.localeCompare(b,undefined,{sensitivity:'base'});});
 }
 function selectedGameDeck(){
   var id=el('gameDeckSelect')&&el('gameDeckSelect').value;
