@@ -85,6 +85,11 @@ nav button{min-height:52px}button:disabled{opacity:.4}
 .proGrid button{width:100%}
 textarea.proArea{width:100%;min-height:180px;background:#06100b;color:#fff;border:1px solid #4c6654;border-radius:10px;padding:12px;font:15px system-ui,-apple-system,sans-serif;resize:vertical}
 @media(max-width:640px){.gameBoard,.appGrid,.proGrid{grid-template-columns:1fr}}
+.gameDeckControl{margin-bottom:2px}
+.gameDeckControl select{width:100%;background:#06100b;color:#fff;border:1px solid #4c6654;border-radius:10px;padding:11px;font-size:15px}
+.gameDeckAddRow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:8px}
+.gameDeckAddRow button{white-space:nowrap}
+@media(max-width:420px){.gameDeckAddRow{grid-template-columns:1fr}.gameDeckAddRow button{width:100%}}
 
 /* WOLF LAIR ANIMATED SCENE */
 #home>.brandHero,#home>.appGrid,#home>.homeFoot{position:relative;z-index:6}
@@ -1966,12 +1971,16 @@ body.trackerPreview #decksView #cameraLight[aria-pressed="true"]{background:#715
   <small>LIFE • COMMANDER • POISON • D20</small>
 </header>
     <div class="gameShell">
-      <div id="gameBoard" class="gameBoard"></div>
-      <div class="playerRosterTools">
-        <button id="addPlayer" type="button">＋ Add Player</button>
-        <button id="removePlayer" type="button">− Remove Last Player</button>
+      <div class="quickCard gameDeckControl">
+        <h3>My Game Deck</h3>
+        <select id="gameDeckSelect" aria-label="Choose a saved deck"></select>
+        <div class="gameDeckAddRow">
+          <select id="gameCreatureSelect" aria-label="Choose a creature from this deck"></select>
+          <button id="addDeckCreature" type="button">＋ Battlefield</button>
+        </div>
+        <div id="gameDeckStatus" class="deckToolStatus" aria-live="polite"></div>
       </div>
-      <div id="playerLimitMsg" class="playerLimitMsg" aria-live="polite"></div>
+      <div id="gameBoard" class="gameBoard"></div>
     </div>
   </main>
 </section>
@@ -2373,6 +2382,62 @@ function loadGame(){
 function saveGame(){
   try{localStorage.setItem(GAME_KEY,JSON.stringify(gameState))}catch(e){}
 }
+function enforceSoloGame(){
+  if(!gameState.players||!gameState.players.length)gameState.players=[{name:'Player 1',life:40,commander:0,poison:0}];
+  if(gameState.players.length>1)gameState.players=[gameState.players[0]];
+  if(typeof playerCreatures!=='undefined'){
+    if(!playerCreatures.length)playerCreatures=[[]];
+    if(playerCreatures.length>1)playerCreatures=[playerCreatures[0]||[]];
+    activePlayerIndex=0;creatures=playerCreatures[0]||[];
+  }
+}
+function deckCreatureNames(deck){
+  var out=[],seen={};
+  function add(name){
+    name=String(name||'').trim();
+    if(!name||seen[name.toLowerCase()])return;
+    seen[name.toLowerCase()]=true;out.push(name);
+  }
+  if(deck&&Array.isArray(deck.entries))deck.entries.forEach(function(e){add(e&&e.name)});
+  String(deck&&deck.cards||'').split(/\n+/).forEach(function(line){
+    var m=line.trim().match(/^(?:\d+\s+)?(.+)$/);if(m)add(m[1]);
+  });
+  return out;
+}
+function selectedGameDeck(){
+  var id=el('gameDeckSelect')&&el('gameDeckSelect').value;
+  for(var i=0;i<decks.length;i++)if(decks[i].id===id)return decks[i];
+  return null;
+}
+function renderGameDeckControls(){
+  var deckSelect=el('gameDeckSelect'), creatureSelect=el('gameCreatureSelect'), addBtn=el('addDeckCreature'), status=el('gameDeckStatus');
+  if(!deckSelect||!creatureSelect)return;
+  var previous=deckSelect.value||localStorage.getItem('wolfLairGameDeck')||'';
+  deckSelect.innerHTML='<option value="">Choose a saved deck…</option>';
+  decks.forEach(function(d){var o=document.createElement('option');o.value=d.id;o.textContent=d.name+(d.commander?' — '+d.commander:'');deckSelect.appendChild(o);});
+  if(decks.some(function(d){return d.id===previous}))deckSelect.value=previous;
+  var deck=selectedGameDeck(), names=deckCreatureNames(deck);
+  creatureSelect.innerHTML='<option value="">Choose a creature…</option>';
+  names.forEach(function(name){var o=document.createElement('option');o.value=name;o.textContent=name;creatureSelect.appendChild(o);});
+  creatureSelect.disabled=!deck;addBtn.disabled=!deck;
+  status.textContent=deck?(names.length+' cards available from '+deck.name):'Select one of your saved decks for this game.';
+}
+function addSelectedDeckCreature(){
+  var deck=selectedGameDeck(), name=el('gameCreatureSelect').value, status=el('gameDeckStatus');
+  if(!deck||!name){status.textContent='Choose a deck and creature first.';return;}
+  status.textContent='Loading '+name+'…';
+  fetch('https://api.scryfall.com/cards/named?exact='+encodeURIComponent(name))
+    .then(function(r){if(!r.ok)throw new Error('Card lookup failed');return r.json();})
+    .then(function(card){
+      var face=card;
+      if((card.power==null||card.toughness==null)&&card.card_faces&&card.card_faces.length)face=card.card_faces[0];
+      var p=parseInt(face.power,10),t=parseInt(face.toughness,10);
+      if(isNaN(p)||isNaN(t))throw new Error('That card does not have standard creature power/toughness.');
+      creatures.push({id:'c'+Date.now()+'_'+Math.floor(Math.random()*1000000),name:card.name,p:p,t:t,c:0,links:[]});
+      finish();
+      status.textContent=card.name+' added to your battlefield.';
+    }).catch(function(err){status.textContent=err.message||'Could not add that card.';});
+}
 function playCounterChange(kind,before,after){
   var defeat=(kind==='life'&&before>0&&after<=0)||
     (kind==='commander'&&before<21&&after>=21)||
@@ -2382,6 +2447,8 @@ function playCounterChange(kind,before,after){
   else if(kind!=='life'&&after>before)window.WolfAudio.play(kind);
 }
 function renderGame(){
+  enforceSoloGame();
+  renderGameDeckControls();
   if(el('trackerView').hasAttribute('data-seat-aligned'))orientPlayerTracker();
   var board=el('gameBoard');
   board.innerHTML='';
@@ -2537,26 +2604,11 @@ function renderGame(){
     limitMsg.textContent=gameState.players.length>=6?'Maximum 6 players':(gameState.players.length+' players at the table');
   }
 }
-el('addPlayer').onclick=function(){
-  if(gameState.players.length>=6)return;
-  var n=gameState.players.length+1;
-  gameState.players.push({name:'Player '+n, life:40, commander:0, poison:0, roll:null});
-  ensurePlayerCreatureSlots();
-  saveGame();
-  save();
-  renderGame();
+el('gameDeckSelect').onchange=function(){
+  try{localStorage.setItem('wolfLairGameDeck',this.value)}catch(e){}
+  renderGameDeckControls();
 };
-el('removePlayer').onclick=function(){
-  if(gameState.players.length<=1)return;
-  gameState.players.pop();
-  playerCreatures.pop();
-  if(activePlayerIndex>=gameState.players.length)activePlayerIndex=gameState.players.length-1;
-  creatures=playerCreatures[activePlayerIndex]||[];
-  saveGame();
-  save();
-  updateBattlefieldPlayerLabel();
-  renderGame();
-};
+el('addDeckCreature').onclick=addSelectedDeckCreature;
 var proState={
   lastSaved: new Date().toISOString(),
   tracker: {count: creatures.length},
@@ -3851,7 +3903,10 @@ window.getWolfGameContext=function(){
 };
 loadDecks();
 loadGame();
-load();render();
+load();
+enforceSoloGame();
+saveGame();save();
+render();
 renderDecks();
 renderGame();
 })();
