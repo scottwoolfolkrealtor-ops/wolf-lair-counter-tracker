@@ -2298,9 +2298,17 @@ function render(){
       card.querySelector(".mistyDragon").onclick=function(){
         if(c.treasures<4)return;
         snapshot();
-        creatures.push({id:'c'+Date.now()+'_'+Math.floor(Math.random()*1000000),name:'Dragon Token',p:6,t:6,c:0,links:[],image:'',typeLine:'Token Creature — Dragon',oracle:'Flying',isCreature:true,treasures:0,lore:0});
+        var tokenId='c'+Date.now()+'_'+Math.floor(Math.random()*1000000);
+        creatures.push({id:tokenId,name:'Dragon Token',p:6,t:6,c:0,links:[],image:'',typeLine:'Token Creature — Dragon',oracle:'Flying',isCreature:true,treasures:0,lore:0});
         creatures=creatures.filter(function(x){return x.id!==c.id});
         finish();
+        fetch('https://api.scryfall.com/cards/search?q='+encodeURIComponent('t:token t:dragon pow=6 tou=6 o:flying c:r'))
+          .then(function(r){if(!r.ok)throw new Error('Token lookup failed');return r.json();})
+          .then(function(data){
+            var token=(data.data||[])[0], dragon=find(tokenId);
+            if(!token||!dragon)return;
+            dragon.image=cardImageUrl(token);dragon.name=token.name||'Dragon Token';save();render();
+          }).catch(function(){});
       };
     }
     card.querySelector(".remove").onclick=function(){
