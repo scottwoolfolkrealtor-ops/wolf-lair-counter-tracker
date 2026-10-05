@@ -1719,6 +1719,35 @@ body.trackerPreview #decksView #cameraLight{width:auto;min-height:40px;margin:0 
 body.trackerPreview #decksView #cameraLight[aria-pressed="true"]{background:#71551c;border-color:#f4cc70;color:#fff6d9;}
 
 #scanTiming{margin:8px 0;padding:8px 12px;font-size:12px;color:#c9c9b8;}#scanTiming summary{cursor:pointer;}#scanTimingText{padding-top:6px;line-height:1.5;}
+
+/* Unified solo player battlefield */
+body.trackerPreview #trackerView{position:relative;inset:auto;min-height:100vh;height:auto;overflow:auto}
+body.trackerPreview #trackerView .playerTrackerSurface{position:relative;left:auto;top:auto;width:100%;height:auto;min-height:100vh;display:block;transform:none;overflow:visible}
+body.trackerPreview #trackerView .playerTrackerSurface main{display:block;overflow:visible;max-width:760px;margin:0 auto;padding:8px 8px 86px}
+body.trackerPreview #trackerView .trackerNavigation{position:sticky;top:0;z-index:20;margin-bottom:5px}
+body.trackerPreview #trackerView .soloHud{display:grid;grid-template-columns:1.35fr 1fr 1fr;gap:6px;margin:0 0 7px}
+body.trackerPreview #trackerView .soloLife,body.trackerPreview #trackerView .soloMini{min-width:0;border:1px solid rgba(183,139,79,.48);border-radius:11px;background:linear-gradient(160deg,rgba(18,21,18,.97),rgba(6,9,7,.98));padding:6px}
+body.trackerPreview #trackerView .soloLife{display:grid;grid-template-columns:36px 1fr 36px;align-items:center;text-align:center}
+body.trackerPreview #trackerView .soloLife span,body.trackerPreview #trackerView .soloMini>span{display:block;color:#a99778;font-size:8px;font-weight:900;letter-spacing:1px;text-align:center}
+body.trackerPreview #trackerView .soloLife strong{display:block;font-size:30px;line-height:1;color:#f4eadb}
+body.trackerPreview #trackerView .soloHud button{min-height:34px;padding:4px;font-size:16px}
+body.trackerPreview #trackerView .soloMini>div{display:grid;grid-template-columns:28px 1fr 28px;gap:3px;align-items:center;margin-top:4px}
+body.trackerPreview #trackerView .soloMini strong{text-align:center;font-size:19px;color:#e7d6b9}
+body.trackerPreview #trackerView .trackerDeckControl{margin-bottom:7px}
+body.trackerPreview #trackerView .battlefieldZoneTitle{display:flex;align-items:end;justify-content:space-between;gap:8px;margin:8px 2px 5px;padding-top:7px;border-top:1px solid rgba(170,126,70,.34)}
+body.trackerPreview #trackerView .battlefieldZoneTitle span{font-family:Georgia,'Times New Roman',serif;font-weight:900;color:#e5d4b8;letter-spacing:1px}
+body.trackerPreview #trackerView .battlefieldZoneTitle small{color:#8d9b8e;font-size:9px}
+body.trackerPreview #trackerView #field{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;overflow:visible;padding:0 0 8px}
+body.trackerPreview #trackerView #field>.card,body.trackerPreview #trackerView #field>.card:only-child{height:auto;min-height:0;display:block;overflow:visible}
+body.trackerPreview #trackerView #field .links{max-height:none;overflow:visible}
+body.trackerPreview #trackerView nav{position:fixed;left:0;right:0;bottom:0;z-index:40}
+body.trackerPreview #trackerView .creatureSwipeHint{display:none!important}
+@media(max-width:520px){
+ body.trackerPreview #trackerView .soloHud{grid-template-columns:1.2fr 1fr 1fr}
+ body.trackerPreview #trackerView .soloLife strong{font-size:26px}
+ body.trackerPreview #trackerView #field{grid-template-columns:1fr}
+ body.trackerPreview #trackerView .battlefieldZoneTitle{align-items:flex-start;flex-direction:column;gap:1px}
+}
 </style>
 <link rel="stylesheet" href="./wolf/wolf.css?v=9">
 </head>
@@ -1953,6 +1982,15 @@ body.trackerPreview #decksView #cameraLight[aria-pressed="true"]{background:#715
   <small>CREATURE &amp; COUNTER CONTROL</small>
   
 </header>
+<div id="soloHud" class="soloHud" aria-label="Game counters">
+  <div class="soloLife">
+    <button id="soloLifeDown" type="button" aria-label="Lose 1 life">−</button>
+    <div><span>LIFE</span><strong id="soloLifeValue">40</strong></div>
+    <button id="soloLifeUp" type="button" aria-label="Gain 1 life">＋</button>
+  </div>
+  <div class="soloMini"><span>COMMANDER</span><div><button id="soloCmdDown" type="button">−</button><strong id="soloCmdValue">0</strong><button id="soloCmdUp" type="button">＋</button></div></div>
+  <div class="soloMini"><span>POISON</span><div><button id="soloPoisonDown" type="button">−</button><strong id="soloPoisonValue">0</strong><button id="soloPoisonUp" type="button">＋</button></div></div>
+</div>
 <div class="quickCard trackerDeckControl">
   <h3>Add From My Deck</h3>
   <select id="trackerDeckSelect" aria-label="Choose a saved deck"></select>
@@ -1967,7 +2005,8 @@ body.trackerPreview #decksView #cameraLight[aria-pressed="true"]{background:#715
 <div class="pt"><input id="pw" inputmode="numeric" placeholder="Power"><input id="th" inputmode="numeric" placeholder="Toughness"></div>
 <button id="add" type="button">+ Add Creature</button><div id="msg" class="msg"></div>
 </div>
-<div id="empty" class="empty">Tap + Add to start tracking creatures.</div>
+<div class="battlefieldZoneTitle"><span>YOUR BATTLEFIELD</span><small>Creatures you add appear here</small></div>
+<div id="empty" class="empty">Choose a creature from your deck or tap + Add.</div>
 <div id="creatureSwipeHint" class="creatureSwipeHint hidden" role="navigation" aria-label="Jump to creature"></div>
 <div id="field" tabindex="0" role="region" aria-label="Creature cards; swipe sideways to browse"></div>
 </main>
@@ -2134,6 +2173,7 @@ function renderCreatureJump(){
   }
 }
 function render(){
+  renderSoloHud();
   var f=el("field"), trackerMain=el("trackerView").querySelector("main");
   var savedScroll={x:window.scrollX,y:window.scrollY,
     top:trackerMain?trackerMain.scrollTop:0,left:trackerMain?trackerMain.scrollLeft:0,
@@ -2493,6 +2533,19 @@ function playCounterChange(kind,before,after){
   if(kind==='life'&&after!==before)window.WolfAudio.play(after>before?'lifeGain':'lifeLoss');
   else if(kind!=='life'&&after>before)window.WolfAudio.play(kind);
 }
+function renderSoloHud(){
+  var p=(gameState.players&&gameState.players[0])||{life:40,commander:0,poison:0};
+  el('soloLifeValue').textContent=String(p.life);
+  el('soloCmdValue').textContent=String(p.commander||0);
+  el('soloPoisonValue').textContent=String(p.poison||0);
+  el('soloPoisonUp').disabled=(p.poison||0)>=10;
+}
+function changeSoloStat(stat,delta){
+  var p=gameState.players[0], before=Number(p[stat])||0, next=before+delta;
+  if(stat==='poison')next=Math.max(0,Math.min(10,next));
+  if(stat==='commander')next=Math.max(0,next);
+  p[stat]=next;saveGame();renderSoloHud();playCounterChange(stat,before,next);
+}
 function renderGame(){
   enforceSoloGame();
   renderGameDeckControls();
@@ -2661,6 +2714,12 @@ el('trackerDeckSelect').onchange=function(){
   renderTrackerDeckControls();
 };
 el('addTrackerDeckCreature').onclick=addTrackerDeckCreature;
+el('soloLifeDown').onclick=function(){changeSoloStat('life',-1)};
+el('soloLifeUp').onclick=function(){changeSoloStat('life',1)};
+el('soloCmdDown').onclick=function(){changeSoloStat('commander',-1)};
+el('soloCmdUp').onclick=function(){changeSoloStat('commander',1)};
+el('soloPoisonDown').onclick=function(){changeSoloStat('poison',-1)};
+el('soloPoisonUp').onclick=function(){changeSoloStat('poison',1)};
 var proState={
   lastSaved: new Date().toISOString(),
   tracker: {count: creatures.length},
