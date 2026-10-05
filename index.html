@@ -2159,7 +2159,7 @@ function buildSmartTriggers(card){
   String(text).split(/\n+/).forEach(function(raw){
     var line=raw.trim();if(!line)return;
     if(/at the beginning of (?:your|each|every|the) upkeep/i.test(line))add('upkeep','Upkeep Trigger',line);
-    if(/when(?:ever)? [^.]*enters(?: the battlefield)?/i.test(line))add('etb','ETB Trigger',line);
+    if(/whenever a land (?:you control )?enters(?: the battlefield)?/i.test(line))add('landfall','Landfall',line);\n    else if(/when(?:ever)? [^.]*enters(?: the battlefield)?/i.test(line))add('etb','ETB Trigger',line);
     if(/at the beginning of (?:your|each|every|the) end step/i.test(line))add('endstep','End Step Trigger',line);
     if(/whenever\b/i.test(line)&&!/enters/i.test(line))add('whenever','Triggered Ability',line);
     if(/\bchoose (?:one|two|one or more)\b/i.test(line))add('choice','Choose Mode',line);
@@ -2241,7 +2241,11 @@ function snapshot(){undoState=clone(creatures);el("undo").disabled=false}
 function finish(){save();render();renderGame()}
 function escapeHTML(v){var d=document.createElement("div");d.textContent=String(v);return d.innerHTML}
 function find(id){for(var i=0;i<creatures.length;i++)if(creatures[i].id===id)return creatures[i];return null}
-function adjust(id,n){var c=find(id);if(!c)return;snapshot();c.c=Math.max(0,c.c+n);finish()}
+function hasBattlefieldPermanent(name){return creatures.some(function(x){return String(x.name||'').toLowerCase()===String(name||'').toLowerCase();});}
+function counterPlacementMultiplier(){return hasBattlefieldPermanent('Doubling Season')?2:1;}
+function tokenCreationMultiplier(){return hasBattlefieldPermanent('Doubling Season')?2:1;}
+function placePlusCounters(c,n){n=Math.max(0,Number(n)||0);c.c=Math.max(0,c.c+n*counterPlacementMultiplier());}
+function adjust(id,n){var c=find(id);if(!c)return;snapshot();if(n>0)placePlusCounters(c,n);else c.c=Math.max(0,c.c+n);finish()}
 function syncCreatureJump(){
   var rail=el("field"), menu=el("creatureSwipeHint");
   if(!rail.children.length)return;
@@ -2357,7 +2361,7 @@ function render(){
         }
         var tokenMatch=text.match(/\b(Treasure|Food|Clue|Blood)(?:\s+artifact)?\s+token/i);
         if(tokenMatch){
-          var kind=tokenMatch[1].toLowerCase(), amount=amountFromWords(text);
+          var kind=tokenMatch[1].toLowerCase(), amount=amountFromWords(text)*tokenCreationMultiplier();
           snapshot();tokenBank[kind]=Math.max(0,(Number(tokenBank[kind])||0)+amount);saveTokenBank();changed=true;
         }
         var selfCounter=text.match(/\bput\s+(?:(?:a|an|one|two|three|four|five|six|seven|eight|nine|ten|\d+)\s+)?([A-Za-z][A-Za-z -]*?) counter(?:s)? on (?:this|it)\b/i);
@@ -2376,9 +2380,15 @@ function render(){
             var index=parseInt(picked,10)-1;
             if(index>=0&&index<eligible.length){
               if(!changed)snapshot();
-              eligible[index].c+=amountFromWords(text);changed=true;
+              placePlusCounters(eligible[index],amountFromWords(text));changed=true;
             }
           }
+        }
+        if(trigger.kind==='landfall'&&/double the number of \+1\/\+1 counters on/i.test(text)){
+          if(!changed)snapshot();
+          var existing=Math.max(0,Number(c.c)||0);
+          if(existing>0)placePlusCounters(c,existing);
+          changed=true;
         }
         if(changed){finish();this.textContent=trigger.label+" ✓";setTimeout(function(){button.textContent=trigger.label;},700);return;}
         this.textContent=trigger.label+" • Confirmed";
@@ -2389,7 +2399,7 @@ function render(){
       card.querySelector(".minus").onclick=function(){adjust(c.id,-1)};
       card.querySelector(".plus").onclick=function(){adjust(c.id,1)};
       card.querySelector(".current").onclick=function(){adjust(c.id,c.p+c.c)};
-      card.querySelector(".double").onclick=function(){snapshot();c.c*=2;finish()};
+      card.querySelector(".double").onclick=function(){snapshot();var existing=Math.max(0,c.c);if(existing>0)placePlusCounters(c,existing);finish()};
       card.querySelector(".reset").onclick=function(){snapshot();c.c=0;finish()};
       card.querySelector(".addx").onclick=function(){var n=parseInt(card.querySelector(".amt").value,10);if(!isNaN(n)&&n!==0)adjust(c.id,n)};
       var boxes=card.querySelectorAll(".lnk");
@@ -2408,13 +2418,13 @@ function render(){
       };
     }
     if(isMisty){
-      card.querySelector(".mistyChapter").onclick=function(){snapshot();c.lore=Math.min(4,c.lore+1);tokenBank.treasure++;saveTokenBank();finish()};
+      card.querySelector(".mistyChapter").onclick=function(){snapshot();c.lore=Math.min(4,c.lore+1);tokenBank.treasure+=tokenCreationMultiplier();saveTokenBank();finish()};
       card.querySelector(".mistySpend").onclick=function(){if(tokenBank.treasure<1)return;snapshot();tokenBank.treasure--;saveTokenBank();finish()};
       card.querySelector(".mistyDragon").onclick=function(){
         if(tokenBank.treasure<4)return;
         snapshot();
         var tokenId='c'+Date.now()+'_'+Math.floor(Math.random()*1000000);
-        creatures.push({id:tokenId,name:'Dragon Token',p:6,t:6,c:0,links:[],image:'',typeLine:'Token Creature — Dragon',oracle:'Flying',isCreature:true,treasures:0,lore:0});
+        var dragonCount=tokenCreationMultiplier();\n        for(var di=0;di<dragonCount;di++)creatures.push({id:tokenId+'_'+di,name:'Dragon Token',p:6,t:6,c:0,links:[],image:'',typeLine:'Token Creature — Dragon',oracle:'Flying',isCreature:true,treasures:0,lore:0});
         creatures=creatures.filter(function(x){return x.id!==c.id});
         finish();
         fetch('https://api.scryfall.com/cards/search?q='+encodeURIComponent('t:token t:dragon pow=6 tou=6 o:flying c:r'))
