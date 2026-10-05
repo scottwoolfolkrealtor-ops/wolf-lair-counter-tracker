@@ -2351,24 +2351,24 @@ function render(){
         if(!trigger)return;
         var text=String(trigger.text||""), changed=false;
         function amountFromWords(source){
-          var m=source.match(/\\b(?:create|creates|put|puts)\\s+(?:(a|an|one|two|three|four|five|six|seven|eight|nine|ten|\\d+)\\s+)?/i);
+          var m=source.match(/\b(?:create|creates|put|puts)\s+(?:(a|an|one|two|three|four|five|six|seven|eight|nine|ten|\d+)\s+)?/i);
           var raw=m&&m[1]?m[1].toLowerCase():"one", words={a:1,an:1,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10};
           return words[raw]||Math.max(1,parseInt(raw,10)||1);
         }
-        var tokenMatch=text.match(/\\b(Treasure|Food|Clue|Blood)(?:\\s+artifact)?\\s+token/i);
+        var tokenMatch=text.match(/\b(Treasure|Food|Clue|Blood)(?:\s+artifact)?\s+token/i);
         if(tokenMatch){
           var kind=tokenMatch[1].toLowerCase(), amount=amountFromWords(text);
           snapshot();tokenBank[kind]=Math.max(0,(Number(tokenBank[kind])||0)+amount);saveTokenBank();changed=true;
         }
-        var selfCounter=text.match(/\\bput\\s+(?:(?:a|an|one|two|three|four|five|six|seven|eight|nine|ten|\\d+)\\s+)?([A-Za-z][A-Za-z -]*?) counter(?:s)? on (?:this|it)\\b/i);
-        if(selfCounter&&!/\\+1\\/+1/i.test(selfCounter[1])){
+        var selfCounter=text.match(/\bput\s+(?:(?:a|an|one|two|three|four|five|six|seven|eight|nine|ten|\d+)\s+)?([A-Za-z][A-Za-z -]*?) counter(?:s)? on (?:this|it)\b/i);
+        if(selfCounter&&!/\+1\/+1/i.test(selfCounter[1])){
           if(!changed)snapshot();
           c.namedCounters=c.namedCounters||{};
           var counterName=selfCounter[1].trim().toLowerCase();
           c.namedCounters[counterName]=Math.max(0,(Number(c.namedCounters[counterName])||0)+amountFromWords(text));
           changed=true;
         }
-        if(/\\bput\\b[^.]*\\+1\\/+1 counter/i.test(text)){
+        if(/\bput\b[^.]*\+1\/+1 counter/i.test(text)){
           var eligible=creatures.filter(function(x){return x.isCreature;});
           if(eligible.length){
             var labels=eligible.map(function(x,i){return (i+1)+". "+x.name;}).join("\\n");
