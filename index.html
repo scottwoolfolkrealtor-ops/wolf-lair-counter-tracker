@@ -2707,15 +2707,21 @@ function enforceSoloGame(){
 }
 function deckCreatureNames(deck){
   var out=[],seen={};
-  function add(name){
+  function cleanDeckCardName(name){
     name=String(name||'').trim();
-    if(!name||seen[name.toLowerCase()])return;
+    name=name.replace(/^\d+\s+/,'');
+    name=name.replace(/\s+\([A-Z0-9]{2,8}\)\s+\d+[A-Za-z]?\s*$/i,'');
+    name=name.replace(/\s+\[[A-Z0-9]{2,8}\]\s+\d+[A-Za-z]?\s*$/i,'');
+    name=name.replace(/\s+\([A-Z0-9]{2,8}\)\s*$/i,'');
+    return name.trim();
+  }
+  function add(name){
+    name=cleanDeckCardName(name);
+    if(!name||/^(deck|commander|sideboard|companion)$/i.test(name)||seen[name.toLowerCase()])return;
     seen[name.toLowerCase()]=true;out.push(name);
   }
   if(deck&&Array.isArray(deck.entries))deck.entries.forEach(function(e){add(e&&e.name)});
-  String(deck&&deck.cards||'').split(/\n+/).forEach(function(line){
-    var m=line.trim().match(/^(?:\d+\s+)?(.+)$/);if(m)add(m[1]);
-  });
+  String(deck&&deck.cards||'').split(/\n+/).forEach(function(line){add(line);});
   return out.sort(function(a,b){return a.localeCompare(b,undefined,{sensitivity:'base'});});
 }
 var trackerDeckTypeCache={};
