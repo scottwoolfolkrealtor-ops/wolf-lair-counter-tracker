@@ -129,6 +129,12 @@ textarea.proArea{width:100%;min-height:180px;background:#06100b;color:#fff;borde
 .trackerDeckControl select{width:100%;background:#06100b;color:#fff;border:1px solid #4c6654;border-radius:9px;padding:8px;font-size:13px}
 .trackerDeckControl .gameDeckAddRow{margin-top:6px}
 .trackerDeckControl button{min-height:38px;padding:7px 9px;font-size:12px}
+.spellPickerGrid{display:grid;gap:7px;margin-top:8px}
+.spellPickerGrid label{display:grid;gap:4px}
+.spellPickerGrid label>span{font-size:9px;font-weight:900;letter-spacing:1.2px;color:#a99a7d}
+.spellPickerGrid select{width:100%;background:#06100b;color:#fff;border:1px solid #4c6654;border-radius:9px;padding:9px;font-size:13px}
+.addSelectedSpell{width:100%;margin-top:8px;border-color:rgba(82,174,89,.68)!important;background:linear-gradient(180deg,rgba(29,72,35,.96),rgba(12,33,17,.98))!important}
+@media(min-width:700px){.spellPickerGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .gameDeckControl select{width:100%;background:#06100b;color:#fff;border:1px solid #4c6654;border-radius:10px;padding:11px;font-size:15px}
 .gameDeckAddRow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:8px}
 .gameDeckAddRow button{white-space:nowrap}
@@ -2091,10 +2097,12 @@ body.trackerPreview #trackerView .tokenBankItem button{min-height:30px;padding:3
 <div class="quickCard trackerDeckControl">
   <h3>Add Spells From My Deck</h3>
   <select id="trackerDeckSelect" aria-label="Choose a saved deck"></select>
-  <div class="gameDeckAddRow">
-    <select id="trackerCreatureSelect" aria-label="Choose a card from this deck"></select>
-    <button id="addTrackerDeckCreature" type="button">＋ Add Spell</button>
+  <div class="spellPickerGrid">
+    <label><span>MANA / LANDS</span><select id="trackerManaSelect" aria-label="Choose mana or land"></select></label>
+    <label><span>CREATURES</span><select id="trackerCreatureSelect" aria-label="Choose a creature"></select></label>
+    <label><span>OTHER SPELLS</span><select id="trackerSpellSelect" aria-label="Choose another spell"></select></label>
   </div>
+  <button id="addTrackerDeckCreature" class="addSelectedSpell" type="button">＋ Add Selected Spell</button>
   <div id="trackerDeckStatus" class="deckToolStatus" aria-live="polite"></div>
 </div>
 <div id="form" class="hidden">
@@ -2710,6 +2718,37 @@ function deckCreatureNames(deck){
   });
   return out.sort(function(a,b){return a.localeCompare(b,undefined,{sensitivity:'base'});});
 }
+var trackerDeckTypeCache={};
+function classifyDeckCards(deck){
+  if(!deck)return Promise.resolve({mana:[],creatures:[],spells:[]});
+  var cacheKey=String(deck.id||deck.name||'deck')+'|'+deckCreatureNames(deck).join('|');
+  if(trackerDeckTypeCache[cacheKey])return Promise.resolve(trackerDeckTypeCache[cacheKey]);
+  var names=deckCreatureNames(deck), groups={mana:[],creatures:[],spells:[]};
+  if(!names.length){trackerDeckTypeCache[cacheKey]=groups;return Promise.resolve(groups);}
+  var chunks=[];for(var i=0;i<names.length;i+=75)chunks.push(names.slice(i,i+75));
+  return Promise.all(chunks.map(function(chunk){
+    return fetch('https://api.scryfall.com/cards/collection',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({identifiers:chunk.map(function(name){return {name:name};})})
+    }).then(function(r){if(!r.ok)throw new Error('Could not sort deck');return r.json();});
+  })).then(function(results){
+    var found={};
+    results.forEach(function(data){
+      (data.data||[]).forEach(function(card){
+        found[String(card.name||'').toLowerCase()]=true;
+        var type=String(card.type_line||'');
+        if(/\bLand\b/i.test(type))groups.mana.push(card.name);
+        else if(/\bCreature\b/i.test(type))groups.creatures.push(card.name);
+        else groups.spells.push(card.name);
+      });
+    });
+    names.forEach(function(name){if(!found[name.toLowerCase()])groups.spells.push(name);});
+    ['mana','creatures','spells'].forEach(function(k){groups[k]=groups[k].sort(function(a,b){return a.localeCompare(b,undefined,{sensitivity:'base'});});});
+    trackerDeckTypeCache[cacheKey]=groups;return groups;
+  }).catch(function(){
+    groups.spells=names.slice();trackerDeckTypeCache[cacheKey]=groups;return groups;
+  });
+}
 function selectedGameDeck(){
   var id=el('gameDeckSelect')&&el('gameDeckSelect').value;
   for(var i=0;i<decks.length;i++)if(decks[i].id===id)return decks[i];
@@ -2768,21 +2807,41 @@ function selectedTrackerDeck(){
   return null;
 }
 function renderTrackerDeckControls(){
-  var deckSelect=el('trackerDeckSelect'), creatureSelect=el('trackerCreatureSelect'), addBtn=el('addTrackerDeckCreature'), status=el('trackerDeckStatus');
-  if(!deckSelect||!creatureSelect)return;
+  var deckSelect=el('trackerDeckSelect'), manaSelect=el('trackerManaSelect'), creatureSelect=el('trackerCreatureSelect'), spellSelect=el('trackerSpellSelect'), addBtn=el('addTrackerDeckCreature'), status=el('trackerDeckStatus');
+  if(!deckSelect||!manaSelect||!creatureSelect||!spellSelect)return;
   var previous=deckSelect.value||localStorage.getItem('wolfLairGameDeck')||'';
   deckSelect.innerHTML='<option value="">Choose a saved deck…</option>';
   decks.forEach(function(d){var o=document.createElement('option');o.value=d.id;o.textContent=d.name+(d.commander?' — '+d.commander:'');deckSelect.appendChild(o);});
   if(decks.some(function(d){return d.id===previous}))deckSelect.value=previous;
-  var deck=selectedTrackerDeck(), names=deckCreatureNames(deck);
-  creatureSelect.innerHTML='<option value="">Choose a spell…</option>';
-  names.forEach(function(name){var o=document.createElement('option');o.value=name;o.textContent=name;creatureSelect.appendChild(o);});
-  creatureSelect.disabled=!deck;addBtn.disabled=!deck;
-  status.textContent=deck?(names.length+' cards available from '+deck.name):'Choose one of your saved decks.';
+  var deck=selectedTrackerDeck();
+  [manaSelect,creatureSelect,spellSelect].forEach(function(select){select.innerHTML='<option value="">Select…</option>';select.disabled=true;});
+  addBtn.disabled=true;
+  if(!deck){status.textContent='Choose one of your saved decks.';return;}
+  status.textContent='Sorting '+deck.name+' by card type…';
+  classifyDeckCards(deck).then(function(groups){
+    function fill(select,label,names){
+      select.innerHTML='<option value="">'+label+' ('+names.length+')</option>';
+      names.forEach(function(name){var o=document.createElement('option');o.value=name;o.textContent=name;select.appendChild(o);});
+      select.disabled=!names.length;
+    }
+    fill(manaSelect,'Mana / Lands',groups.mana);
+    fill(creatureSelect,'Creatures',groups.creatures);
+    fill(spellSelect,'Other Spells',groups.spells);
+    [manaSelect,creatureSelect,spellSelect].forEach(function(select){
+      select.onchange=function(){
+        if(!this.value)return;
+        [manaSelect,creatureSelect,spellSelect].forEach(function(other){if(other!==select)other.value='';});
+        addBtn.disabled=false;
+      };
+    });
+    status.textContent=(groups.mana.length+groups.creatures.length+groups.spells.length)+' cards sorted from '+deck.name+'.';
+  });
 }
 function addTrackerDeckCreature(){
-  var deck=selectedTrackerDeck(), name=el('trackerCreatureSelect').value, status=el('trackerDeckStatus');
-  if(!deck||!name){status.textContent='Choose a deck card first.';return;}
+  var deck=selectedTrackerDeck(), status=el('trackerDeckStatus');
+  var selects=[el('trackerManaSelect'),el('trackerCreatureSelect'),el('trackerSpellSelect')];
+  var name='';selects.some(function(select){if(select&&select.value){name=select.value;return true;}return false;});
+  if(!deck||!name){status.textContent='Choose a spell first.';return;}
   status.textContent='Loading '+name+'…';
   lookupDeckCard(name)
     .then(function(card){
@@ -2794,7 +2853,7 @@ function addTrackerDeckCreature(){
       snapshot();
       var isPlaneswalker=/Planeswalker/i.test(typeLine),isSaga=/Saga/i.test(typeLine),startingLoyalty=isPlaneswalker?Math.max(0,parseInt(card.loyalty,10)||0):0;
       creatures.push({id:'c'+Date.now()+'_'+Math.floor(Math.random()*1000000),name:card.name,p:p||0,t:t||0,c:0,links:[],image:image,typeLine:typeLine,oracle:String(card.oracle_text||''),isCreature:isCreature,treasures:0,lore:0,loyalty:startingLoyalty,isPlaneswalker:isPlaneswalker,isSaga:isSaga,loyaltyAbilities:isPlaneswalker?planeswalkerAbilities(card):[],smartTriggers:buildSmartTriggers(card)});
-      finish();status.textContent=card.name+' added to your battlefield.';
+      finish();selects.forEach(function(select){if(select)select.value='';});el('addTrackerDeckCreature').disabled=true;status.textContent=card.name+' added to your battlefield.';
     }).catch(function(err){status.textContent=err.message||'Could not add that card.';});
 }
 function playCounterChange(kind,before,after){
