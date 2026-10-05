@@ -2025,7 +2025,83 @@ body.trackerPreview #trackerView .tokenBankItem div{display:grid;grid-template-c
 body.trackerPreview #trackerView .tokenBankItem button{min-height:30px;padding:3px;font-size:14px}
 @media(max-width:430px){body.trackerPreview #trackerView .tokenBankGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
-<style id="card-specific-controls-style">body.trackerPreview #trackerView .cardSpecificControls{margin-top:7px;padding:7px;border:1px solid rgba(193,139,75,.42);border-radius:10px;background:rgba(9,17,11,.92)}body.trackerPreview #trackerView .specificStat{text-align:center;margin-bottom:6px}body.trackerPreview #trackerView .specificStat span{display:block;font-size:8px;letter-spacing:1px;color:#a8b3a5;font-weight:900}body.trackerPreview #trackerView .specificStat strong{font-size:24px;color:#e7f2df}body.trackerPreview #trackerView .specificButtons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}body.trackerPreview #trackerView .specificButtons button{min-height:36px;padding:5px;font-size:11px}</style></head>
+<style id="card-specific-controls-style">body.trackerPreview #trackerView .cardSpecificControls{margin-top:7px;padding:7px;border:1px solid rgba(193,139,75,.42);border-radius:10px;background:rgba(9,17,11,.92)}body.trackerPreview #trackerView .specificStat{text-align:center;margin-bottom:6px}body.trackerPreview #trackerView .specificStat span{display:block;font-size:8px;letter-spacing:1px;color:#a8b3a5;font-weight:900}body.trackerPreview #trackerView .specificStat strong{font-size:24px;color:#e7f2df}body.trackerPreview #trackerView .specificButtons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}body.trackerPreview #trackerView .specificButtons button{min-height:36px;padding:5px;font-size:11px}
+/* FINAL MOBILE BATTLEFIELD ORIENTATION OVERRIDE */
+@media(max-width:520px) and (orientation:portrait){
+  body.trackerPreview{
+    overflow:hidden!important;
+  }
+  body.trackerPreview #trackerView{
+    position:fixed!important;
+    inset:0!important;
+    width:100vw!important;
+    height:100vh!important;
+    min-height:0!important;
+    overflow:hidden!important;
+    container-type:normal!important;
+  }
+  body.trackerPreview #trackerView .playerTrackerSurface{
+    position:fixed!important;
+    left:50%!important;
+    top:50%!important;
+    width:100vh!important;
+    height:100vw!important;
+    min-height:0!important;
+    transform:translate(-50%,-50%) rotate(90deg)!important;
+    transform-origin:center center!important;
+    display:flex!important;
+    flex-direction:column!important;
+    overflow:hidden!important;
+  }
+  body.trackerPreview #trackerView .playerTrackerSurface main{
+    flex:1!important;
+    width:100%!important;
+    max-width:none!important;
+    min-height:0!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    padding:6px 8px 6px!important;
+  }
+  body.trackerPreview #trackerView #field{
+    transform:none!important;
+    transform-origin:center!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:220px!important;
+    margin:0!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+  }
+  body.trackerPreview #trackerView .playerTrackerSurface nav{
+    position:relative!important;
+    left:auto!important;
+    right:auto!important;
+    bottom:auto!important;
+    flex:none!important;
+    width:100%!important;
+  }
+  body.trackerPreview #trackerView .soloHud{
+    position:relative!important;
+    top:auto!important;
+  }
+  body.trackerPreview #trackerView .gameStateFab{
+    position:absolute!important;
+    right:10px!important;
+    bottom:62px!important;
+  }
+}
+@media(max-width:520px) and (orientation:landscape){
+  body.trackerPreview #trackerView .playerTrackerSurface{
+    transform:none!important;
+    position:relative!important;
+    left:auto!important;
+    top:auto!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:100vh!important;
+  }
+}
+</style></head>
 <body class="trackerPreview">
 <section id="home">
   <div id="lairScene" class="lairScene" aria-hidden="true">
