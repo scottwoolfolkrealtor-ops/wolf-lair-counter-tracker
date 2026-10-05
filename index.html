@@ -2305,9 +2305,14 @@ function render(){
         fetch('https://api.scryfall.com/cards/search?q='+encodeURIComponent('t:token t:dragon pow=6 tou=6 o:flying c:r'))
           .then(function(r){if(!r.ok)throw new Error('Token lookup failed');return r.json();})
           .then(function(data){
-            var token=(data.data||[])[0], dragon=find(tokenId);
+            var tokens=(data.data||[]), token=tokens.find(function(x){
+              var text=String(x.oracle_text||'').trim().toLowerCase().replace(/[.\s]+$/,'');
+              var type=String(x.type_line||'').toLowerCase();
+              var colors=x.colors||[];
+              return String(x.power)==='6'&&String(x.toughness)==='6'&&/token creature.*dragon/.test(type)&&colors.length===1&&colors[0]==='R'&&text==='flying';
+            }), dragon=find(tokenId);
             if(!token||!dragon)return;
-            dragon.image=cardImageUrl(token);dragon.name=token.name||'Dragon Token';save();render();
+            dragon.image=cardImageUrl(token);dragon.name='Dragon Token';dragon.oracle='Flying';save();render();
           }).catch(function(){});
       };
     }
