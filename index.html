@@ -86,6 +86,11 @@ nav button{min-height:52px}button:disabled{opacity:.4}
 textarea.proArea{width:100%;min-height:180px;background:#06100b;color:#fff;border:1px solid #4c6654;border-radius:10px;padding:12px;font:15px system-ui,-apple-system,sans-serif;resize:vertical}
 @media(max-width:640px){.gameBoard,.appGrid,.proGrid{grid-template-columns:1fr}}
 .gameDeckControl{margin-bottom:2px}
+.trackerDeckControl{margin:0 0 8px;padding:9px}
+.trackerDeckControl h3{margin:0 0 7px;font-size:14px}
+.trackerDeckControl select{width:100%;background:#06100b;color:#fff;border:1px solid #4c6654;border-radius:9px;padding:8px;font-size:13px}
+.trackerDeckControl .gameDeckAddRow{margin-top:6px}
+.trackerDeckControl button{min-height:38px;padding:7px 9px;font-size:12px}
 .gameDeckControl select{width:100%;background:#06100b;color:#fff;border:1px solid #4c6654;border-radius:10px;padding:11px;font-size:15px}
 .gameDeckAddRow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:8px}
 .gameDeckAddRow button{white-space:nowrap}
@@ -1948,6 +1953,15 @@ body.trackerPreview #decksView #cameraLight[aria-pressed="true"]{background:#715
   <small>CREATURE &amp; COUNTER CONTROL</small>
   
 </header>
+<div class="quickCard trackerDeckControl">
+  <h3>Add From My Deck</h3>
+  <select id="trackerDeckSelect" aria-label="Choose a saved deck"></select>
+  <div class="gameDeckAddRow">
+    <select id="trackerCreatureSelect" aria-label="Choose a creature from this deck"></select>
+    <button id="addTrackerDeckCreature" type="button">＋ Battlefield</button>
+  </div>
+  <div id="trackerDeckStatus" class="deckToolStatus" aria-live="polite"></div>
+</div>
 <div id="form" class="hidden">
 <input id="nm" placeholder="Creature name">
 <div class="pt"><input id="pw" inputmode="numeric" placeholder="Power"><input id="th" inputmode="numeric" placeholder="Toughness"></div>
@@ -2438,6 +2452,39 @@ function addSelectedDeckCreature(){
       status.textContent=card.name+' added to your battlefield.';
     }).catch(function(err){status.textContent=err.message||'Could not add that card.';});
 }
+function selectedTrackerDeck(){
+  var id=el('trackerDeckSelect')&&el('trackerDeckSelect').value;
+  for(var i=0;i<decks.length;i++)if(decks[i].id===id)return decks[i];
+  return null;
+}
+function renderTrackerDeckControls(){
+  var deckSelect=el('trackerDeckSelect'), creatureSelect=el('trackerCreatureSelect'), addBtn=el('addTrackerDeckCreature'), status=el('trackerDeckStatus');
+  if(!deckSelect||!creatureSelect)return;
+  var previous=deckSelect.value||localStorage.getItem('wolfLairGameDeck')||'';
+  deckSelect.innerHTML='<option value="">Choose a saved deck…</option>';
+  decks.forEach(function(d){var o=document.createElement('option');o.value=d.id;o.textContent=d.name+(d.commander?' — '+d.commander:'');deckSelect.appendChild(o);});
+  if(decks.some(function(d){return d.id===previous}))deckSelect.value=previous;
+  var deck=selectedTrackerDeck(), names=deckCreatureNames(deck);
+  creatureSelect.innerHTML='<option value="">Choose a creature…</option>';
+  names.forEach(function(name){var o=document.createElement('option');o.value=name;o.textContent=name;creatureSelect.appendChild(o);});
+  creatureSelect.disabled=!deck;addBtn.disabled=!deck;
+  status.textContent=deck?(names.length+' cards available from '+deck.name):'Choose one of your saved decks.';
+}
+function addTrackerDeckCreature(){
+  var deck=selectedTrackerDeck(), name=el('trackerCreatureSelect').value, status=el('trackerDeckStatus');
+  if(!deck||!name){status.textContent='Choose a deck and creature first.';return;}
+  status.textContent='Loading '+name+'…';
+  fetch('https://api.scryfall.com/cards/named?exact='+encodeURIComponent(name))
+    .then(function(r){if(!r.ok)throw new Error('Card lookup failed');return r.json();})
+    .then(function(card){
+      var face=card;if((card.power==null||card.toughness==null)&&card.card_faces&&card.card_faces.length)face=card.card_faces[0];
+      var p=parseInt(face.power,10),t=parseInt(face.toughness,10);
+      if(isNaN(p)||isNaN(t))throw new Error('That card does not have standard creature power/toughness.');
+      snapshot();
+      creatures.push({id:'c'+Date.now()+'_'+Math.floor(Math.random()*1000000),name:card.name,p:p,t:t,c:0,links:[]});
+      finish();status.textContent=card.name+' added to your battlefield.';
+    }).catch(function(err){status.textContent=err.message||'Could not add that card.';});
+}
 function playCounterChange(kind,before,after){
   var defeat=(kind==='life'&&before>0&&after<=0)||
     (kind==='commander'&&before<21&&after>=21)||
@@ -2609,6 +2656,11 @@ el('gameDeckSelect').onchange=function(){
   renderGameDeckControls();
 };
 el('addDeckCreature').onclick=addSelectedDeckCreature;
+el('trackerDeckSelect').onchange=function(){
+  try{localStorage.setItem('wolfLairGameDeck',this.value)}catch(e){}
+  renderTrackerDeckControls();
+};
+el('addTrackerDeckCreature').onclick=addTrackerDeckCreature;
 var proState={
   lastSaved: new Date().toISOString(),
   tracker: {count: creatures.length},
@@ -3908,6 +3960,7 @@ enforceSoloGame();
 saveGame();save();
 render();
 renderDecks();
+renderTrackerDeckControls();
 renderGame();
 })();
 </script>
