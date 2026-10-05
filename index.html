@@ -2147,7 +2147,7 @@ function normalize(c){
   c.treasures=Math.max(0,Number(c.treasures)||0);
   c.lore=Math.max(0,Number(c.lore)||0);c.loyalty=Math.max(0,Number(c.loyalty)||0);c.isPlaneswalker=!!c.isPlaneswalker||/Planeswalker/i.test(c.typeLine);c.isSaga=!!c.isSaga||/Saga/i.test(c.typeLine);
   c.loyaltyAbilities=Array.isArray(c.loyaltyAbilities)?c.loyaltyAbilities:[];
-  c.smartTriggers=Array.isArray(c.smartTriggers)?c.smartTriggers:[];
+  c.smartTriggers=Array.isArray(c.smartTriggers)?c.smartTriggers:[];c.namedCounters=(c.namedCounters&&typeof c.namedCounters==="object")?c.namedCounters:{};
   if(!Array.isArray(c.links))c.links=[];
 }
 function buildSmartTriggers(card){
@@ -2325,7 +2325,9 @@ function render(){
     var typeControls='';
     if(c.isPlaneswalker)typeControls='<div class="cardSpecificControls"><div class="specificStat"><span>LOYALTY</span><strong>'+c.loyalty+'</strong></div><div class="specificButtons">'+(c.loyaltyAbilities||[]).map(function(a,i){return '<button class="loyaltyAction" data-loyalty-index="'+i+'">'+escapeHTML(a.label)+'</button>';}).join('')+'</div></div>';
     else if(c.isSaga&&!isMisty)typeControls='<div class="cardSpecificControls"><div class="specificStat"><span>LORE</span><strong>'+c.lore+'</strong></div><div class="specificButtons"><button class="sagaLoreMinus">− Lore</button><button class="sagaLorePlus">＋ Lore</button></div></div>';
+    var namedCounterControls=Object.keys(c.namedCounters||{}).map(function(k){return '<div class="specificStat"><span>'+escapeHTML(k.toUpperCase())+' COUNTERS</span><strong>'+c.namedCounters[k]+'</strong></div>';}).join('');
     var smartControls=(c.smartTriggers||[]).map(function(trigger,index){return '<button class="smartTrigger" data-trigger-index="'+index+'" title="'+escapeHTML(trigger.text||'')+'">'+escapeHTML(trigger.label)+'</button>';}).join('');
+    if(namedCounterControls)typeControls+= '<div class="cardSpecificControls">'+namedCounterControls+'</div>';
     if(smartControls)smartControls='<div class="smartControls">'+smartControls+'</div>';
     var creatureControls=c.isCreature?
       '<div class="battleControls"><button class="minus">−1</button><button class="plus">+1</button><button class="double">×2</button><button class="reset">Reset</button></div>'+
@@ -2353,10 +2355,18 @@ function render(){
           var raw=m&&m[1]?m[1].toLowerCase():"one", words={a:1,an:1,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10};
           return words[raw]||Math.max(1,parseInt(raw,10)||1);
         }
-        var tokenMatch=text.match(/\\b(Treasure|Food|Clue|Blood)\\s+token/i);
+        var tokenMatch=text.match(/\\b(Treasure|Food|Clue|Blood)(?:\\s+artifact)?\\s+token/i);
         if(tokenMatch){
           var kind=tokenMatch[1].toLowerCase(), amount=amountFromWords(text);
           snapshot();tokenBank[kind]=Math.max(0,(Number(tokenBank[kind])||0)+amount);saveTokenBank();changed=true;
+        }
+        var selfCounter=text.match(/\\bput\\s+(?:(?:a|an|one|two|three|four|five|six|seven|eight|nine|ten|\\d+)\\s+)?([A-Za-z][A-Za-z -]*?) counter(?:s)? on (?:this|it)\\b/i);
+        if(selfCounter&&!/\\+1\\/+1/i.test(selfCounter[1])){
+          if(!changed)snapshot();
+          c.namedCounters=c.namedCounters||{};
+          var counterName=selfCounter[1].trim().toLowerCase();
+          c.namedCounters[counterName]=Math.max(0,(Number(c.namedCounters[counterName])||0)+amountFromWords(text));
+          changed=true;
         }
         if(/\\bput\\b[^.]*\\+1\\/+1 counter/i.test(text)){
           var eligible=creatures.filter(function(x){return x.isCreature;});
