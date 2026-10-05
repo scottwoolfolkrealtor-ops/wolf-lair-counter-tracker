@@ -2159,7 +2159,8 @@ function buildSmartTriggers(card){
   String(text).split(/\n+/).forEach(function(raw){
     var line=raw.trim();if(!line)return;
     if(/at the beginning of (?:your|each|every|the) upkeep/i.test(line))add('upkeep','Upkeep Trigger',line);
-    if(/whenever a land (?:you control )?enters(?: the battlefield)?/i.test(line))add('landfall','Landfall',line);\n    else if(/when(?:ever)? [^.]*enters(?: the battlefield)?/i.test(line))add('etb','ETB Trigger',line);
+    if(/whenever a land (?:you control )?enters(?: the battlefield)?/i.test(line))add('landfall','Landfall',line);
+    else if(/when(?:ever)? [^.]*enters(?: the battlefield)?/i.test(line))add('etb','ETB Trigger',line);
     if(/at the beginning of (?:your|each|every|the) end step/i.test(line))add('endstep','End Step Trigger',line);
     if(/whenever\b/i.test(line)&&!/enters/i.test(line))add('whenever','Triggered Ability',line);
     if(/\bchoose (?:one|two|one or more)\b/i.test(line))add('choice','Choose Mode',line);
@@ -2424,7 +2425,8 @@ function render(){
         if(tokenBank.treasure<4)return;
         snapshot();
         var tokenId='c'+Date.now()+'_'+Math.floor(Math.random()*1000000);
-        var dragonCount=tokenCreationMultiplier();\n        for(var di=0;di<dragonCount;di++)creatures.push({id:tokenId+'_'+di,name:'Dragon Token',p:6,t:6,c:0,links:[],image:'',typeLine:'Token Creature — Dragon',oracle:'Flying',isCreature:true,treasures:0,lore:0});
+        var dragonCount=tokenCreationMultiplier();
+        for(var di=0;di<dragonCount;di++)creatures.push({id:tokenId+'_'+di,name:'Dragon Token',p:6,t:6,c:0,links:[],image:'',typeLine:'Token Creature — Dragon',oracle:'Flying',isCreature:true,treasures:0,lore:0});
         creatures=creatures.filter(function(x){return x.id!==c.id});
         finish();
         fetch('https://api.scryfall.com/cards/search?q='+encodeURIComponent('t:token t:dragon pow=6 tou=6 o:flying c:r'))
