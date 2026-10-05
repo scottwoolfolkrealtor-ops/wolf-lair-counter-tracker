@@ -1793,6 +1793,158 @@ body.trackerPreview #trackerView .creatureSwipeHint{display:none!important}
  body.trackerPreview #trackerView .battlefieldZoneTitle{align-items:flex-start;flex-direction:column;gap:1px}
 }
 
+/* Arena-inspired mobile battlefield */
+body.trackerPreview #trackerView .playerTrackerSurface main{
+  max-width:980px;
+}
+body.trackerPreview #trackerView .battlefieldZoneTitle{
+  position:relative;
+  margin:10px 0 6px;
+  padding:10px 12px;
+  border:1px solid rgba(156,119,70,.34);
+  border-radius:14px;
+  background:
+    linear-gradient(180deg,rgba(11,18,13,.88),rgba(5,9,7,.72)),
+    radial-gradient(ellipse at center,rgba(57,99,62,.14),transparent 70%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+}
+body.trackerPreview #trackerView .battlefieldZoneTitle::after{
+  content:'';
+  position:absolute;
+  left:8%;right:8%;bottom:-7px;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(104,171,104,.55),transparent);
+}
+body.trackerPreview #trackerView #field{
+  display:flex!important;
+  align-items:flex-end!important;
+  gap:10px!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  scroll-snap-type:x proximity;
+  overscroll-behavior-x:contain;
+  -webkit-overflow-scrolling:touch;
+  padding:8px 8px 14px!important;
+  margin:0 -2px;
+  min-height:286px;
+  border-radius:18px;
+  background:
+    linear-gradient(180deg,rgba(5,11,8,.34),rgba(2,5,4,.64)),
+    radial-gradient(ellipse at 50% 100%,rgba(43,89,48,.2),transparent 65%);
+  border:1px solid rgba(78,123,82,.22);
+  box-shadow:inset 0 12px 30px rgba(0,0,0,.16),inset 0 -16px 34px rgba(0,0,0,.24);
+}
+body.trackerPreview #trackerView #field>.card,
+body.trackerPreview #trackerView #field>.card:only-child{
+  flex:0 0 168px;
+  width:168px;
+  min-width:168px;
+  scroll-snap-align:center;
+  padding:5px!important;
+  border-radius:14px!important;
+  background:rgba(5,8,6,.86)!important;
+  border:1px solid rgba(171,130,77,.45)!important;
+  box-shadow:0 10px 22px rgba(0,0,0,.35)!important;
+}
+body.trackerPreview #trackerView .battleCardVisual{
+  max-width:none!important;
+  border-radius:11px!important;
+  box-shadow:0 8px 18px rgba(0,0,0,.42)!important;
+}
+body.trackerPreview #trackerView .battleCardPower{
+  right:5px!important;
+  bottom:5px!important;
+  font-size:18px!important;
+  padding:4px 6px!important;
+}
+body.trackerPreview #trackerView .battleCardCounters{
+  left:5px!important;
+  bottom:5px!important;
+  font-size:15px!important;
+  padding:4px 6px!important;
+}
+body.trackerPreview #trackerView .battleControls{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:3px!important;
+  margin-top:5px!important;
+}
+body.trackerPreview #trackerView .battleControls button{
+  min-height:32px!important;
+  padding:3px!important;
+  font-size:10px!important;
+  border-radius:8px!important;
+}
+body.trackerPreview #trackerView .custom{
+  grid-template-columns:1fr 44px!important;
+  gap:4px!important;
+  margin-top:4px!important;
+}
+body.trackerPreview #trackerView .custom input{
+  min-width:0;
+  padding:7px 6px!important;
+  font-size:11px!important;
+}
+body.trackerPreview #trackerView .custom button{
+  padding:4px!important;
+  font-size:10px!important;
+}
+body.trackerPreview #trackerView .battleMore{
+  margin-top:4px!important;
+  padding:3px!important;
+}
+body.trackerPreview #trackerView .battleMore summary{
+  padding:3px!important;
+  font-size:9px!important;
+}
+body.trackerPreview #trackerView .permanentType{
+  margin-top:4px!important;
+  padding:4px 5px!important;
+  font-size:9px!important;
+}
+body.trackerPreview #trackerView .trackerDeckControl{
+  border-radius:14px;
+  background:linear-gradient(180deg,rgba(12,19,14,.94),rgba(5,9,7,.92));
+}
+body.trackerPreview #trackerView .soloHud{
+  position:sticky;
+  top:49px;
+  z-index:18;
+  padding:5px;
+  border-radius:13px;
+  background:rgba(4,8,5,.84);
+  backdrop-filter:blur(6px);
+  box-shadow:0 8px 18px rgba(0,0,0,.2);
+}
+body.trackerPreview #trackerView nav{
+  background:rgba(5,8,6,.94)!important;
+  backdrop-filter:blur(10px);
+}
+@media(max-width:520px){
+  body.trackerPreview #trackerView #field{
+    min-height:252px;
+    gap:8px!important;
+    padding-left:6px!important;
+    padding-right:6px!important;
+  }
+  body.trackerPreview #trackerView #field>.card,
+  body.trackerPreview #trackerView #field>.card:only-child{
+    flex-basis:150px;
+    width:150px;
+    min-width:150px;
+  }
+  body.trackerPreview #trackerView .battlefieldZoneTitle small{
+    display:none;
+  }
+}
+@media(min-width:700px){
+  body.trackerPreview #trackerView #field>.card,
+  body.trackerPreview #trackerView #field>.card:only-child{
+    flex-basis:190px;
+    width:190px;
+    min-width:190px;
+  }
+}
+
 /* Card-image battlefield */
 body.trackerPreview #trackerView #field{align-items:start}
 body.trackerPreview #trackerView #field>.card{padding:7px;background:linear-gradient(160deg,rgba(14,17,14,.98),rgba(5,8,6,.99));border-color:rgba(173,129,72,.48)}
