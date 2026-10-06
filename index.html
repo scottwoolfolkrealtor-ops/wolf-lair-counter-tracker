@@ -3118,8 +3118,11 @@ function addTrackerDeckCreature(){
     .then(function(card){
       var typeLine=String(card.type_line||''), isCreature=/Creature/i.test(typeLine);
       var face=card;if(isCreature&&(card.power==null||card.toughness==null)&&card.card_faces&&card.card_faces.length)face=card.card_faces[0];
-      var p=isCreature?parseInt(face.power,10):0,t=isCreature?parseInt(face.toughness,10):0;
-      if(isCreature&&(isNaN(p)||isNaN(t)))throw new Error('Wolf Lair could not read that creature’s power/toughness.');
+      function baseStat(value){
+        var n=parseInt(String(value==null?'':value),10);
+        return isNaN(n)?0:n;
+      }
+      var p=isCreature?baseStat(face.power):0,t=isCreature?baseStat(face.toughness):0;
       var image='';
       snapshot();
       var isPlaneswalker=/Planeswalker/i.test(typeLine),isSaga=/Saga/i.test(typeLine),startingLoyalty=isPlaneswalker?Math.max(0,parseInt(card.loyalty,10)||0):0;
