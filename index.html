@@ -2479,7 +2479,7 @@ var wolfGlowCache={};
 function wolfGlowLogo(colors){
   var logo=window.WolfLogoImage;if(!logo||!logo.complete||!logo.naturalWidth)return '';
   var key=colors.join('')||'C';if(wolfGlowCache[key])return wolfGlowCache[key];
-  if(key==='G')return logo.src;
+  
   var rgb={W:[255,239,190],U:[35,140,255],B:[150,75,205],R:[255,65,24],G:[65,235,70],C:[190,205,220]};
   var canvas=document.createElement('canvas');canvas.width=logo.naturalWidth;canvas.height=logo.naturalHeight;
   var ctx=canvas.getContext('2d');ctx.drawImage(logo,0,0);
@@ -2496,7 +2496,13 @@ function wolfGlowLogo(colors){
     var light=Math.max(r,g,b)/255;
     for(var k=0;k<3;k++){var target=(left[k]*(1-mix)+right[k]*mix)*light;p[i+k]=Math.round(p[i+k]*(1-amount)+target*amount);}
   }
-  ctx.putImageData(frame,0,0);return wolfGlowCache[key]=canvas.toDataURL('image/png');
+  ctx.putImageData(frame,0,0);
+  var cropped=document.createElement('canvas');cropped.width=240;cropped.height=330;
+  var out=cropped.getContext('2d');out.fillStyle='#050906';out.fillRect(0,0,240,330);
+  out.drawImage(canvas,canvas.width*.25,0,canvas.width*.50,canvas.height*.54,0,35,240,146);
+  var fade=out.createLinearGradient(0,145,0,183);fade.addColorStop(0,'rgba(5,9,6,0)');fade.addColorStop(1,'#050906');
+  out.fillStyle=fade;out.fillRect(0,145,240,40);
+  return wolfGlowCache[key]=cropped.toDataURL('image/png');
 }
 function applyWolfManaBackground(panel,c){
   var colors=(c.colors||[]).filter(function(x){return /^(W|U|B|R|G)$/.test(x);});
