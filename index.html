@@ -2104,7 +2104,7 @@ body.trackerPreview #trackerView .tokenBankItem button{min-height:30px;padding:3
 }
 </style><style id="wolf-card-logo-background">
 body.trackerPreview #trackerView .battleCardFallback.wolfOriginalCard{
-background-image:linear-gradient(180deg,rgba(4,9,6,.20),rgba(4,9,6,.76)),var(--wolf-card-logo,url('./wolf-lair-logo.jpeg')) !important;
+background-image:linear-gradient(180deg,rgba(4,9,6,.08),rgba(4,9,6,.45)),var(--wolf-mana-tint,linear-gradient(135deg,rgba(131,145,155,.60),rgba(131,145,155,.60))),var(--wolf-card-logo,url('./wolf-lair-logo.jpeg')) !important;
 background-size:cover;background-position:center;background-repeat:no-repeat;
 text-shadow:0 2px 5px #000;
 }
@@ -2468,6 +2468,29 @@ function renderTokenBank(){
 }
 function el(id){return document.getElementById(id)}
 function clone(x){return JSON.parse(JSON.stringify(x))}
+function spellManaColors(card){
+  var face=(card.card_faces&&card.card_faces[0])||card;
+  var mana=String(card.mana_cost||face.mana_cost||'');
+  var colors=['W','U','B','R','G'].filter(function(color){return mana.indexOf(color)!==-1;});
+  return colors.length?colors:(card.colors||face.colors||[]);
+}
+var wolfManaPending={};
+function applyWolfManaBackground(panel,c){
+  var palette={W:'rgba(238,210,116,.65)',U:'rgba(0,104,255,.64)',B:'rgba(105,31,157,.70)',R:'rgba(239,42,18,.64)',G:'rgba(0,178,56,.63)'};
+  var colors=(c.colors||[]).filter(function(x){return palette[x];});
+  var tones=colors.map(function(x){return palette[x];});
+  if(!tones.length)tones=['rgba(131,145,155,.60)'];
+  if(tones.length===1)tones.push(tones[0]);
+  panel.style.setProperty('--wolf-mana-tint','linear-gradient(135deg,'+tones.join(',')+')');
+  if(!Array.isArray(c.colors)&&!wolfManaPending[c.name]){
+    wolfManaPending[c.name]=true;
+    lookupDeckCard(c.name).then(function(data){
+      c.colors=spellManaColors(data);save();
+      if(panel._creatureRef===c)applyWolfManaBackground(panel,c);
+    }).catch(function(){});
+  }
+}
+
 function normalize(c){
   c.id=String(c.id||("c"+Date.now()+Math.random()));
   c.name=String(c.name||"Creature");
@@ -2658,7 +2681,7 @@ function render(){
     }
     if(!targets)targets="<div>Add another creature first.</div>";
     var card=document.createElement("section");card.className="card";
-    card._creatureRef=c;card.setAttribute("data-creature-shape",creatureShape(c));
+    card._creatureRef=c;applyWolfManaBackground(card,c);card.setAttribute("data-creature-shape",creatureShape(c));
     var isMisty=/^The Misty Mountains Cold$/i.test(c.name);
     var typeControls='';
     if(c.isPlaneswalker)typeControls='<div class="cardSpecificControls"><div class="specificStat"><span>LOYALTY</span><strong>'+c.loyalty+'</strong></div><div class="specificButtons">'+(c.loyaltyAbilities||[]).map(function(a,i){return '<button class="loyaltyAction" data-loyalty-index="'+i+'">'+escapeHTML(a.label)+'</button>';}).join('')+'</div></div>';
@@ -3081,7 +3104,7 @@ function addSelectedDeckCreature(){
       var p=parseInt(face.power,10),t=parseInt(face.toughness,10);
       if(isNaN(p)||isNaN(t))throw new Error('That card does not have standard creature power/toughness.');
       var image='';
-      creatures.push({id:'c'+Date.now()+'_'+Math.floor(Math.random()*1000000),name:card.name,p:p,t:t,c:0,links:[],image:image});
+      creatures.push({id:'c'+Date.now()+'_'+Math.floor(Math.random()*1000000),name:card.name,colors:spellManaColors(card),p:p,t:t,c:0,links:[],image:image});
       finish();
       status.textContent=card.name+' added to your battlefield.';
     }).catch(function(err){status.textContent=err.message||'Could not add that card.';});
@@ -3140,7 +3163,7 @@ function addTrackerDeckCreature(){
       var image='';
       snapshot();
       var isPlaneswalker=/Planeswalker/i.test(typeLine),isSaga=/Saga/i.test(typeLine),startingLoyalty=isPlaneswalker?Math.max(0,parseInt(card.loyalty,10)||0):0;
-      creatures.push({id:'c'+Date.now()+'_'+Math.floor(Math.random()*1000000),name:card.name,p:p||0,t:t||0,c:0,links:[],image:image,typeLine:typeLine,oracle:String(card.oracle_text||''),isCreature:isCreature,treasures:0,lore:0,loyalty:startingLoyalty,isPlaneswalker:isPlaneswalker,isSaga:isSaga,loyaltyAbilities:isPlaneswalker?planeswalkerAbilities(card):[],smartTriggers:buildSmartTriggers(card)});
+      creatures.push({id:'c'+Date.now()+'_'+Math.floor(Math.random()*1000000),name:card.name,colors:spellManaColors(card),p:p||0,t:t||0,c:0,links:[],image:image,typeLine:typeLine,oracle:String(card.oracle_text||''),isCreature:isCreature,treasures:0,lore:0,loyalty:startingLoyalty,isPlaneswalker:isPlaneswalker,isSaga:isSaga,loyaltyAbilities:isPlaneswalker?planeswalkerAbilities(card):[],smartTriggers:buildSmartTriggers(card)});
       finish();selects.forEach(function(select){if(select)select.value='';});el('addTrackerDeckCreature').disabled=true;status.textContent=card.name+' added to your battlefield.';
     }).catch(function(err){status.textContent=err.message||'Could not add that card.';});
 }
