@@ -2102,7 +2102,14 @@ body.trackerPreview #trackerView .tokenBankItem button{min-height:30px;padding:3
     min-height:100vh!important;
   }
 }
-</style></head>
+</style><style id="wolf-card-logo-background">
+#trackerView #field>.card,body.trackerPreview #trackerView #field>.card{
+background-image:linear-gradient(160deg,rgba(6,14,9,.82),rgba(4,9,6,.90)),var(--wolf-card-logo,url('./wolf-lair-logo.jpeg'));
+background-size:cover;background-position:center;background-repeat:no-repeat;
+}
+#trackerView #field>.card .wolfCardIdentity,#trackerView #field>.card .head{text-shadow:0 2px 4px #000}
+</style>
+</head>
 <body class="trackerPreview">
 <section id="home">
   <div id="lairScene" class="lairScene" aria-hidden="true">
@@ -2176,6 +2183,7 @@ body.trackerPreview #trackerView .tokenBankItem button{min-height:30px;padding:3
           if(data.length<40000) throw new Error('Logo data incomplete');
           var img=document.getElementById('wolfLairLogo');
           if(img) img.src='data:image/webp;base64,'+data;
+          document.documentElement.style.setProperty('--wolf-card-logo','url("data:image/webp;base64,'+data+'")');
         }).catch(function(err){
           var img=document.getElementById('wolfLairLogo');
           if(img){img.alt='The Wolf Lair logo could not load';}
