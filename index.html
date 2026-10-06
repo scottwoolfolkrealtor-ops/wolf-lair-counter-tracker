@@ -2010,6 +2010,7 @@ body.trackerPreview #trackerView .mistyControls button{min-height:38px;padding:6
 body.trackerPreview #trackerView .mistyChapter,body.trackerPreview #trackerView .mistySpend{grid-column:auto}
 body.trackerPreview #trackerView .mistyDragon{grid-column:1/-1;border-color:rgba(197,145,73,.7);background:linear-gradient(180deg,rgba(74,48,22,.96),rgba(31,20,10,.98));color:#f2d5a2}
 body.trackerPreview #trackerView .permanentRemove{width:100%;margin-top:6px;border-color:rgba(151,87,67,.56)}
+body.trackerPreview #trackerView .wolfOriginalCard{min-height:210px;aspect-ratio:488/680;background:radial-gradient(circle at 50% 30%,rgba(64,126,69,.35),transparent 38%),linear-gradient(155deg,#17231a,#070b08 72%);border:1px solid rgba(190,136,73,.55);box-shadow:inset 0 0 30px rgba(0,0,0,.28)}body.trackerPreview #trackerView .wolfOriginalCard .wolfSigil{font-size:42px;filter:grayscale(.25);margin-bottom:5px}body.trackerPreview #trackerView .wolfOriginalCard small{margin-top:10px;color:#8fa88d;font-size:8px;letter-spacing:2px;font-weight:900}body.trackerPreview #trackerView .wolfCardIdentity{margin:6px 0;padding:6px 8px;border-radius:9px;background:rgba(5,9,6,.82);border:1px solid rgba(151,119,76,.35)}body.trackerPreview #trackerView .wolfCardIdentity strong{display:block;color:#efe1ca;font-family:Georgia,'Times New Roman',serif;font-size:15px}body.trackerPreview #trackerView .wolfCardIdentity span{display:block;margin-top:2px;color:#9faf9e;font-size:9px}
 body.trackerPreview #trackerView .smartControls{display:grid;grid-template-columns:1fr;gap:5px;margin-top:6px}body.trackerPreview #trackerView .smartTrigger{border-color:rgba(92,181,100,.7);background:linear-gradient(180deg,rgba(28,67,34,.96),rgba(11,31,16,.98));color:#eaffdf}
 </style>
 <link rel="stylesheet" href="./wolf/wolf.css?v=9">
@@ -2653,15 +2654,15 @@ function render(){
     if(namedCounterControls)typeControls+= '<div class="cardSpecificControls">'+namedCounterControls+'</div>';
     if(smartControls)smartControls='<div class="smartControls">'+smartControls+'</div>';
     var creatureControls=c.isCreature?
-      '<div class="battleControls"><button class="minus">−1</button><button class="plus">+1</button><button class="double">×2</button><button class="reset">Reset</button></div>'+
+      '<div class="wolfCardIdentity"><strong>'+escapeHTML(c.name)+'</strong><span>'+escapeHTML(c.typeLine||'Creature')+'</span></div><div class="battleControls"><button class="minus">−1</button><button class="plus">+1</button><button class="double">×2</button><button class="reset">Reset</button></div>'+
       '<div class="custom"><input class="amt" inputmode="numeric" placeholder="Custom +X"><button class="addx">+X</button></div>'+
       '<details class="battleMore"><summary>More controls</summary><div class="count"><span>+1/+1 Counters</span><strong>'+c.c+'</strong></div><button class="wide current">+ Current Power</button><div class="links"><b>Target / Link to:</b><div class="linkTargets">'+targets+'</div><button class="wide linked">+ Current Power to Me + Linked</button><button class="wide counters">+ My Counters to Target(s)</button></div><button class="remove">Remove Creature</button></details>'
-      :'<div class="permanentType">'+escapeHTML(c.typeLine||'Permanent')+'</div>'+
+      :'<div class="wolfCardIdentity"><strong>'+escapeHTML(c.name)+'</strong><span>'+escapeHTML(c.typeLine||'Permanent')+'</span></div><div class="permanentType">'+escapeHTML(c.typeLine||'Permanent')+'</div>'+
        (isMisty?'<div class="mistyControls"><div class="mistyStat"><span>LORE</span><strong class="mistyLoreValue">'+c.lore+'</strong></div><div class="mistyStat"><span>GLOBAL TREASURES</span><strong class="mistyTreasureValue">'+tokenBank.treasure+'</strong></div><button class="mistyChapter">＋ Chapter / Treasure</button><button class="mistySpend">− Spend Treasure</button><button class="mistyDragon" '+(tokenBank.treasure<4?'disabled':'')+'>Create 6/6 Dragon</button></div>':'')+
        '<button class="remove permanentRemove">Remove Permanent</button>';
     card.innerHTML=
      '<div class="battleCardVisual">'+
-       (c.image?'<img class="battleCardImage" src="'+escapeHTML(c.image)+'" alt="'+escapeHTML(c.name)+' card">':'<div class="battleCardFallback"><strong>'+escapeHTML(c.name)+'</strong><span>'+escapeHTML(c.typeLine||'Permanent')+'</span></div>')+
+       '<div class="battleCardFallback wolfOriginalCard"><div class="wolfSigil">🐺</div><strong>'+escapeHTML(c.name)+'</strong><span>'+escapeHTML(c.typeLine||'Permanent')+'</span><small>WOLF LAIR BATTLEFIELD</small></div>'+
        (c.isCreature?'<div class="battleCardPower">'+(c.p+c.c)+'/'+(c.t+c.c)+'</div><div class="battleCardCounters">+'+c.c+'</div>':'')+
      '</div>'+typeControls+smartControls+creatureControls;
     Array.prototype.forEach.call(card.querySelectorAll(".loyaltyAction"),function(button){button.onclick=function(){var a=(c.loyaltyAbilities||[])[Number(this.getAttribute("data-loyalty-index"))];if(!a)return;snapshot();c.loyalty=Math.max(0,c.loyalty+a.delta);finish();};});
@@ -3065,7 +3066,7 @@ function addSelectedDeckCreature(){
       if((card.power==null||card.toughness==null)&&card.card_faces&&card.card_faces.length)face=card.card_faces[0];
       var p=parseInt(face.power,10),t=parseInt(face.toughness,10);
       if(isNaN(p)||isNaN(t))throw new Error('That card does not have standard creature power/toughness.');
-      var image=cardImageUrl(card);
+      var image='';
       creatures.push({id:'c'+Date.now()+'_'+Math.floor(Math.random()*1000000),name:card.name,p:p,t:t,c:0,links:[],image:image});
       finish();
       status.textContent=card.name+' added to your battlefield.';
@@ -3119,7 +3120,7 @@ function addTrackerDeckCreature(){
       var face=card;if(isCreature&&(card.power==null||card.toughness==null)&&card.card_faces&&card.card_faces.length)face=card.card_faces[0];
       var p=isCreature?parseInt(face.power,10):0,t=isCreature?parseInt(face.toughness,10):0;
       if(isCreature&&(isNaN(p)||isNaN(t)))throw new Error('Wolf Lair could not read that creature’s power/toughness.');
-      var image=cardImageUrl(card);
+      var image='';
       snapshot();
       var isPlaneswalker=/Planeswalker/i.test(typeLine),isSaga=/Saga/i.test(typeLine),startingLoyalty=isPlaneswalker?Math.max(0,parseInt(card.loyalty,10)||0):0;
       creatures.push({id:'c'+Date.now()+'_'+Math.floor(Math.random()*1000000),name:card.name,p:p||0,t:t||0,c:0,links:[],image:image,typeLine:typeLine,oracle:String(card.oracle_text||''),isCreature:isCreature,treasures:0,lore:0,loyalty:startingLoyalty,isPlaneswalker:isPlaneswalker,isSaga:isSaga,loyaltyAbilities:isPlaneswalker?planeswalkerAbilities(card):[],smartTriggers:buildSmartTriggers(card)});
