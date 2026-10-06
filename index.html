@@ -2971,12 +2971,17 @@ el("show").onclick=function(){
 };
 var baseAutoStats={p:'',t:''};
 var baseCardLookup=null,baseCardName='',baseLookupTimer=null,baseLookupVersion=0;
+function startingCreatureFace(card){
+  if(card.power!=null&&card.toughness!=null)return card;
+  var faces=card.card_faces||[];
+  for(var i=0;i<faces.length;i++)if(faces[i].power!=null&&faces[i].toughness!=null)return faces[i];
+  return card;
+}
 function fillStartingStats(card,name){
-  var face=card;
-  if((card.power==null||card.toughness==null)&&card.card_faces&&card.card_faces.length)face=card.card_faces[0];
+  var face=startingCreatureFace(card);
   baseCardLookup=card;baseCardName=name;
   var p=String(face.power==null?'':face.power),t=String(face.toughness==null?'':face.toughness);
-  if(/^\d+$/.test(p)&&/^\d+$/.test(t)){
+  if(/^[+-]?[0-9]+$/.test(p)&&/^[+-]?[0-9]+$/.test(t)){
     if(!el('pw').value){el('pw').value=p;baseAutoStats.p=p;}
     if(!el('th').value){el('th').value=t;baseAutoStats.t=t;}
     el('msg').textContent='Starting power/toughness loaded: '+p+'/'+t+'.';
@@ -3166,7 +3171,7 @@ function addSelectedDeckCreature(){
   lookupDeckCard(name)
     .then(function(card){
       var face=card;
-      if((card.power==null||card.toughness==null)&&card.card_faces&&card.card_faces.length)face=card.card_faces[0];
+      face=startingCreatureFace(card);
       var p=parseInt(face.power,10),t=parseInt(face.toughness,10);
       if(isNaN(p)||isNaN(t))throw new Error('That card does not have standard creature power/toughness.');
       var image='';
@@ -3220,7 +3225,7 @@ function addTrackerDeckCreature(){
   lookupDeckCard(name)
     .then(function(card){
       var typeLine=String(card.type_line||''), isCreature=/Creature/i.test(typeLine);
-      var face=card;if(isCreature&&(card.power==null||card.toughness==null)&&card.card_faces&&card.card_faces.length)face=card.card_faces[0];
+      var face=startingCreatureFace(card);isCreature=isCreature||/Creature/i.test(face.type_line||'');if(isCreature&& !/Creature/i.test(typeLine))typeLine=String(face.type_line||typeLine);
       function baseStat(value){
         var n=parseInt(String(value==null?'':value),10);
         return isNaN(n)?0:n;
