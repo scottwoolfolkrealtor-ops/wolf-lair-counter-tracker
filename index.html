@@ -2104,7 +2104,7 @@ body.trackerPreview #trackerView .tokenBankItem button{min-height:30px;padding:3
 }
 </style><style id="wolf-card-logo-background">
 body.trackerPreview #trackerView .battleCardFallback.wolfOriginalCard{
-background-image:linear-gradient(180deg,rgba(4,9,6,.08),rgba(4,9,6,.45)),var(--wolf-mana-tint,linear-gradient(135deg,rgba(131,145,155,.60),rgba(131,145,155,.60))),var(--wolf-card-logo,url('./wolf-lair-logo.jpeg')) !important;
+background-image:linear-gradient(180deg,rgba(4,9,6,.08),rgba(4,9,6,.45)),var(--wolf-glow-logo,var(--wolf-card-logo,url('./wolf-lair-logo.jpeg'))) !important;
 background-size:cover;background-position:center;background-repeat:no-repeat;
 text-shadow:0 2px 5px #000;
 }
@@ -2188,7 +2188,7 @@ background-size:cover;background-position:center;background-repeat:no-repeat;
           var data=chunks.map(function(x){return x.trim();}).join('');
           if(data.length<40000) throw new Error('Logo data incomplete');
           var img=document.getElementById('wolfLairLogo');
-          if(img) img.src='data:image/webp;base64,'+data;
+          if(img){img.onload=function(){window.WolfLogoImage=img;window.dispatchEvent(new Event('wolf-logo-ready'));};img.src='data:image/webp;base64,'+data;}
           document.documentElement.style.setProperty('--wolf-card-logo','url("data:image/webp;base64,'+data+'")');
         }).catch(function(err){
           var img=document.getElementById('wolfLairLogo');
@@ -2475,13 +2475,33 @@ function spellManaColors(card){
   return colors.length?colors:(card.colors||face.colors||[]);
 }
 var wolfManaPending={};
+var wolfGlowCache={};
+function wolfGlowLogo(colors){
+  var logo=window.WolfLogoImage;if(!logo||!logo.complete||!logo.naturalWidth)return '';
+  var key=colors.join('')||'C';if(wolfGlowCache[key])return wolfGlowCache[key];
+  if(key==='G')return logo.src;
+  var rgb={W:[255,239,190],U:[35,140,255],B:[150,75,205],R:[255,65,24],G:[65,235,70],C:[190,205,220]};
+  var canvas=document.createElement('canvas');canvas.width=logo.naturalWidth;canvas.height=logo.naturalHeight;
+  var ctx=canvas.getContext('2d');ctx.drawImage(logo,0,0);
+  var frame=ctx.getImageData(0,0,canvas.width,canvas.height),p=frame.data;
+  for(var y=0;y<canvas.height;y++)for(var x=0;x<canvas.width;x++){
+    var i=(y*canvas.width+x)*4,r=p[i],g=p[i+1],b=p[i+2];
+    var dx=(x/canvas.width-.50)/.29,dy=(y/canvas.height-.27)/.33;
+    var distance=dx*dx+dy*dy;
+    if(distance>=1||g<45||g<r*.98||g<b*1.18)continue;
+    var amount=Math.min(1,(g-b)/Math.max(1,g)*1.8)*Math.min(1,(1-distance)*5);
+    var fraction=Math.max(0,Math.min(.999,(x/canvas.width-.23)/.54));
+    var list=colors.length?colors:['C'],position=fraction*Math.max(0,list.length-1),a=Math.floor(position),mix=position-a;
+    var left=rgb[list[a]],right=rgb[list[Math.min(a+1,list.length-1)]];
+    var light=Math.max(r,g,b)/255;
+    for(var k=0;k<3;k++){var target=(left[k]*(1-mix)+right[k]*mix)*light;p[i+k]=Math.round(p[i+k]*(1-amount)+target*amount);}
+  }
+  ctx.putImageData(frame,0,0);return wolfGlowCache[key]=canvas.toDataURL('image/png');
+}
 function applyWolfManaBackground(panel,c){
-  var palette={W:'rgba(238,210,116,.65)',U:'rgba(0,104,255,.64)',B:'rgba(105,31,157,.70)',R:'rgba(239,42,18,.64)',G:'rgba(0,178,56,.63)'};
-  var colors=(c.colors||[]).filter(function(x){return palette[x];});
-  var tones=colors.map(function(x){return palette[x];});
-  if(!tones.length)tones=['rgba(131,145,155,.60)'];
-  if(tones.length===1)tones.push(tones[0]);
-  panel.style.setProperty('--wolf-mana-tint','linear-gradient(135deg,'+tones.join(',')+')');
+  var colors=(c.colors||[]).filter(function(x){return /^(W|U|B|R|G)$/.test(x);});
+  var src=wolfGlowLogo(colors);
+  if(src)panel.style.setProperty('--wolf-glow-logo','url("'+src+'")');
   if(!Array.isArray(c.colors)&&!wolfManaPending[c.name]){
     wolfManaPending[c.name]=true;
     lookupDeckCard(c.name).then(function(data){
@@ -2490,7 +2510,9 @@ function applyWolfManaBackground(panel,c){
     }).catch(function(){});
   }
 }
-
+window.addEventListener('wolf-logo-ready',function(){
+  document.querySelectorAll('#field>.card').forEach(function(panel){if(panel._creatureRef)applyWolfManaBackground(panel,panel._creatureRef);});
+});
 function normalize(c){
   c.id=String(c.id||("c"+Date.now()+Math.random()));
   c.name=String(c.name||"Creature");
