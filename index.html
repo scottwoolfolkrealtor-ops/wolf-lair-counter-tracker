@@ -2969,13 +2969,51 @@ el("show").onclick=function(){
   else window.scrollTo(0,0);
   openCreatureKeyboard("nm");
 };
-el("add").onclick=function(){
+var baseAutoStats={p:'',t:''};
+var baseCardLookup=null,baseCardName='',baseLookupTimer=null,baseLookupVersion=0;
+function fillStartingStats(card,name){
+  var face=card;
+  if((card.power==null||card.toughness==null)&&card.card_faces&&card.card_faces.length)face=card.card_faces[0];
+  baseCardLookup=card;baseCardName=name;
+  var p=String(face.power==null?'':face.power),t=String(face.toughness==null?'':face.toughness);
+  if(/^\d+$/.test(p)&&/^\d+$/.test(t)){
+    if(!el('pw').value){el('pw').value=p;baseAutoStats.p=p;}
+    if(!el('th').value){el('th').value=t;baseAutoStats.t=t;}
+    el('msg').textContent='Starting power/toughness loaded: '+p+'/'+t+'.';
+  }else el('msg').textContent='This card has variable stats; enter its starting power and toughness.';
+}
+el('nm').addEventListener('input',function(){
+  clearTimeout(baseLookupTimer);baseLookupVersion++;baseCardLookup=null;
+  if(el('pw').value===baseAutoStats.p)el('pw').value='';
+  if(el('th').value===baseAutoStats.t)el('th').value='';
+  baseAutoStats={p:'',t:''};
+  var name=el('nm').value.trim(),version=baseLookupVersion;
+  if(name.length<3)return;
+  baseLookupTimer=setTimeout(function(){
+    lookupDeckCard(name).then(function(card){if(version===baseLookupVersion&&el('nm').value.trim()===name)fillStartingStats(card,name);})
+      .catch(function(){if(version===baseLookupVersion)el('msg').textContent='Enter power and toughness for a custom creature.';});
+  },600);
+});
+el("add").onclick=async function(){
   el("msg").textContent="";
-  var name=el("nm").value.trim(), p=parseInt(el("pw").value,10), t=parseInt(el("th").value,10);
-  if(!name||isNaN(p)||isNaN(t)){el("msg").textContent="Enter name, power, and toughness.";return}
-  closeCreatureKeyboard();
-  snapshot();creatures.push({id:"c"+Date.now()+"_"+Math.floor(Math.random()*1000000),name:name,p:p,t:t,c:0,links:[]});
-  el("nm").value="";el("pw").value="";el("th").value="";el("form").className="hidden";finish();
+  var name=el("nm").value.trim();
+  if(!name){el('msg').textContent='Enter a creature name.';return;}
+  var button=el('add');button.disabled=true;
+  try{
+    if(!baseCardLookup||baseCardName!==name){
+      el('msg').textContent='Looking up starting power and toughness…';
+      try{var found=await lookupDeckCard(name);if(el('nm').value.trim()!==name)return;fillStartingStats(found,name);}catch(err){}
+    }
+    var p=parseInt(el('pw').value,10),t=parseInt(el('th').value,10);
+    if(isNaN(p)||isNaN(t)){el('msg').textContent='Enter power and toughness for this creature.';return;}
+    var data=baseCardName===name?baseCardLookup:null;
+    closeCreatureKeyboard();snapshot();
+    creatures.push({id:'c'+Date.now()+'_'+Math.floor(Math.random()*1000000),name:data?data.name:name,p:p,t:t,c:0,links:[],
+      colors:data?spellManaColors(data):undefined,typeLine:data?data.type_line:'Creature',isCreature:true,
+      oracle:data?String(data.oracle_text||''):'',smartTriggers:data?buildSmartTriggers(data):[]});
+    clearTimeout(baseLookupTimer);baseLookupVersion++;baseCardLookup=null;baseCardName='';
+    el('nm').value='';el('pw').value='';el('th').value='';el('msg').textContent='';el('form').className='hidden';finish();
+  }finally{button.disabled=false;}
 };
 el("undo").onclick=function(){
   if(undoState===null)return;
