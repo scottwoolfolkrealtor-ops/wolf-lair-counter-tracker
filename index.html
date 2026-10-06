@@ -2103,6 +2103,12 @@ body.trackerPreview #trackerView .tokenBankItem button{min-height:30px;padding:3
   }
 }
 </style><style id="wolf-card-logo-background">
+body.trackerPreview #trackerView .battleCardFallback.wolfOriginalCard{
+background-image:linear-gradient(180deg,rgba(4,9,6,.20),rgba(4,9,6,.76)),var(--wolf-card-logo,url('./wolf-lair-logo.jpeg')) !important;
+background-size:cover;background-position:center;background-repeat:no-repeat;
+text-shadow:0 2px 5px #000;
+}
+
 #trackerView #field>.card,body.trackerPreview #trackerView #field>.card{
 background-image:linear-gradient(160deg,rgba(6,14,9,.82),rgba(4,9,6,.90)),var(--wolf-card-logo,url('./wolf-lair-logo.jpeg')) !important;
 background-size:cover;background-position:center;background-repeat:no-repeat;
@@ -2670,7 +2676,7 @@ function render(){
        '<button class="remove permanentRemove">Remove Permanent</button>';
     card.innerHTML=
      '<div class="battleCardVisual">'+
-       '<div class="battleCardFallback wolfOriginalCard"><div class="wolfSigil">🐺</div><strong>'+escapeHTML(c.name)+'</strong><span>'+escapeHTML(c.typeLine||'Permanent')+'</span><small>WOLF LAIR BATTLEFIELD</small></div>'+
+       '<div class="battleCardFallback wolfOriginalCard"><strong>'+escapeHTML(c.name)+'</strong><span>'+escapeHTML(c.typeLine||'Permanent')+'</span><small>WOLF LAIR BATTLEFIELD</small></div>'+
        (c.isCreature?'<div class="battleCardPower">'+(c.p+c.c)+'/'+(c.t+c.c)+'</div><div class="battleCardCounters">+'+c.c+'</div>':'')+
      '</div>'+typeControls+smartControls+creatureControls;
     Array.prototype.forEach.call(card.querySelectorAll(".loyaltyAction"),function(button){button.onclick=function(){var a=(c.loyaltyAbilities||[])[Number(this.getAttribute("data-loyalty-index"))];if(!a)return;snapshot();c.loyalty=Math.max(0,c.loyalty+a.delta);finish();};});
