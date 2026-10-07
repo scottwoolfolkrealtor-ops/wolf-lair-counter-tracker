@@ -117,6 +117,8 @@ nav button{min-height:52px}button:disabled{opacity:.4}
 .playerEffects .effectToggleGrid{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media(max-width:420px){.playerEffects .effectToggleGrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.playerEffects .effectToggle{font-size:9px;padding:6px 4px}.playerEffects .effectCounter{gap:4px;padding:6px}.playerEffects .effectCounter button{padding:4px 6px}.playerEffects .effectCounterLabel{font-size:8px}}
 .proPanel{display:grid;gap:12px}
+.alphaNavButton{min-height:44px;padding:7px 10px;border-color:rgba(132,210,111,.6);background:linear-gradient(180deg,#24452a,#102317);color:#eaffdf;font-size:11px;letter-spacing:.7px}
+#deckTopNav{display:flex;align-items:center;gap:8px}#deckTopNav .backHome{flex:1}
 .alphaHero{position:relative;overflow:hidden;border:1px solid rgba(132,210,111,.58);border-radius:20px;padding:18px;background:radial-gradient(circle at 92% 8%,rgba(125,255,106,.18),transparent 34%),linear-gradient(145deg,#172d1d,#09110c 74%);box-shadow:0 16px 36px rgba(0,0,0,.26)}
 .alphaEyebrow{font-size:10px;letter-spacing:2.5px;font-weight:900;color:#a8ee89}.alphaHero h2{margin:6px 0 5px;font:900 26px Georgia,'Times New Roman',serif;color:#f1f5e9}.alphaHero p{margin:0;color:#bac8b8;line-height:1.5;font-size:14px}.alphaBadge{display:inline-flex;align-items:center;gap:6px;margin-top:13px;padding:7px 10px;border:1px solid rgba(143,191,125,.4);border-radius:999px;background:rgba(4,10,6,.55);font-size:11px;font-weight:850;letter-spacing:.8px;color:#d8e8ce}.alphaBadge:before{content:'';width:7px;height:7px;border-radius:50%;background:#879587}.alphaBadge.active:before{background:#8bec67;box-shadow:0 0 10px #83ed66}
 .alphaStats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:14px}.alphaStat{padding:10px;border:1px solid rgba(136,166,128,.22);border-radius:12px;background:rgba(0,0,0,.22)}.alphaStat span{display:block;color:#9cac9e;font-size:9px;font-weight:850;letter-spacing:1.5px}.alphaStat strong{display:block;margin-top:4px;font-size:20px;color:#f0f6eb}.alphaControls{display:grid;gap:10px}.alphaControl{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;padding:11px 0;border-top:1px solid rgba(145,166,145,.15)}.alphaControl strong{display:block;font-size:14px}.alphaControl small{display:block;margin-top:3px;color:#9eafa1;font-size:12px;line-height:1.4}.alphaControl select{max-width:150px;background:#06100b;color:white;border:1px solid #4c6654;border-radius:9px;padding:9px;font-size:13px}.alphaControl input{width:24px;height:24px;accent-color:#7bd866}.alphaNote{margin:0;color:#8fa092;font-size:11px;line-height:1.5}.deckLimitBanner{margin:0 0 12px;padding:12px;border:1px solid rgba(140,180,128,.32);border-radius:14px;background:linear-gradient(135deg,rgba(20,38,25,.92),rgba(7,13,9,.95));color:#c6d2c5;font-size:13px;line-height:1.45}.deckLimitBanner strong{color:#eff5e9}.deckLimitBanner button{width:100%;margin-top:9px;border-color:rgba(132,210,111,.56);color:#eaffdf;background:linear-gradient(180deg,#25452a,#102516)}
@@ -2260,7 +2262,7 @@ background-size:cover;background-position:center;background-repeat:no-repeat;
 
 <section id="decksView" class="hidden">
  <main>
-  <button id="backDecksHome" class="backHome" type="button">‹ Wolf Lair Home</button>
+  <div id="deckTopNav"><button id="backDecksHome" class="backHome" type="button">‹ Wolf Lair Home</button><button id="openAlphaFromDecks" class="alphaNavButton" type="button">ALPHA</button></div>
   <header class="deckTitle">
    <div class="trackerBrand">THE WOLF LAIR</div>
    <h1>DECK VAULT</h1>
@@ -2346,7 +2348,7 @@ background-size:cover;background-position:center;background-repeat:no-repeat;
 <section id="trackerView" class="hidden">
 <div class="playerTrackerSurface">
 <main>
-<div class="trackerNavigation"><button id="backHome" class="backHome" type="button">‹ Wolf Lair Home</button>
+<div class="trackerNavigation"><button id="backHome" class="backHome" type="button">‹ Wolf Lair Home</button><button id="openAlphaFromTracker" class="alphaNavButton" type="button">ALPHA</button>
 <button class="askWolf" type="button">Ask Wolf</button><button id="quickGameMode" class="quickSwitch" type="button">BATTLEFIELD</button><button class="soundToggle" type="button" aria-label="Mute sound effects" aria-pressed="true">Sound on</button></div>
 <header class="trackerTitle">
   <div id="activePlayerLabel" class="trackerBrand">PLAYER 1 • THE WOLF LAIR</div>
@@ -2407,7 +2409,7 @@ background-size:cover;background-position:center;background-repeat:no-repeat;
 
 <section id="gameView" class="hidden">
   <main>
-    <div class="gameNavigation"><button class="askWolf" type="button">Ask Wolf</button><button id="backGameHome" class="backHome" type="button">‹ Wolf Lair Home</button><button class="soundToggle" type="button" aria-label="Mute sound effects" aria-pressed="true">Sound on</button></div>
+    <div class="gameNavigation"><button class="askWolf" type="button">Ask Wolf</button><button id="backGameHome" class="backHome" type="button">‹ Wolf Lair Home</button><button id="openAlphaFromGame" class="alphaNavButton" type="button">ALPHA</button><button class="soundToggle" type="button" aria-label="Mute sound effects" aria-pressed="true">Sound on</button></div>
     <header class="gameTitle tableCommandTitle">
   <div class="trackerBrand">THE WOLF LAIR</div>
   <h1>BATTLEFIELD COMMAND</h1>
@@ -3573,8 +3575,12 @@ el('backDecksHome').onclick=function(){closeDeckForm();el('decksView').className
 el('openGame').onclick=function(){el('home').className='hidden';el('gameView').className='hidden';el('trackerView').className='';loadDecks();renderTrackerDeckControls();render();window.scrollTo(0,0)};
 el('backGameHome').onclick=function(){el('gameView').className='hidden';el('home').className='';window.scrollTo(0,0)};
 
-el('openPro').onclick=function(){el('home').className='hidden';el('proView').className='';renderAlpha();loadPro();window.scrollTo(0,0)};
-el('backProHome').onclick=function(){el('proView').className='hidden';el('home').className='';window.scrollTo(0,0)};
+var alphaReturnView='home';
+function showAlphaView(from){alphaReturnView=from||(document.body.classList.contains('trackerPreview')?'trackerView':'home');el('home').className='hidden';el('trackerView').className='hidden';el('gameView').className='hidden';el('decksView').className='hidden';el('proView').className='';el('backProHome').textContent=alphaReturnView==='trackerView'?'‹ Battlefield':(alphaReturnView==='gameView'?'‹ Game Table':(alphaReturnView==='decksView'?'‹ Deck Vault':'‹ Wolf Lair Home'));renderAlpha();loadPro();window.scrollTo(0,0)}
+window.showWolfAlpha=showAlphaView;
+el('openPro').onclick=function(){showAlphaView('home')};
+[['openAlphaFromTracker','trackerView'],['openAlphaFromGame','gameView'],['openAlphaFromDecks','decksView']].forEach(function(item){var button=el(item[0]);if(button)button.onclick=function(){showAlphaView(item[1])}});
+el('backProHome').onclick=function(){el('proView').className='hidden';el(alphaReturnView).className='';if(alphaReturnView==='trackerView'&&typeof render==='function')render();if(alphaReturnView==='decksView'&&typeof renderDecks==='function')renderDecks();if(alphaReturnView==='gameView'&&typeof renderGame==='function')renderGame();window.scrollTo(0,0)};
 
 var DECKKEY="wolfLairDecks1", decks=[], editingDeck=null, lastCardResult=null, deckUndoState=null, deckEntries=[];
 var ALPHA_PREVIEW_KEY="wolfLairAlphaPreview1", ALPHA_PREFS_KEY="wolfLairAlphaPrefs1", FREE_DECK_LIMIT=2, alphaWakeLock=null;
@@ -4946,7 +4952,8 @@ renderAlpha();
     toGame.addEventListener('pointercancel',function(){gameTap=null;});
   }
   var params=new URLSearchParams(location.search);
-  if(params.get('mode')==='game') showGame();
+  if(params.get('mode')==='alpha'&&typeof window.showWolfAlpha==='function')window.showWolfAlpha();
+  else if(params.get('mode')==='game') showGame();
   else if(params.get('mode')==='decks') showDecks();
   else showTracker();
 })();
