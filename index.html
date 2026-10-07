@@ -2457,6 +2457,7 @@ background-size:cover;background-position:center;background-repeat:no-repeat;
           <button id="alphaSoundPreview" type="button">Preview sound</button>
           <label class="alphaControl"><span><strong>Keep screen awake</strong><small>Keep your phone display on during a game when supported.</small></span><input id="alphaWakeLockToggle" type="checkbox" aria-label="Keep screen awake"></label>
         </div>
+        <p class="alphaNote">Settings save as you choose. Background and card artwork changes show on the Battlefield; sound styles play during game actions.</p>
         <p class="alphaNote">Keep screen awake uses your browser’s display wake lock and may be unavailable on some devices.</p>
       </div>
       <div class="quickCard">
@@ -3586,7 +3587,7 @@ el('openGame').onclick=function(){el('home').className='hidden';el('gameView').c
 el('backGameHome').onclick=function(){el('gameView').className='hidden';el('home').className='';window.scrollTo(0,0)};
 
 var alphaReturnView='home';
-function showAlphaView(from){alphaReturnView=from||(document.body.classList.contains('trackerPreview')?'trackerView':'home');el('home').className='hidden';el('trackerView').className='hidden';el('gameView').className='hidden';el('decksView').className='hidden';el('proView').className='';el('backProHome').textContent=alphaReturnView==='trackerView'?'‹ Battlefield':(alphaReturnView==='gameView'?'‹ Game Table':(alphaReturnView==='decksView'?'‹ Deck Vault':'‹ Wolf Lair Home'));renderAlpha();loadPro();window.scrollTo(0,0)}
+function showAlphaView(from){try{localStorage.setItem('wolfLairAlphaPreview1','true')}catch(e){}alphaReturnView=from||(document.body.classList.contains('trackerPreview')?'trackerView':'home');el('home').className='hidden';el('trackerView').className='hidden';el('gameView').className='hidden';el('decksView').className='hidden';el('proView').className='';el('backProHome').textContent=alphaReturnView==='trackerView'?'‹ Battlefield':(alphaReturnView==='gameView'?'‹ Game Table':(alphaReturnView==='decksView'?'‹ Deck Vault':'‹ Wolf Lair Home'));renderAlpha();loadPro();window.scrollTo(0,0)}
 window.showWolfAlpha=showAlphaView;
 el('openPro').onclick=function(){showAlphaView('home')};
 [['openAlphaFromTracker','trackerView'],['openAlphaFromGame','gameView'],['openAlphaFromDecks','decksView']].forEach(function(item){var button=el(item[0]);if(button)button.onclick=function(){showAlphaView(item[1])}});
