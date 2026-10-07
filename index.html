@@ -117,6 +117,11 @@ nav button{min-height:52px}button:disabled{opacity:.4}
 .playerEffects .effectToggleGrid{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media(max-width:420px){.playerEffects .effectToggleGrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.playerEffects .effectToggle{font-size:9px;padding:6px 4px}.playerEffects .effectCounter{gap:4px;padding:6px}.playerEffects .effectCounter button{padding:4px 6px}.playerEffects .effectCounterLabel{font-size:8px}}
 .proPanel{display:grid;gap:12px}
+.alphaHero{position:relative;overflow:hidden;border:1px solid rgba(132,210,111,.58);border-radius:20px;padding:18px;background:radial-gradient(circle at 92% 8%,rgba(125,255,106,.18),transparent 34%),linear-gradient(145deg,#172d1d,#09110c 74%);box-shadow:0 16px 36px rgba(0,0,0,.26)}
+.alphaEyebrow{font-size:10px;letter-spacing:2.5px;font-weight:900;color:#a8ee89}.alphaHero h2{margin:6px 0 5px;font:900 26px Georgia,'Times New Roman',serif;color:#f1f5e9}.alphaHero p{margin:0;color:#bac8b8;line-height:1.5;font-size:14px}.alphaBadge{display:inline-flex;align-items:center;gap:6px;margin-top:13px;padding:7px 10px;border:1px solid rgba(143,191,125,.4);border-radius:999px;background:rgba(4,10,6,.55);font-size:11px;font-weight:850;letter-spacing:.8px;color:#d8e8ce}.alphaBadge:before{content:'';width:7px;height:7px;border-radius:50%;background:#879587}.alphaBadge.active:before{background:#8bec67;box-shadow:0 0 10px #83ed66}
+.alphaStats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:14px}.alphaStat{padding:10px;border:1px solid rgba(136,166,128,.22);border-radius:12px;background:rgba(0,0,0,.22)}.alphaStat span{display:block;color:#9cac9e;font-size:9px;font-weight:850;letter-spacing:1.5px}.alphaStat strong{display:block;margin-top:4px;font-size:20px;color:#f0f6eb}.alphaControls{display:grid;gap:10px}.alphaControl{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;padding:11px 0;border-top:1px solid rgba(145,166,145,.15)}.alphaControl strong{display:block;font-size:14px}.alphaControl small{display:block;margin-top:3px;color:#9eafa1;font-size:12px;line-height:1.4}.alphaControl select{max-width:150px;background:#06100b;color:white;border:1px solid #4c6654;border-radius:9px;padding:9px;font-size:13px}.alphaControl input{width:24px;height:24px;accent-color:#7bd866}.alphaNote{margin:0;color:#8fa092;font-size:11px;line-height:1.5}.deckLimitBanner{margin:0 0 12px;padding:12px;border:1px solid rgba(140,180,128,.32);border-radius:14px;background:linear-gradient(135deg,rgba(20,38,25,.92),rgba(7,13,9,.95));color:#c6d2c5;font-size:13px;line-height:1.45}.deckLimitBanner strong{color:#eff5e9}.deckLimitBanner button{width:100%;margin-top:9px;border-color:rgba(132,210,111,.56);color:#eaffdf;background:linear-gradient(180deg,#25452a,#102516)}
+body.alphaTheme-moon{background:#070d18;color:#f0f3fb}body.alphaTheme-moon .quickCard,body.alphaTheme-moon .card,body.alphaTheme-moon .deckCard,body.alphaTheme-moon .playerCard,body.alphaTheme-moon .gameStatePanel{background:#101a2b;border-color:#46536f}body.alphaTheme-moon button{background:#1a2940;border-color:#65779d}body.alphaTheme-moon input,body.alphaTheme-moon textarea,body.alphaTheme-moon select{background:#0a1220;border-color:#536281}
+body.alphaTheme-ember{background:#140b08;color:#fff3ed}body.alphaTheme-ember .quickCard,body.alphaTheme-ember .card,body.alphaTheme-ember .deckCard,body.alphaTheme-ember .playerCard,body.alphaTheme-ember .gameStatePanel{background:#21130e;border-color:#79533e}body.alphaTheme-ember button{background:#382016;border-color:#95664a}body.alphaTheme-ember input,body.alphaTheme-ember textarea,body.alphaTheme-ember select{background:#140b08;border-color:#80553f}
 .quickCard{background:#0b1710;border:1px solid #45604d;border-radius:16px;padding:12px}
 .quickCard h3{margin:0 0 8px;font-size:18px}
 .proGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -2261,6 +2266,7 @@ background-size:cover;background-position:center;background-repeat:no-repeat;
    <h1>DECK VAULT</h1>
    <small>BUILD • SCAN • IMPORT</small>
   </header>
+  <div id="deckLimitBanner" class="deckLimitBanner"></div>
   <div id="deckList"></div>
   <button id="newDeck" class="wide" type="button">＋ New Deck</button>
   <div id="deckForm" class="hidden deckForm">
@@ -2425,10 +2431,31 @@ background-size:cover;background-position:center;background-repeat:no-repeat;
 <section id="proView" class="hidden">
   <main>
     <button id="backProHome" class="backHome" type="button">‹ Wolf Lair Home</button>
-    <header><div class="wolf">🐺</div><h1>Wolf Lair Pro</h1><small>LOCAL SYNC</small></header>
+    <header><div class="wolf">🐺</div><h1>The Alpha Wolf Lair</h1><small>ALPHA MEMBER EXPERIENCE</small></header>
     <div class="proPanel">
+      <div class="alphaHero">
+        <div class="alphaEyebrow">THE WOLF LAIR • PREMIUM</div>
+        <h2>Your Alpha Den</h2>
+        <p>More room for your decks, a lair that feels like yours, and a battlefield that stays ready while you play.</p>
+        <div id="alphaTierLabel" class="alphaBadge">FREE PLAN</div>
+        <div class="alphaStats"><div class="alphaStat"><span>DECKS IN YOUR VAULT</span><strong id="alphaDeckCount">0</strong></div><div class="alphaStat"><span>DECK ACCESS</span><strong id="alphaDeckAccess">2 decks</strong></div></div>
+      </div>
       <div class="quickCard">
-        <h3>Session Status</h3>
+        <h3>Make the Lair Yours</h3>
+        <div class="alphaControls">
+          <label class="alphaControl"><span><strong>Battlefield theme</strong><small>Choose the look used across your app.</small></span><select id="alphaThemeSelect"><option value="forest">Forest</option><option value="moon">Moonlit</option><option value="ember">Ember</option></select></label>
+          <label class="alphaControl"><span><strong>Keep screen awake</strong><small>Keep your phone display on during a game when supported.</small></span><input id="alphaWakeLockToggle" type="checkbox" aria-label="Keep screen awake"></label>
+        </div>
+        <p class="alphaNote">Keep screen awake uses your browser’s display wake lock and may be unavailable on some devices.</p>
+      </div>
+      <div class="quickCard">
+        <h3>Alpha Access Preview</h3>
+        <p class="alphaNote">Preview Alpha on this device to test unlimited deck storage and the Alpha settings. This is a local preview; subscription billing and sign-in are not connected yet.</p>
+        <button id="alphaPreviewToggle" class="wide" type="button">Preview Alpha</button>
+      </div>
+      <div class="quickCard">
+        <h3>Local Backup</h3>
+        <p class="alphaNote">Save or restore this device’s current game profile. The backup stays in this browser unless you copy the JSON.</p>
         <div class="proGrid">
           <button id="saveProfile" type="button">Save Profile</button>
           <button id="loadProfile" type="button">Load Profile</button>
@@ -3546,10 +3573,55 @@ el('backDecksHome').onclick=function(){closeDeckForm();el('decksView').className
 el('openGame').onclick=function(){el('home').className='hidden';el('gameView').className='hidden';el('trackerView').className='';loadDecks();renderTrackerDeckControls();render();window.scrollTo(0,0)};
 el('backGameHome').onclick=function(){el('gameView').className='hidden';el('home').className='';window.scrollTo(0,0)};
 
-el('openPro').onclick=function(){el('home').className='hidden';el('proView').className='';loadPro();window.scrollTo(0,0)};
+el('openPro').onclick=function(){el('home').className='hidden';el('proView').className='';renderAlpha();loadPro();window.scrollTo(0,0)};
 el('backProHome').onclick=function(){el('proView').className='hidden';el('home').className='';window.scrollTo(0,0)};
 
 var DECKKEY="wolfLairDecks1", decks=[], editingDeck=null, lastCardResult=null, deckUndoState=null, deckEntries=[];
+var ALPHA_PREVIEW_KEY="wolfLairAlphaPreview1", ALPHA_PREFS_KEY="wolfLairAlphaPrefs1", FREE_DECK_LIMIT=2, alphaWakeLock=null;
+function alphaEnabled(){try{return localStorage.getItem(ALPHA_PREVIEW_KEY)==="true"}catch(e){return false}}
+function alphaPrefs(){try{var p=JSON.parse(localStorage.getItem(ALPHA_PREFS_KEY)||"{}");return p&&typeof p==="object"?p:{}}catch(e){return {}}}
+function saveAlphaPrefs(p){try{localStorage.setItem(ALPHA_PREFS_KEY,JSON.stringify(p))}catch(e){}}
+function syncAlphaWakeLock(){
+  var wants=alphaEnabled()&&!!alphaPrefs().keepAwake;
+  if(!wants||document.hidden||!navigator.wakeLock||!navigator.wakeLock.request){
+    if(alphaWakeLock){var old=alphaWakeLock;alphaWakeLock=null;old.release().catch(function(){});}return;
+  }
+  if(alphaWakeLock)return;
+  navigator.wakeLock.request("screen").then(function(lock){
+    alphaWakeLock=lock;
+    lock.addEventListener("release",function(){if(alphaWakeLock===lock)alphaWakeLock=null;});
+  }).catch(function(){});
+}
+function applyAlphaTheme(){
+  var enabled=alphaEnabled(),theme=enabled?(alphaPrefs().theme||"forest"):"forest";
+  document.body.classList.remove("alphaTheme-moon","alphaTheme-ember");
+  if(theme==="moon")document.body.classList.add("alphaTheme-moon");
+  if(theme==="ember")document.body.classList.add("alphaTheme-ember");
+  var select=el("alphaThemeSelect");if(select){select.value=theme;select.disabled=!enabled;}
+  var awake=el("alphaWakeLockToggle");if(awake){awake.checked=!!alphaPrefs().keepAwake;awake.disabled=!enabled;}
+  syncAlphaWakeLock();
+}
+function renderAlpha(){
+  loadDecks();
+  var enabled=alphaEnabled(),badge=el("alphaTierLabel"),count=el("alphaDeckCount"),access=el("alphaDeckAccess"),toggle=el("alphaPreviewToggle");
+  if(badge){badge.textContent=enabled?"ALPHA PREVIEW • THIS DEVICE":"FREE PLAN";badge.className=enabled?"alphaBadge active":"alphaBadge";}
+  if(count)count.textContent=String(decks.length);
+  if(access)access.textContent=enabled?"Unlimited":"2 free decks";
+  if(toggle)toggle.textContent=enabled?"Turn Off Alpha Preview":"Preview Alpha";
+  applyAlphaTheme();
+}
+function renderDeckLimitBanner(){
+  var box=el("deckLimitBanner");if(!box)return;
+  var enabled=alphaEnabled(),remaining=Math.max(0,FREE_DECK_LIMIT-decks.length);
+  box.innerHTML=enabled
+    ?'<strong>Alpha Preview is on.</strong> Your vault has unlimited deck slots on this device.'
+    :'<strong>Free plan: '+decks.length+' of '+FREE_DECK_LIMIT+' decks saved.</strong> '+(remaining?remaining+' slot'+(remaining===1?'':'s')+' remaining.':'You’ve reached the free deck limit.')+' Preview Alpha to unlock unlimited decks and personal themes.';
+  var button=document.createElement("button");button.type="button";button.textContent=enabled?"Alpha settings":"Explore Alpha";button.onclick=function(){el("decksView").className="hidden";el("proView").className="";renderAlpha();loadPro();window.scrollTo(0,0)};box.appendChild(button);
+}
+el("alphaPreviewToggle").onclick=function(){try{localStorage.setItem(ALPHA_PREVIEW_KEY,String(!alphaEnabled()))}catch(e){}renderAlpha();renderDecks()};
+el("alphaThemeSelect").onchange=function(){if(!alphaEnabled()){applyAlphaTheme();return}var p=alphaPrefs();p.theme=this.value;saveAlphaPrefs(p);applyAlphaTheme()};
+el("alphaWakeLockToggle").onchange=function(){if(!alphaEnabled()){this.checked=false;return}var p=alphaPrefs();p.keepAwake=this.checked;saveAlphaPrefs(p);syncAlphaWakeLock()};
+document.addEventListener("visibilitychange",syncAlphaWakeLock);
 function loadDecks(){try{var x=JSON.parse(localStorage.getItem(DECKKEY)||"[]");if(Array.isArray(x))decks=x}catch(e){decks=[]}}
 function saveDecks(){try{localStorage.setItem(DECKKEY,JSON.stringify(decks))}catch(e){}}
 function deckCardCount(txt){
@@ -3867,7 +3939,7 @@ function searchScryfallChoices(query){
     });
 }
 function renderDecks(){
-  var box=el("deckList");box.innerHTML="";
+  var box=el("deckList");box.innerHTML="";renderDeckLimitBanner();
   if(!decks.length){box.innerHTML='<div class="empty deckEmpty"><strong>Your vault is empty.</strong><br>Create a deck, scan cards, search by name, paste a list, or import a file.</div>';return}
   for(var i=0;i<decks.length;i++){
    (function(d){
@@ -3898,6 +3970,8 @@ el("undoDeckChange").onclick=undoDeckChange;
 updateDeckUndoButton();
 renderDeckValue();
 el("newDeck").onclick=function(){
+  loadDecks();
+  if(!alphaEnabled()&&decks.length>=FREE_DECK_LIMIT){renderDeckLimitBanner();return}
   editingDeck=null;deckUndoState=null;deckEntries=[];updateDeckUndoButton();renderDeckValue();
   el("deckFormTitle").textContent="New Deck";
   el("deckForm").className="deckForm";
@@ -3909,13 +3983,14 @@ el("cancelDeck").onclick=closeDeckForm;
 el("saveDeck").onclick=function(){
   var n=el("deckName").value.trim(), cmd=el("commanderName").value.trim(), cards=el("deckCards").value.trim();
   if(!n){el("deckMsg").textContent="Enter a deck name.";return}
+  if(!editingDeck&&!alphaEnabled()&&decks.length>=FREE_DECK_LIMIT){el("deckMsg").textContent="The free plan includes 2 saved decks. Preview Alpha for unlimited deck storage.";return}
   syncStructuredEntriesToText();
   if(editingDeck){
    for(var i=0;i<decks.length;i++)if(decks[i].id===editingDeck){decks[i].name=n;decks[i].commander=cmd;decks[i].cards=cards;decks[i].entries=clone(deckEntries);break}
   }else{
    decks.push({id:"d"+Date.now()+"_"+Math.floor(Math.random()*1000000),name:n,commander:cmd,cards:cards,entries:clone(deckEntries)});
   }
-  saveDecks();closeDeckForm();renderDecks();
+  saveDecks();closeDeckForm();renderDecks();renderAlpha();
 };
 el("searchCardBtn").onclick=function(){
   closeDeckTools();
@@ -4821,6 +4896,7 @@ render();
 renderDecks();
 renderTrackerDeckControls();
 renderGame();
+renderAlpha();
 })();
 </script>
 <script>
