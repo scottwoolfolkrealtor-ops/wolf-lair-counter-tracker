@@ -2020,6 +2020,22 @@ background-size:cover;background-position:center;background-repeat:no-repeat;
 }
 #trackerView #field>.card .wolfCardIdentity,#trackerView #field>.card .head{text-shadow:0 2px 4px #000}
 </style>
+<style id="portrait-battlefield-layout">
+@media (orientation:portrait) and (max-width:900px){
+  body.trackerPreview #trackerView .playerTrackerSurface main{max-width:760px}
+  body.trackerPreview #trackerView #field{
+    display:grid!important;grid-template-columns:minmax(0,1fr)!important;justify-items:center;
+    width:100%!important;height:auto!important;min-height:0!important;margin:0!important;
+    overflow:visible!important;transform:none!important;padding:0 0 12px!important;
+  }
+  body.trackerPreview #trackerView #field>.card,
+  body.trackerPreview #trackerView #field>.card:only-child{
+    width:min(100%,340px)!important;max-width:340px!important;min-width:0!important;
+    flex:none!important;margin:0 auto!important;
+  }
+  body.trackerPreview #trackerView .battleCardVisual{max-width:250px}
+}
+</style>
 </head>
 <body class="trackerPreview">
 <section id="home">
