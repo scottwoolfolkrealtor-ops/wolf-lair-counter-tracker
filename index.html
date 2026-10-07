@@ -1950,38 +1950,7 @@ body.trackerPreview #trackerView nav{
     display:none;
   }
 }
-@media(max-width:520px) and (orientation:portrait){
-  body.trackerPreview #trackerView .battlefieldZoneTitle{
-    margin-bottom:6px;
-  }
-  body.trackerPreview #trackerView #field{
-    width:calc(100vh - 118px);
-    max-width:none;
-    height:calc(100vw - 22px);
-    min-height:0;
-    transform-origin:top left;
-    transform:rotate(90deg) translateY(-100%);
-    margin:0 0 calc(100vh - 118px - 100vw + 22px) 0!important;
-    overflow-x:auto!important;
-    overflow-y:hidden!important;
-    border-radius:18px;
-  }
-  body.trackerPreview #trackerView #field>.card,
-  body.trackerPreview #trackerView #field>.card:only-child{
-    flex-basis:142px;
-    width:142px;
-    min-width:142px;
-  }
-}
-@media(max-width:520px) and (orientation:landscape){
-  body.trackerPreview #trackerView #field{
-    width:100%;
-    height:auto;
-    min-height:230px;
-    transform:none;
-    margin:0!important;
-  }
-}
+@media(max-width:520px){body.trackerPreview #trackerView .battlefieldZoneTitle{margin-bottom:6px}}
 @media(min-width:700px){
   body.trackerPreview #trackerView #field>.card,
   body.trackerPreview #trackerView #field>.card:only-child{
